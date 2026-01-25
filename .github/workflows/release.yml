@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  HUSKY: 0
+
+permissions:
+  contents: write # ✅ Required to push branches and tags
+  pull-requests: write # ✅ Required to open release PRs
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node.js with pnpm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Setup GitHub Packages Auth
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GHT_PACKAGES }}" > ~/.npmrc
+
+      - name: Install Dependencies
+        run: pnpm install --ignore-scripts
+
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          commit: 'Version Packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.CODECOV_TOKEN }}
