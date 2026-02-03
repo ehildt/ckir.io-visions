@@ -13,10 +13,13 @@ ENTRYPOINT ["pnpm", "run", "start:dev"]
 
 # Target: builder (shared build stage)
 FROM base AS builder
-COPY package.json tsconfig*.json shims.d.ts ./ 
+COPY package.json tsconfig*.json shims.d.ts ./
 COPY src/ ./src/
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
+RUN  \
+  echo "@ehildt:registry=https://npm.pkg.github.com/" > /app/.npmrc &&  \
+  echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN_PACKAGES}" >> /app/.npmrc \
+  --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
 
 # Target: temporary (entrypoint for prepare-dev)
 FROM builder AS builddev
@@ -34,6 +37,7 @@ ENV                                         \
   PRINT_CONFIG="false"                      \
   ENABLE_SWAGGER="true"                     \
   PATH="$PNPM_HOME:$PATH"
+
 COPY --chown=node:node --from=builddev /app/dist ./dist
 COPY --chown=node:node --from=builddev /app/package*.json ./ 
 COPY --chown=node:node --from=builddev /app/node_modules ./node_modules
@@ -50,6 +54,7 @@ ENV                                         \
   PRINT_CONFIG="false"                      \
   ENABLE_SWAGGER="false"                    \
   PATH="$PNPM_HOME:$PATH"
+
 COPY --chown=node:node --from=buildprod /app/dist ./dist
 COPY --chown=node:node --from=buildprod /app/package*.json ./ 
 COPY --chown=node:node --from=buildprod /app/node_modules ./node_modules

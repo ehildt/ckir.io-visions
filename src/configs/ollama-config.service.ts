@@ -4,7 +4,7 @@ import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 
 const extendedSchema = OllamaConfigSchema.concat(
-  Joi.object({ keepAlive: Joi.string().default(false) }),
+  Joi.object({ keepAlive: Joi.string().optional() }),
 );
 
 @Injectable()

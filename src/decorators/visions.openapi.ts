@@ -7,13 +7,15 @@ import {
   ApiResponse,
 } from "@nestjs/swagger";
 
+import { BATCH_ID, NUM_CTX, ROOM_ID, STREAM, X_VISION_LLM } from "./constants";
+
 import { VisionTask } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
 
 export const ApiQueryStream = () =>
   ApiQuery({
     type: Boolean,
     required: false,
-    name: "stream",
+    name: STREAM,
     default: "false",
     description: [
       "**Response mode**",
@@ -25,7 +27,7 @@ export const ApiQueryStream = () =>
 
 export const ApiQueryRoomId = () =>
   ApiQuery({
-    name: "roomId",
+    name: ROOM_ID,
     type: String,
     required: false,
     example: "a1b2c3",
@@ -39,7 +41,7 @@ export const ApiQueryRoomId = () =>
 
 export const ApiQueryBatchId = () =>
   ApiQuery({
-    name: "batchId",
+    name: BATCH_ID,
     type: String,
     required: false,
     example: "1234",
@@ -53,7 +55,7 @@ export const ApiQueryBatchId = () =>
 
 export const ApiQueryNumCtx = () =>
   ApiQuery({
-    name: "numCtx",
+    name: NUM_CTX,
     required: false,
     type: Number,
     example: "32000",
@@ -126,8 +128,8 @@ const ApiBodySchema = () =>
 
 const ApiHeaderXVisionLLM = () =>
   ApiHeader({
-    name: "x-vision-llm",
-    required: false,
+    name: X_VISION_LLM,
+    required: true,
     schema: {
       type: "string",
       example: "ministral-3:14b",

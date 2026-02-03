@@ -1,5 +1,6 @@
 import { Type } from "@nestjs/common";
 
+import { IMAGES } from "./constants";
 import { MultiPartFiles, MultiPartValue } from "./visions.decorator";
 
 import { SupportedToolFunction } from "@/dtos/json-rpc/mcp.model";
@@ -18,6 +19,6 @@ export const MultiPartPayload = () =>
 export const MultiPartImages = () =>
   MultiPartFiles({
     required: false,
-    fieldName: "images",
+    fieldName: IMAGES,
     allowedMimeTypes: ALLOWED_MIME_TYPES,
   });

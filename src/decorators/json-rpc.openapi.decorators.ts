@@ -9,6 +9,7 @@ import {
   getSchemaPath,
 } from "@nestjs/swagger";
 
+import { X_VISION_LLM } from "./constants";
 import {
   ApiQueryBatchId,
   ApiQueryNumCtx,
@@ -87,9 +88,9 @@ export function ApiMcpJsonRpc() {
       responses follow the same protocol envelope.`,
     }),
     ApiHeader({
-      name: "x-vision-llm",
+      name: X_VISION_LLM,
       description: "Specifies which LLM to use for vision",
-      required: false,
+      required: true,
       schema: {
         type: "string",
         example: "ministral-3:14b",

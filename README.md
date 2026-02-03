@@ -1,8 +1,6 @@
 <h1 align="center">@CKIR.IO/VISIONS</h1>
 
-<strong>@CKIR.IO/VISIONS</strong> allows uploading one or more images (PNG, JPG, JPEG, WEBP) and supports optional AI-driven description, comparison and text extraction via OCR.
-
-It exposes multiple REST endpoints and implements the Model Context Protocol (MCP) using the JSON‑RPC 2.0 transport. MCP is an open standard for structured, request/response‑based communication between clients and tools that enables runtime capability discovery and interaction with external services. In distributed systems this pattern — often called dynamic discovery — means that a client can query a server for the set of available methods or capabilities at runtime instead of relying on a fixed list compiled ahead of time. MCP extends this idea further by defining specific JSON‑RPC methods (such as tools/list, resources/list, and tools/call) so clients can enumerate available tools and selectively invoke only those they actually need, providing both flexibility and control.
+<strong>@CKIR.IO/VISIONS</strong> allows uploading one or more images (PNG, JPG, JPEG, WEBP) and supports optional AI-driven description, comparison and text extraction via OCR. It exposes multiple REST endpoints and implements the Model Context Protocol (MCP) using the JSON‑RPC 2.0 transport. This microservice is originating from the ckir project collection.
 
 <br>
 

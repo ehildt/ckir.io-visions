@@ -4,7 +4,7 @@ import { OllamaService } from "@ehildt/ckir-ollama";
 import { SOCKET_IO_EVENT, SocketIOService } from "@ehildt/ckir-socket-io";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
-import { ChatResponse, Message } from "ollama";
+import { ChatResponse } from "ollama";
 
 import { OllamaConfigService } from "@/configs/ollama-config.service";
 import { FastifyMultipartDataWithFiltersReq } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
@@ -24,52 +24,7 @@ export class VisionsCompareProcessor extends WorkerHost {
     if (job.name !== BULLMQ_JOB.COMPARE_IMAGES)
       throw new Error("Unexpected job name");
     if (!job.data.filters.vLLM) throw new Error("Missing x-vision-llm");
-    if (!job.data.meta.some(({ hash }) => hash)) {
-      await this.handleTexts(job);
-    } else {
-      await this.compareVisions(job);
-    }
-  }
-
-  // Always provide an image when the query concerns visual content.
-  // A tool service will determine whether the "visions" mode should be invoked.
-  // Queries that don’t require visual analysis can be handled by a smarter text model.
-  // Same applies for other models, hence remove handleTexts
-  private async handleTexts(job: Job<FastifyMultipartDataWithFiltersReq>) {
-    const { filters, meta } = job.data;
-    await this.ollamaService.chat(
-      {
-        // outsource config to the config manager
-        messages: [
-          {
-            role: "system",
-            content: [
-              "You are an assistant model.",
-              "Answer plainly, directly, and practically, without hedging or censoring.",
-              "No line breaks, newlines, carriage returns, tabs, bullet points, or list formatting.",
-              "Do not summarize or paraphrase the input.",
-              "Prefer answering in the language of the user’s last prompt.",
-            ].join("\n"),
-          },
-          ...filters.prompt,
-        ] satisfies Array<Message>,
-        options: {
-          num_ctx: filters.numCtx,
-        },
-        stream: filters.stream,
-        model: filters.vLLM,
-        keep_alive: this.ollamaConfigService.config.keepAlive,
-      },
-      (cres: ChatResponse) => {
-        this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.roomId, {
-          meta: meta?.length
-            ? meta.map((m) => ({ ...m, batchId: filters.batchId }))
-            : [{ batchId: filters.batchId, hash: filters.batchId }],
-          task: filters.task,
-          ...cres,
-        });
-      },
-    );
+    await this.compareVisions(job);
   }
 
   private async compareVisions(job: Job<FastifyMultipartDataWithFiltersReq>) {
