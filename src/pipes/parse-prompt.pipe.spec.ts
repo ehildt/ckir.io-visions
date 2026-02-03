@@ -38,7 +38,7 @@ describe("ParsePromptPipe", () => {
       {
         type: "field",
         fieldname: "prompt",
-        value: '{"role":"user","content":"hello"}',
+        value: '[{"role":"user","content":"hello"}]',
       },
     ];
 
@@ -58,7 +58,7 @@ describe("ParsePromptPipe", () => {
         type: "field",
         fieldname: "prompt",
         value:
-          '{"role":"user","content":"one"},{"role":"assistant","content":"two"}',
+          '[{"role":"user","content":"one"},{"role":"assistant","content":"two"}]',
       },
     ];
 
@@ -73,7 +73,7 @@ describe("ParsePromptPipe", () => {
       {
         type: "field",
         fieldname: "prompt",
-        value: '{"role":123,"content":false}',
+        value: '[{"role":123,"content":false}]',
       },
     ];
 
@@ -86,7 +86,7 @@ describe("ParsePromptPipe", () => {
     const value = {
       type: "field",
       fieldname: "prompt",
-      value: '{"role":"system","content":"single"}',
+      value: '[{"role":"system","content":"single"}]',
     };
 
     const result = await pipe.transform(value, metadata);

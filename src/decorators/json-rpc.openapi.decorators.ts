@@ -17,8 +17,14 @@ import {
   ApiQueryStream,
 } from "./visions.openapi";
 
-import { McpToolsListReq } from "@/dtos/json-rpc/mcp-tools-list-req.dto";
-import { McpVisionPayloadReq } from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
+import {
+  McpToolsListReq,
+  McpToolsListReq_Params,
+} from "@/dtos/json-rpc/mcp-tools-list-req.dto";
+import {
+  McpVisionPayloadReq,
+  McpVisionPayloadReq_Params,
+} from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
 
 const ApiJsonRpcBodySchema = () =>
   ApiBody({
@@ -74,7 +80,12 @@ export function ApiMcpJsonRpc() {
     ApiQueryBatchId(),
     ApiQueryRoomId(),
     ApiConsumes("multipart/form-data"),
-    ApiExtraModels(McpVisionPayloadReq, McpToolsListReq),
+    ApiExtraModels(
+      McpVisionPayloadReq,
+      McpToolsListReq,
+      McpToolsListReq_Params,
+      McpVisionPayloadReq_Params,
+    ),
     ApiJsonRpcBodySchema(),
     ApiAcceptedResponse({
       description:

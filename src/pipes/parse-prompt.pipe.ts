@@ -26,7 +26,7 @@ export class ParsePromptPipe implements PipeTransform {
 
     let parsed: Array<Prompt>;
     try {
-      parsed = JSON.parse(`[${field.value}]`);
+      parsed = JSON.parse(field.value);
     } catch {
       return [];
     }
