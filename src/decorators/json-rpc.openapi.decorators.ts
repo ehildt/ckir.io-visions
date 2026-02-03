@@ -9,6 +9,7 @@ import {
   getSchemaPath,
 } from "@nestjs/swagger";
 
+import { X_VISION_LLM } from "./constants";
 import {
   ApiQueryBatchId,
   ApiQueryNumCtx,
@@ -16,8 +17,14 @@ import {
   ApiQueryStream,
 } from "./visions.openapi";
 
-import { McpToolsListReq } from "@/dtos/json-rpc/mcp-tools-list-req.dto";
-import { McpVisionPayloadReq } from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
+import {
+  McpToolsListReq,
+  McpToolsListReq_Params,
+} from "@/dtos/json-rpc/mcp-tools-list-req.dto";
+import {
+  McpVisionPayloadReq,
+  McpVisionPayloadReq_Params,
+} from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
 
 const ApiJsonRpcBodySchema = () =>
   ApiBody({
@@ -73,7 +80,12 @@ export function ApiMcpJsonRpc() {
     ApiQueryBatchId(),
     ApiQueryRoomId(),
     ApiConsumes("multipart/form-data"),
-    ApiExtraModels(McpVisionPayloadReq, McpToolsListReq),
+    ApiExtraModels(
+      McpVisionPayloadReq,
+      McpToolsListReq,
+      McpToolsListReq_Params,
+      McpVisionPayloadReq_Params,
+    ),
     ApiJsonRpcBodySchema(),
     ApiAcceptedResponse({
       description:
@@ -87,9 +99,9 @@ export function ApiMcpJsonRpc() {
       responses follow the same protocol envelope.`,
     }),
     ApiHeader({
-      name: "x-vision-llm",
+      name: X_VISION_LLM,
       description: "Specifies which LLM to use for vision",
-      required: false,
+      required: true,
       schema: {
         type: "string",
         example: "ministral-3:14b",

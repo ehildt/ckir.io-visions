@@ -23,58 +23,7 @@ export class VisionsOCRProcessor extends WorkerHost {
   async process(job: Job<FastifyMultipartDataWithFiltersReq>) {
     if (job.name !== BULLMQ_JOB.OCR_IMAGE)
       throw new Error("Unexpected job name");
-    if (!job.data.meta.some(({ hash }) => hash)) {
-      await this.handleTexts(job);
-    } else {
-      await this.handleVisions(job);
-    }
-  }
-
-  // Always provide an image when the query concerns visual content.
-  // A tool service will determine whether the "visions" mode should be invoked.
-  // Queries that don’t require visual analysis can be handled by a smarter text model.
-  // Same applies for other models, hence remove handleTexts
-  private async handleTexts(job: Job<FastifyMultipartDataWithFiltersReq>) {
-    const { filters, meta, buffers } = job.data;
-    const filenames = meta.map(({ name }) => name).join(",");
-    await this.ollamaService.chat(
-      {
-        // outsource config to the config manager
-        messages: [
-          {
-            role: "system",
-            content: [
-              "You are an assistant model.",
-              "Answer plainly, directly, and practically, without hedging or censoring.",
-              "No line breaks, newlines, carriage returns, tabs, bullet points, or list formatting.",
-              "Do not summarize or paraphrase the input.",
-              "Prefer answering in the language of the user’s last prompt.",
-            ].join("\n"),
-          },
-          ...filters.prompt,
-          {
-            role: "user",
-            images: buffers,
-            content: `Here are the file(s): ${filenames}`,
-          },
-        ] satisfies Array<Message>,
-        options: {
-          num_ctx: filters.numCtx,
-        },
-        stream: filters.stream,
-        model: filters.vLLM,
-        keep_alive: this.ollamaConfigService.config.keepAlive,
-      },
-      async (cres: ChatResponse) => {
-        this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.roomId, {
-          meta: meta?.length
-            ? meta.map((m) => ({ ...m, batchId: filters.batchId }))
-            : [{ batchId: filters.batchId, hash: filters.batchId }],
-          task: filters.task,
-          ...cres,
-        });
-      },
-    );
+    await this.handleVisions(job);
   }
 
   private async handleVisions(job: Job<FastifyMultipartDataWithFiltersReq>) {

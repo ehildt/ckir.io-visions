@@ -1,3 +1,4 @@
+import { IMAGES, PROMPT, TASK } from "@/decorators/constants";
 import { SupportedToolFunction } from "@/dtos/json-rpc/mcp.model";
 
 export const VISIONS_ANALYZE = {
@@ -9,7 +10,7 @@ export const VISIONS_ANALYZE = {
   inputSchema: {
     type: "object",
     additionalProperties: false,
-    required: ["images", "prompt", "task"],
+    required: [IMAGES, PROMPT, TASK],
     properties: {
       prompt: {
         type: "string",

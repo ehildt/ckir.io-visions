@@ -4,6 +4,7 @@ import {
   IsArray,
   IsIn,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -11,7 +12,7 @@ import {
 
 import { SupportedToolFunction, SupportedToolMethod } from "./mcp.model";
 
-class McpToolsListReq_Params {
+export class McpToolsListReq_Params {
   @IsArray()
   @IsOptional()
   @ApiPropertyOptional({
@@ -23,6 +24,7 @@ class McpToolsListReq_Params {
   requestedTools?: Array<SupportedToolFunction>;
 }
 
+// dedicated type, this is only for list
 export class McpToolsListReq {
   @ApiProperty({ example: 2 })
   @IsNumber()
@@ -36,8 +38,9 @@ export class McpToolsListReq {
   @IsString()
   method: SupportedToolMethod;
 
-  @ApiProperty({ type: McpToolsListReq_Params })
+  @IsObject()
   @ValidateNested()
   @Type(() => McpToolsListReq_Params)
+  @ApiProperty({ type: McpToolsListReq_Params })
   params: McpToolsListReq_Params;
 }

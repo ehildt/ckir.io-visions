@@ -12,6 +12,16 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 
+import {
+  BATCH_ID,
+  IMAGES,
+  NUM_CTX,
+  PROMPT,
+  ROOM_ID,
+  STREAM,
+  TASK,
+  X_VISION_LLM,
+} from "@/decorators/constants";
 import { MultiPartFiles, MultiPartValue } from "@/decorators/visions.decorator";
 import { ApiVision } from "@/decorators/visions.openapi";
 import { VisionTask } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
@@ -30,15 +40,15 @@ export class ClassicController {
   @ApiVision()
   @HttpCode(HttpStatus.ACCEPTED)
   async visionStream(
-    @Query("batchId") batchId: string,
-    @Headers("x-vision-llm") vLLM: string,
-    @Query("stream", new ParseBoolPipe({ optional: true })) stream: boolean,
-    @MultiPartValue("task") task: MultipartValue<VisionTask>,
-    @Query("roomId") roomId?: string,
-    @MultiPartValue("prompt", new ParsePromptPipe()) prompt?: Array<Prompt>,
-    @Query("numCtx", new ParseIntPipe({ optional: true })) numCtx?: number,
+    @Query(BATCH_ID) batchId: string,
+    @Headers(X_VISION_LLM) vLLM: string,
+    @Query(STREAM, new ParseBoolPipe({ optional: true })) stream: boolean,
+    @MultiPartValue(TASK) task: MultipartValue<VisionTask>,
+    @Query(ROOM_ID) roomId?: string,
+    @MultiPartValue(PROMPT, new ParsePromptPipe()) prompt?: Array<Prompt>,
+    @Query(NUM_CTX, new ParseIntPipe({ optional: true })) numCtx?: number,
     @MultiPartFiles({
-      fieldName: "images",
+      fieldName: IMAGES,
       allowedMimeTypes: ALLOWED_MIME_TYPES,
     })
     images?: Array<MultipartFile>,

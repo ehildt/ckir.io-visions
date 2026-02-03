@@ -30,12 +30,13 @@ import { JsonRpcService } from "./services/json-rpc.service";
         SocketIOConfigService,
       ],
     }),
+    // ! REFINE ollama vs llama.cpp
+    // ollama comes with queues, slight overhead
+    // llama.cpp offers god mode, needs tweaking
     OllamaModule.registerAsync({
       global: true,
       inject: [OllamaConfigService],
-      useFactory: async ({ config: xOllamaConfig }: OllamaConfigService) => ({
-        host: xOllamaConfig.host,
-      }),
+      useFactory: async ({ config }: OllamaConfigService) => config,
     }),
     BullMQModule.registerAsync({
       global: true,

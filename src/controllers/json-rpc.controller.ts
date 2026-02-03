@@ -12,6 +12,13 @@ import {
 } from "@nestjs/common";
 
 import {
+  BATCH_ID,
+  NUM_CTX,
+  ROOM_ID,
+  STREAM,
+  X_VISION_LLM,
+} from "@/decorators/constants";
+import {
   MultiPartImages,
   MultiPartPayload,
 } from "@/decorators/json-rpc.decorators";
@@ -28,12 +35,12 @@ export class JsonRpcController {
   @ApiMcpJsonRpc()
   @HttpCode(HttpStatus.ACCEPTED)
   async rpc(
-    @Query("batchId") batchId: string,
-    @Query("stream", new ParseBoolPipe({ optional: true })) stream: boolean,
-    @Headers("x-vision-llm") vLLM: string,
+    @Query(BATCH_ID) batchId: string,
+    @Query(STREAM, new ParseBoolPipe({ optional: true })) stream: boolean,
+    @Headers(X_VISION_LLM) vLLM: string,
     @MultiPartPayload() req: McpGenericType<McpVisionPayloadReq_Params>,
-    @Query("roomId") roomId?: string,
-    @Query("numCtx", new ParseIntPipe({ optional: true })) numCtx?: number,
+    @Query(ROOM_ID) roomId?: string,
+    @Query(NUM_CTX, new ParseIntPipe({ optional: true })) numCtx?: number,
     @MultiPartImages() images?: Array<MultipartFile>,
   ) {
     if (req.method === "tools/list")
