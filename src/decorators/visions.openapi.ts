@@ -84,29 +84,31 @@ const ApiBodySchema = () =>
           ].join("\n"),
         },
         prompt: {
-          type: "array",
-          items: {
-            type: "object",
-            required: ["role", "content"],
-            properties: {
-              role: {
-                type: "string",
-                example: "user",
-                enum: ["user", "tool", "assistant"],
-                description: "**The prompt role**",
-              },
-              content: {
-                type: "string",
-                example: "Describe this image with exhaustive details",
-                description: "**The prompt content**",
-              },
+          type: "object",
+          required: ["role", "content"],
+          example: [
+            {
+              role: "user",
+              content: "Describe this image in exhaustive visual detail",
+            },
+          ],
+          properties: {
+            role: {
+              type: "string",
+              example: "user",
+              enum: ["user", "tool", "assistant"],
+              description: "**The prompt role**",
+            },
+            content: {
+              type: "string",
+              description: "**The prompt content**",
             },
           },
           description: [
-            "**Task instruction**",
+            "**Prompt**",
             "",
-            "Optional textual guidance provided to the model.",
-            "Used to refine or constrain the selected vision task.",
+            "Provides textual guidance to the model for performing the vision task.",
+            "Can refine or constrain the output, for example by specifying level of detail or focus areas.",
           ].join("\n"),
         },
         images: {
