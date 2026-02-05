@@ -1,21 +1,36 @@
 name: Sync folder to Wiki
+
 on:
   push:
-    branches: [dev]
-    paths: ['.wiki/**']
+    branches: [main]
+    paths: 
+      - '.wiki/**'
+
 permissions:
   contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      # 1) Main-Repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) Wiki-Repository
+      - name: Checkout wiki
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}.wiki
           path: wiki
+
+      # 3) Safety-Guard + Sync
       - name: Mirror .wiki -> Wiki
-        run: rsync -a --delete --exclude '.git/' .wiki/ wiki/
+        run: |
+          test -d .wiki || { echo "::error::.wiki folder missing"; exit 1; }
+          rsync -a --delete --exclude '.git/' .wiki/ wiki/
+
+      # 4) Commit & Push
       - name: Commit & push to Wiki
         working-directory: wiki
         run: |
@@ -23,5 +38,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet || git commit -m "docs(wiki): sync .wiki to GitHub Wiki"
-          git remote -v
           git push
