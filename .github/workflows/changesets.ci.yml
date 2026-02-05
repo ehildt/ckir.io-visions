@@ -49,10 +49,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Create Release Pull Request
+      - name: Run Changesets Action
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
           commit: 'Version Packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GHT_CHANGESET }}
