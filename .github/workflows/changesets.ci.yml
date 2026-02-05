@@ -55,4 +55,4 @@ jobs:
           version: pnpm changeset version
           commit: 'Version Packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
