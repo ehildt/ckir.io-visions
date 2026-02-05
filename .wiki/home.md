@@ -21,5 +21,5 @@
 <br>
 
 ## Setup
-- [[Home – Docker Compose|home/docker-compose]]
-- [[Home – System Environment|home/system-environment]]
+- [System Environment](home/system-environment)
+- [Docker Compose](home/docker-compose)
