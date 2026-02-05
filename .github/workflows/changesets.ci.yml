@@ -1,4 +1,4 @@
-name: Release
+name: CHANGESETS_CI
 
 on:
   push:
@@ -12,12 +12,12 @@ env:
   HUSKY: 0
 
 permissions:
-  contents: write # ✅ Required to push branches and tags
-  pull-requests: write # ✅ Required to open release PRs
+  contents: write
+  pull-requests: write
 
 jobs:
   release:
-    name: Release
+    name: Bump Versions
     runs-on: ubuntu-latest
 
     steps:
@@ -49,10 +49,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Create Release Pull Request
+      - name: Run Changesets Action
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
           commit: 'Version Packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GHT_CHANGESET }}
