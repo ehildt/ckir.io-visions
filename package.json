@@ -89,6 +89,7 @@
     "jest-extended": "^6.0.0",
     "jest-junit": "^16.0.0",
     "jiti": "^2.6.1",
+    "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "npm-check-updates": "^19.3.2",
     "rimraf": "^6.1.2",

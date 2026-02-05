@@ -1,0 +1,392 @@
+{
+  "@ehildt/ckir-bullmq": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-bullmq",
+    "message": "^0.1.17",
+    "color": "hsl(-206,70%,45%)"
+  },
+  "@ehildt/ckir-bullmq-logger": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-bullmq-logger",
+    "message": "^0.1.14",
+    "color": "hsl(219,70%,45%)"
+  },
+  "@ehildt/ckir-config-factory": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-config-factory",
+    "message": "^0.1.9",
+    "color": "hsl(-278,70%,45%)"
+  },
+  "@ehildt/ckir-helpers": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-helpers",
+    "message": "^0.1.22",
+    "color": "hsl(346,70%,45%)"
+  },
+  "@ehildt/ckir-ollama": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-ollama",
+    "message": "^0.1.12",
+    "color": "hsl(-199,70%,45%)"
+  },
+  "@ehildt/ckir-qdrant": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-qdrant",
+    "message": "^0.1.8",
+    "color": "hsl(-269,70%,45%)"
+  },
+  "@ehildt/ckir-socket-io": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-socket-io",
+    "message": "^0.1.17",
+    "color": "hsl(325,70%,45%)"
+  },
+  "@fastify/compress": {
+    "schemaVersion": 1,
+    "label": "@fastify/compress",
+    "message": "^8.3.1",
+    "color": "hsl(329,70%,45%)"
+  },
+  "@fastify/multipart": {
+    "schemaVersion": 1,
+    "label": "@fastify/multipart",
+    "message": "^9.4.0",
+    "color": "hsl(-203,70%,45%)"
+  },
+  "@fastify/static": {
+    "schemaVersion": 1,
+    "label": "@fastify/static",
+    "message": "^8.3.0",
+    "color": "hsl(77,70%,45%)"
+  },
+  "@nestjs/bullmq": {
+    "schemaVersion": 1,
+    "label": "@nestjs/bullmq",
+    "message": "^11.0.4",
+    "color": "hsl(-267,70%,45%)"
+  },
+  "@nestjs/common": {
+    "schemaVersion": 1,
+    "label": "@nestjs/common",
+    "message": "^11.1.13",
+    "color": "hsl(-271,70%,45%)"
+  },
+  "@nestjs/core": {
+    "schemaVersion": 1,
+    "label": "@nestjs/core",
+    "message": "^11.1.13",
+    "color": "hsl(-259,70%,45%)"
+  },
+  "@nestjs/microservices": {
+    "schemaVersion": 1,
+    "label": "@nestjs/microservices",
+    "message": "^11.1.13",
+    "color": "hsl(252,70%,45%)"
+  },
+  "@nestjs/platform-fastify": {
+    "schemaVersion": 1,
+    "label": "@nestjs/platform-fastify",
+    "message": "^11.1.13",
+    "color": "hsl(-204,70%,45%)"
+  },
+  "@nestjs/swagger": {
+    "schemaVersion": 1,
+    "label": "@nestjs/swagger",
+    "message": "^11.2.6",
+    "color": "hsl(220,70%,45%)"
+  },
+  "@qdrant/js-client-rest": {
+    "schemaVersion": 1,
+    "label": "@qdrant/js-client-rest",
+    "message": "^1.16.2",
+    "color": "hsl(-39,70%,45%)"
+  },
+  "bullmq": {
+    "schemaVersion": 1,
+    "label": "bullmq",
+    "message": "^5.67.3",
+    "color": "hsl(-353,70%,45%)"
+  },
+  "class-transformer": {
+    "schemaVersion": 1,
+    "label": "class-transformer",
+    "message": "^0.5.1",
+    "color": "hsl(-196,70%,45%)"
+  },
+  "class-validator": {
+    "schemaVersion": 1,
+    "label": "class-validator",
+    "message": "^0.14.3",
+    "color": "hsl(253,70%,45%)"
+  },
+  "date-fns": {
+    "schemaVersion": 1,
+    "label": "date-fns",
+    "message": "^4.1.0",
+    "color": "hsl(-116,70%,45%)"
+  },
+  "fastify": {
+    "schemaVersion": 1,
+    "label": "fastify",
+    "message": "^5.7.4",
+    "color": "hsl(152,70%,45%)"
+  },
+  "ioredis": {
+    "schemaVersion": 1,
+    "label": "ioredis",
+    "message": "^5.9.2",
+    "color": "hsl(309,70%,45%)"
+  },
+  "joi": {
+    "schemaVersion": 1,
+    "label": "joi",
+    "message": "^18.0.2",
+    "color": "hsl(292,70%,45%)"
+  },
+  "ollama": {
+    "schemaVersion": 1,
+    "label": "ollama",
+    "message": "^0.6.3",
+    "color": "hsl(-346,70%,45%)"
+  },
+  "pino": {
+    "schemaVersion": 1,
+    "label": "pino",
+    "message": "^10.3.0",
+    "color": "hsl(138,70%,45%)"
+  },
+  "pino-pretty": {
+    "schemaVersion": 1,
+    "label": "pino-pretty",
+    "message": "^13.1.3",
+    "color": "hsl(185,70%,45%)"
+  },
+  "reflect-metadata": {
+    "schemaVersion": 1,
+    "label": "reflect-metadata",
+    "message": "^0.2.2",
+    "color": "hsl(207,70%,45%)"
+  },
+  "rxjs": {
+    "schemaVersion": 1,
+    "label": "rxjs",
+    "message": "^7.8.2",
+    "color": "hsl(215,70%,45%)"
+  },
+  "@changesets/cli": {
+    "schemaVersion": 1,
+    "label": "@changesets/cli",
+    "message": "^2.29.8",
+    "color": "hsl(-278,70%,45%)"
+  },
+  "@eslint/js": {
+    "schemaVersion": 1,
+    "label": "@eslint/js",
+    "message": "^9.39.2",
+    "color": "hsl(-81,70%,45%)"
+  },
+  "@nestjs/cli": {
+    "schemaVersion": 1,
+    "label": "@nestjs/cli",
+    "message": "^11.0.16",
+    "color": "hsl(170,70%,45%)"
+  },
+  "@nestjs/schematics": {
+    "schemaVersion": 1,
+    "label": "@nestjs/schematics",
+    "message": "^11.0.9",
+    "color": "hsl(-28,70%,45%)"
+  },
+  "@nestjs/testing": {
+    "schemaVersion": 1,
+    "label": "@nestjs/testing",
+    "message": "^11.1.13",
+    "color": "hsl(354,70%,45%)"
+  },
+  "@types/eslint": {
+    "schemaVersion": 1,
+    "label": "@types/eslint",
+    "message": "^9.6.1",
+    "color": "hsl(-57,70%,45%)"
+  },
+  "@types/jest": {
+    "schemaVersion": 1,
+    "label": "@types/jest",
+    "message": "^30.0.0",
+    "color": "hsl(218,70%,45%)"
+  },
+  "@types/node": {
+    "schemaVersion": 1,
+    "label": "@types/node",
+    "message": "^24.10.11",
+    "color": "hsl(352,70%,45%)"
+  },
+  "@types/supertest": {
+    "schemaVersion": 1,
+    "label": "@types/supertest",
+    "message": "^6.0.3",
+    "color": "hsl(-41,70%,45%)"
+  },
+  "depcheck": {
+    "schemaVersion": 1,
+    "label": "depcheck",
+    "message": "^1.4.7",
+    "color": "hsl(-215,70%,45%)"
+  },
+  "dependency-cruiser": {
+    "schemaVersion": 1,
+    "label": "dependency-cruiser",
+    "message": "^17.3.7",
+    "color": "hsl(-5,70%,45%)"
+  },
+  "dotenv-cli": {
+    "schemaVersion": 1,
+    "label": "dotenv-cli",
+    "message": "^11.0.0",
+    "color": "hsl(-25,70%,45%)"
+  },
+  "eslint": {
+    "schemaVersion": 1,
+    "label": "eslint",
+    "message": "^9.39.2",
+    "color": "hsl(-111,70%,45%)"
+  },
+  "eslint-config-prettier": {
+    "schemaVersion": 1,
+    "label": "eslint-config-prettier",
+    "message": "^10.1.8",
+    "color": "hsl(-318,70%,45%)"
+  },
+  "eslint-plugin-prettier": {
+    "schemaVersion": 1,
+    "label": "eslint-plugin-prettier",
+    "message": "^5.5.5",
+    "color": "hsl(41,70%,45%)"
+  },
+  "eslint-plugin-simple-import-sort": {
+    "schemaVersion": 1,
+    "label": "eslint-plugin-simple-import-sort",
+    "message": "^12.1.1",
+    "color": "hsl(-247,70%,45%)"
+  },
+  "eslint-plugin-sonarjs": {
+    "schemaVersion": 1,
+    "label": "eslint-plugin-sonarjs",
+    "message": "^3.0.6",
+    "color": "hsl(-26,70%,45%)"
+  },
+  "globals": {
+    "schemaVersion": 1,
+    "label": "globals",
+    "message": "^16.5.0",
+    "color": "hsl(208,70%,45%)"
+  },
+  "husky": {
+    "schemaVersion": 1,
+    "label": "husky",
+    "message": "^9.1.7",
+    "color": "hsl(204,70%,45%)"
+  },
+  "jest": {
+    "schemaVersion": 1,
+    "label": "jest",
+    "message": "^30.2.0",
+    "color": "hsl(228,70%,45%)"
+  },
+  "jest-extended": {
+    "schemaVersion": 1,
+    "label": "jest-extended",
+    "message": "^6.0.0",
+    "color": "hsl(26,70%,45%)"
+  },
+  "jest-junit": {
+    "schemaVersion": 1,
+    "label": "jest-junit",
+    "message": "^16.0.0",
+    "color": "hsl(-267,70%,45%)"
+  },
+  "jiti": {
+    "schemaVersion": 1,
+    "label": "jiti",
+    "message": "^2.6.1",
+    "color": "hsl(132,70%,45%)"
+  },
+  "js-yaml": {
+    "schemaVersion": 1,
+    "label": "js-yaml",
+    "message": "^4.1.1",
+    "color": "hsl(259,70%,45%)"
+  },
+  "lint-staged": {
+    "schemaVersion": 1,
+    "label": "lint-staged",
+    "message": "^16.2.7",
+    "color": "hsl(-312,70%,45%)"
+  },
+  "npm-check-updates": {
+    "schemaVersion": 1,
+    "label": "npm-check-updates",
+    "message": "^19.3.2",
+    "color": "hsl(131,70%,45%)"
+  },
+  "rimraf": {
+    "schemaVersion": 1,
+    "label": "rimraf",
+    "message": "^6.1.2",
+    "color": "hsl(-215,70%,45%)"
+  },
+  "source-map-support": {
+    "schemaVersion": 1,
+    "label": "source-map-support",
+    "message": "^0.5.21",
+    "color": "hsl(-236,70%,45%)"
+  },
+  "supertest": {
+    "schemaVersion": 1,
+    "label": "supertest",
+    "message": "^7.2.2",
+    "color": "hsl(-43,70%,45%)"
+  },
+  "ts-jest": {
+    "schemaVersion": 1,
+    "label": "ts-jest",
+    "message": "^29.4.6",
+    "color": "hsl(-166,70%,45%)"
+  },
+  "ts-loader": {
+    "schemaVersion": 1,
+    "label": "ts-loader",
+    "message": "^9.5.4",
+    "color": "hsl(-135,70%,45%)"
+  },
+  "ts-node": {
+    "schemaVersion": 1,
+    "label": "ts-node",
+    "message": "^10.9.2",
+    "color": "hsl(-32,70%,45%)"
+  },
+  "ts-unused-exports": {
+    "schemaVersion": 1,
+    "label": "ts-unused-exports",
+    "message": "^11.0.1",
+    "color": "hsl(-98,70%,45%)"
+  },
+  "tsconfig-paths": {
+    "schemaVersion": 1,
+    "label": "tsconfig-paths",
+    "message": "^4.2.0",
+    "color": "hsl(282,70%,45%)"
+  },
+  "typescript": {
+    "schemaVersion": 1,
+    "label": "typescript",
+    "message": "^5.9.3",
+    "color": "hsl(-107,70%,45%)"
+  },
+  "typescript-eslint": {
+    "schemaVersion": 1,
+    "label": "typescript-eslint",
+    "message": "^8.54.0",
+    "color": "hsl(345,70%,45%)"
+  }
+}
