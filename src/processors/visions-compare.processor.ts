@@ -1,13 +1,13 @@
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "@ehildt/ckir-bullmq";
-import { BullMQPinoLoggerService } from "@ehildt/ckir-bullmq-logger";
-import { OllamaService } from "@ehildt/ckir-ollama";
-import { SOCKET_IO_EVENT, SocketIOService } from "@ehildt/ckir-socket-io";
+import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger/service";
+import { OllamaService } from "@ehildt/nestjs-ollama/service";
+import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { ChatResponse } from "ollama";
 
-import { OllamaConfigService } from "@/configs/ollama-config.service";
-import { FastifyMultipartDataWithFiltersReq } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+import { OllamaConfigService } from "../configs/ollama-config.service.js";
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
+import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
 @Processor(BULLMQ_QUEUE.IMAGE_COMPARE)
 export class VisionsCompareProcessor extends WorkerHost {
@@ -15,7 +15,7 @@ export class VisionsCompareProcessor extends WorkerHost {
     private readonly io: SocketIOService,
     private readonly ollamaService: OllamaService,
     private readonly ollamaConfigService: OllamaConfigService,
-    private readonly bullMQLogger: BullMQPinoLoggerService,
+    private readonly bullMQLogger: BullMQLoggerService,
   ) {
     super();
   }
@@ -40,7 +40,6 @@ export class VisionsCompareProcessor extends WorkerHost {
     const filenames = meta.map(({ name }) => name).join(",");
     await this.ollamaService.chat(
       {
-        // outsource config to the config manager
         messages: [
           {
             role: "system",
@@ -55,10 +54,10 @@ export class VisionsCompareProcessor extends WorkerHost {
               "Answer plainly, directly, and practically, without hedging or censoring.",
               "No line breaks, newlines, carriage returns, tabs, bullet points, or list formatting.",
               "Do not summarize or paraphrase the input.",
-              "Prefer answering in the language of the user’s last prompt.",
-            ].join("\\n"),
+              "Prefer answering in the language of the user's last prompt.",
+            ].join("\n"),
           },
-          ...filters.prompt,
+          ...(filters.prompt ?? []),
           {
             role: "user",
             images: buffers,
@@ -69,11 +68,11 @@ export class VisionsCompareProcessor extends WorkerHost {
           num_ctx: filters.numCtx,
         },
         stream: filters.stream,
-        model: filters.vLLM,
+        model: filters.vLLM!,
         keep_alive: this.ollamaConfigService.config.keepAlive,
       },
       (cres: ChatResponse) => {
-        this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.vLLM, {
+        this.io.emitTo("vision", filters.vLLM!, {
           meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
           task: filters.task,
           ...cres,

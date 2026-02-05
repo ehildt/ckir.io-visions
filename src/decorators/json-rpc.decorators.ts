@@ -1,11 +1,11 @@
 import { Type } from "@nestjs/common";
 
-import { IMAGES } from "./constants";
-import { MultiPartFiles, MultiPartValue } from "./visions.decorator";
+import { SupportedToolFunction } from "../dtos/json-rpc/mcp.model.js";
+import { McpVisionPayloadReq } from "../dtos/json-rpc/mcp-vision-payload-req.dto.js";
+import { JsonRpcValidationPipe } from "../pipes/json-rpc-validation.pipe.js";
 
-import { SupportedToolFunction } from "@/dtos/json-rpc/mcp.model";
-import { McpVisionPayloadReq } from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
-import { JsonRpcValidationPipe } from "@/pipes/json-rpc-validation.pipe";
+import { IMAGES } from "./constants.js";
+import { MultiPartFiles, MultiPartValue } from "./visions.decorator.js";
 
 const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
 

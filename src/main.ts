@@ -1,13 +1,13 @@
 import {
   API_DOCS,
-  BODY_LIMIT,
-  LOG_LEVEL,
+  getBodyLimit,
+  getLogLevel,
   logConfigObject,
   logServerPath,
   logSwaggerPath,
   SWAGGER_DOCUMENT,
   VALIDATION_PIPE,
-} from "@ehildt/ckir-helpers";
+} from "@ehildt/ckir-helpers/bootstrap";
 import compress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
 import { Logger, VersioningType } from "@nestjs/common";
@@ -18,12 +18,14 @@ import {
 } from "@nestjs/platform-fastify";
 import { SwaggerModule } from "@nestjs/swagger";
 
-import { AppConfigService } from "./configs/app-config.service";
-import { MainModule } from "./main.module";
+import { AppConfigService } from "./configs/app-config.service.js";
+import { MainModule } from "./main.module.js";
 
 void (async () => {
-  const logger = { logger: LOG_LEVEL };
-  const adapter = new FastifyAdapter({ bodyLimit: BODY_LIMIT });
+  const logger = { logger: getLogLevel(process.env.LOG_LEVEL) };
+  const adapter = new FastifyAdapter({
+    bodyLimit: getBodyLimit(process.env.BODY_LIMIT),
+  });
   const APP = await NestFactory.create<NestFastifyApplication>(
     MainModule,
     adapter,
@@ -56,7 +58,7 @@ void (async () => {
     },
     () => {
       const nestLogger = APP.get(Logger);
-      logConfigObject(nestLogger, appConfigService);
+      logConfigObject(nestLogger, appConfigService.config);
       logServerPath(nestLogger, appConfigService.config);
       logSwaggerPath(nestLogger, appConfigService.config);
     },

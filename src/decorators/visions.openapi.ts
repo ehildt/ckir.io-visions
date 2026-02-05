@@ -7,9 +7,15 @@ import {
   ApiResponse,
 } from "@nestjs/swagger";
 
-import { BATCH_ID, NUM_CTX, ROOM_ID, STREAM, X_VISION_LLM } from "./constants";
+import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
-import { VisionTask } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+import {
+  BATCH_ID,
+  NUM_CTX,
+  ROOM_ID,
+  STREAM,
+  X_VISION_LLM,
+} from "./constants.js";
 
 export const ApiQueryStream = () =>
   ApiQuery({

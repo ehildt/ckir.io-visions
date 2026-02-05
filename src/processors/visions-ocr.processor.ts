@@ -1,13 +1,13 @@
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "@ehildt/ckir-bullmq";
-import { BullMQPinoLoggerService } from "@ehildt/ckir-bullmq-logger";
-import { OllamaService } from "@ehildt/ckir-ollama";
-import { SOCKET_IO_EVENT, SocketIOService } from "@ehildt/ckir-socket-io";
+import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger/service";
+import { OllamaService } from "@ehildt/nestjs-ollama/service";
+import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { ChatResponse, Message } from "ollama";
 
-import { OllamaConfigService } from "@/configs/ollama-config.service";
-import { FastifyMultipartDataWithFiltersReq } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+import { OllamaConfigService } from "../configs/ollama-config.service.js";
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
+import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
 @Processor(BULLMQ_QUEUE.IMAGE_OCR)
 export class VisionsOCRProcessor extends WorkerHost {
@@ -15,7 +15,7 @@ export class VisionsOCRProcessor extends WorkerHost {
     private readonly io: SocketIOService,
     private readonly ollamaService: OllamaService,
     private readonly ollamaConfigService: OllamaConfigService,
-    private readonly bullMQLogger: BullMQPinoLoggerService,
+    private readonly bullMQLogger: BullMQLoggerService,
   ) {
     super();
   }
@@ -39,7 +39,6 @@ export class VisionsOCRProcessor extends WorkerHost {
     const filenames = meta.map(({ name }) => name).join(",");
     await this.ollamaService.chat(
       {
-        // outsource config to the config manager
         messages: [
           {
             role: "system",
@@ -51,7 +50,7 @@ export class VisionsOCRProcessor extends WorkerHost {
               "Output plain text only.",
             ].join("\n"),
           },
-          ...filters.prompt,
+          ...(filters.prompt ?? []),
           {
             role: "user",
             images: buffers,
@@ -62,11 +61,11 @@ export class VisionsOCRProcessor extends WorkerHost {
           num_ctx: filters.numCtx,
         },
         stream: filters.stream,
-        model: filters.vLLM,
+        model: filters.vLLM!,
         keep_alive: this.ollamaConfigService.config.keepAlive,
       },
       async (cres: ChatResponse) => {
-        this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.roomId, {
+        this.io.emitTo("vision", filters.roomId ?? filters.vLLM!, {
           meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
           task: filters.task,
           ...cres,

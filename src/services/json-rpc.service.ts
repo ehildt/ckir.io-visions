@@ -1,18 +1,18 @@
-import { hashPayload } from "@ehildt/ckir-helpers";
+import { hashPayload } from "@ehildt/ckir-helpers/hash-payload";
 import type { MultipartFile } from "@fastify/multipart";
 import { BadRequestException, Injectable } from "@nestjs/common";
-
-import { AnalyzeImageService } from "./analyze-image.service";
 
 import {
   FastifyMultipartDataWithFiltersReq,
   FastifyMultipartMeta,
-} from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+} from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 import {
   McpGenericType,
   SupportedToolFunction,
-} from "@/dtos/json-rpc/mcp.model";
-import { JSON_RPC_TOOLS_LIST } from "@/tools/tools.constants";
+} from "../dtos/json-rpc/mcp.model.js";
+import { JSON_RPC_TOOLS_LIST } from "../tools/tools.constants.js";
+
+import { AnalyzeImageService } from "./analyze-image.service.js";
 @Injectable()
 export class JsonRpcService {
   constructor(private readonly analyzeImageService: AnalyzeImageService) {}

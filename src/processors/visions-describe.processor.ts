@@ -1,13 +1,13 @@
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "@ehildt/ckir-bullmq";
-import { BullMQPinoLoggerService } from "@ehildt/ckir-bullmq-logger";
-import { OllamaService } from "@ehildt/ckir-ollama";
-import { SOCKET_IO_EVENT, SocketIOService } from "@ehildt/ckir-socket-io";
+import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger/service";
+import { OllamaService } from "@ehildt/nestjs-ollama/service";
+import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { ChatResponse, Message } from "ollama";
 
-import { OllamaConfigService } from "@/configs/ollama-config.service";
-import { FastifyMultipartDataWithFiltersReq } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+import { OllamaConfigService } from "../configs/ollama-config.service.js";
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
+import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
 @Processor(BULLMQ_QUEUE.IMAGE_DESCRIBE)
 export class VisionsDescribeProcessor extends WorkerHost {
@@ -15,7 +15,7 @@ export class VisionsDescribeProcessor extends WorkerHost {
     private readonly io: SocketIOService,
     private readonly ollamaService: OllamaService,
     private readonly ollamaConfigService: OllamaConfigService,
-    private readonly bullMQLogger: BullMQPinoLoggerService,
+    private readonly bullMQLogger: BullMQLoggerService,
   ) {
     super();
   }
@@ -57,9 +57,9 @@ export class VisionsDescribeProcessor extends WorkerHost {
                 "No line breaks, newlines, carriage returns, tabs, bullet points, or list formatting.",
                 "Do not summarize or paraphrase the input.",
                 "Prefer answering in the language of the user’s last prompt.",
-              ].join("\\n"),
+              ].join("\n"),
             },
-            ...filters.prompt,
+            ...(filters.prompt ?? []),
             {
               role: "user",
               images: buffers,
@@ -70,18 +70,18 @@ export class VisionsDescribeProcessor extends WorkerHost {
             num_ctx: filters.numCtx,
           },
           stream: filters.stream,
-          model: filters.vLLM,
+          model: filters.vLLM!,
           keep_alive: this.ollamaConfigService.config.keepAlive,
         },
         async (cres: ChatResponse) => {
           if (filters.roomId)
-            this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.roomId, {
+            this.io.emitTo("vision", filters.roomId, {
               meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
               task: filters.task,
               ...cres,
             });
           else
-            this.io.emit(SOCKET_IO_EVENT.VISION, {
+            this.io.emit("vision", {
               meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
               task: filters.task,
               ...cres,
@@ -107,9 +107,9 @@ export class VisionsDescribeProcessor extends WorkerHost {
               "No line breaks, newlines, carriage returns, tabs, bullet points, or list formatting.",
               "Do not summarize or paraphrase the input.",
               "Prefer answering in the language of the user’s last prompt.",
-            ].join("\\n"),
+            ].join("\n"),
           },
-          ...filters.prompt,
+          ...(filters.prompt ?? []),
           {
             role: "user",
             images: buffers,
@@ -120,22 +120,25 @@ export class VisionsDescribeProcessor extends WorkerHost {
           num_ctx: filters.numCtx,
         },
         stream: filters.stream,
-        model: filters.vLLM,
+        model: filters.vLLM!,
         keep_alive: this.ollamaConfigService.config.keepAlive,
       });
 
-      if (filters.roomId)
-        this.io.emitTo(SOCKET_IO_EVENT.VISION, filters.roomId, {
-          meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
-          task: filters.task,
-          ...reply.message,
-        });
-      else
-        this.io.emit(SOCKET_IO_EVENT.VISION, {
-          meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
-          task: filters.task,
-          ...reply.message,
-        });
+      const replyMessage = reply?.message;
+      if (replyMessage) {
+        if (filters.roomId)
+          this.io.emitTo("vision", filters.roomId, {
+            meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
+            task: filters.task,
+            ...replyMessage,
+          });
+        else
+          this.io.emit("vision", {
+            meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
+            task: filters.task,
+            ...replyMessage,
+          });
+      }
     }
   }
 

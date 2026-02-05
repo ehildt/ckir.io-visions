@@ -21,15 +21,16 @@ import {
   STREAM,
   TASK,
   X_VISION_LLM,
-} from "@/decorators/constants";
-import { MultiPartFiles, MultiPartValue } from "@/decorators/visions.decorator";
-import { ApiVision } from "@/decorators/visions.openapi";
-import { VisionTask } from "@/dtos/classic/get-fastify-multipart-data-req.dto";
-import { Prompt } from "@/dtos/prompt.dto";
-import { ParsePromptPipe } from "@/pipes/parse-prompt.pipe";
-import { AnalyzeImageService } from "@/services/analyze-image.service";
-
-const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
+} from "../decorators/constants.js";
+import {
+  MultiPartFiles,
+  MultiPartValue,
+} from "../decorators/visions.decorator.js";
+import { ApiVision } from "../decorators/visions.openapi.js";
+import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
+import { Prompt } from "../dtos/prompt.dto.js";
+import { ParsePromptPipe } from "../pipes/parse-prompt.pipe.js";
+import { AnalyzeImageService } from "../services/analyze-image.service.js";
 
 @ApiTags("Images")
 @Controller("vision")
@@ -49,12 +50,15 @@ export class ClassicController {
     @Query(NUM_CTX, new ParseIntPipe({ optional: true })) numCtx?: number,
     @MultiPartFiles({
       fieldName: IMAGES,
-      allowedMimeTypes: ALLOWED_MIME_TYPES,
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/webp"],
     })
     images?: Array<MultipartFile>,
   ) {
     if (!vLLM) throw new BadRequestException("Missing x-vision-llm header");
-    const results = await this.visionsService.toFilePayloads(batchId, images);
+    const results = await this.visionsService.toFilePayloads(
+      batchId,
+      images ?? [],
+    );
 
     void this.visionsService.emit({
       buffers: results.map((r) => r.buffer).filter(Boolean),

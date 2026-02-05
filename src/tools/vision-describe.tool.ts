@@ -1,5 +1,5 @@
-import { IMAGES, PROMPT, TASK } from "@/decorators/constants";
-import { SupportedToolFunction } from "@/dtos/json-rpc/mcp.model";
+import { IMAGES, PROMPT, TASK } from "../decorators/constants.js";
+import { SupportedToolFunction } from "../dtos/json-rpc/mcp.model.js";
 
 export const VISIONS_ANALYZE = {
   name: "visions.analyze" satisfies SupportedToolFunction,

@@ -4,9 +4,9 @@ import { IsString } from "class-validator";
 export class Prompt {
   @ApiProperty({ example: "user" })
   @IsString()
-  role: string;
+  role!: string;
 
   @ApiProperty({ example: "Describe this image in exhaustive visual detail." })
   @IsString()
-  content: string;
+  content!: string;
 }

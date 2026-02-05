@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from "class-validator";
 
-import { SupportedToolFunction, SupportedToolMethod } from "./mcp.model";
+import { SupportedToolFunction, SupportedToolMethod } from "./mcp.model.js";
 
 export class McpToolsListReq_Params {
   @IsArray()
@@ -28,19 +28,19 @@ export class McpToolsListReq_Params {
 export class McpToolsListReq {
   @ApiProperty({ example: 2 })
   @IsNumber()
-  id: number;
+  id!: number;
 
   @ApiProperty({ example: "2.0" })
   @IsIn(["2.0"])
-  jsonrpc: "2.0";
+  jsonrpc!: "2.0";
 
   @ApiProperty({ example: "tools/list" satisfies SupportedToolMethod })
   @IsString()
-  method: SupportedToolMethod;
+  method!: SupportedToolMethod;
 
   @IsObject()
   @ValidateNested()
   @Type(() => McpToolsListReq_Params)
   @ApiProperty({ type: McpToolsListReq_Params })
-  params: McpToolsListReq_Params;
+  params!: McpToolsListReq_Params;
 }

@@ -16,11 +16,6 @@ FROM base AS builder
 COPY package.json tsconfig*.json shims.d.ts ./
 COPY src/ ./src/
 
-RUN  \
-  echo "@ehildt:registry=https://npm.pkg.github.com/" > /app/.npmrc &&  \
-  echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN_PACKAGES}" >> /app/.npmrc \
-  --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
-
 # Target: temporary (entrypoint for prepare-dev)
 FROM builder AS builddev
 RUN pnpm run build

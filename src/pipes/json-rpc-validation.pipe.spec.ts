@@ -1,6 +1,6 @@
-import { JsonRpcValidationPipe } from "./json-rpc-validation.pipe";
+import { McpVisionPayloadReq } from "../dtos/json-rpc/mcp-vision-payload-req.dto";
 
-import { McpVisionPayloadReq } from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
+import { JsonRpcValidationPipe } from "./json-rpc-validation.pipe";
 
 describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
   let pipe: JsonRpcValidationPipe<string>;
@@ -37,6 +37,7 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
   });
 
   it("should throw if method is missing", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { method, ...payload } = validBasePayload;
     await expect(pipe.transform(payload)).rejects.toThrow(
       "Missing method field",

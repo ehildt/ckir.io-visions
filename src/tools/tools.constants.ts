@@ -1,4 +1,4 @@
-import { VISIONS_ANALYZE } from "./vision-describe.tool";
+import { VISIONS_ANALYZE } from "./vision-describe.tool.js";
 
 export const JSON_RPC_TOOLS_LIST = {
   id: 1,

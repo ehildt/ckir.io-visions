@@ -9,22 +9,22 @@ import {
   getSchemaPath,
 } from "@nestjs/swagger";
 
-import { X_VISION_LLM } from "./constants";
+import {
+  McpToolsListReq,
+  McpToolsListReq_Params,
+} from "../dtos/json-rpc/mcp-tools-list-req.dto.js";
+import {
+  McpVisionPayloadReq,
+  McpVisionPayloadReq_Params,
+} from "../dtos/json-rpc/mcp-vision-payload-req.dto.js";
+
+import { X_VISION_LLM } from "./constants.js";
 import {
   ApiQueryBatchId,
   ApiQueryNumCtx,
   ApiQueryRoomId,
   ApiQueryStream,
-} from "./visions.openapi";
-
-import {
-  McpToolsListReq,
-  McpToolsListReq_Params,
-} from "@/dtos/json-rpc/mcp-tools-list-req.dto";
-import {
-  McpVisionPayloadReq,
-  McpVisionPayloadReq_Params,
-} from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
+} from "./visions.openapi.js";
 
 const ApiJsonRpcBodySchema = () =>
   ApiBody({

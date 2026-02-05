@@ -1,23 +1,24 @@
 import { Readable } from "node:stream";
 
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "@ehildt/ckir-bullmq";
-import { hashPayload } from "@ehildt/ckir-helpers";
+import { hashPayload } from "@ehildt/ckir-helpers/hash-payload";
 import { MultipartFile } from "@fastify/multipart";
 import { getQueueToken } from "@nestjs/bullmq";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Queue } from "bullmq";
 
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants";
+
 import { AnalyzeImageService } from "./analyze-image.service";
 
-jest.mock("@ehildt/ckir-helpers", () => ({
-  hashPayload: jest.fn(),
+vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
+  hashPayload: vi.fn(),
 }));
 
 describe("AnalyzeImageService", () => {
   let service: AnalyzeImageService;
-  let describeQueue: jest.Mocked<Queue>;
-  let compareQueue: jest.Mocked<Queue>;
-  let ocrQueue: jest.Mocked<Queue>;
+  let describeQueue: vi.Mocked<Queue>;
+  let compareQueue: vi.Mocked<Queue>;
+  let ocrQueue: vi.Mocked<Queue>;
 
   const mockFileStream = () =>
     Object.assign(new Readable({ read() {} }), {
@@ -31,15 +32,15 @@ describe("AnalyzeImageService", () => {
         AnalyzeImageService,
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_DESCRIBE),
-          useValue: { add: jest.fn() },
+          useValue: { add: vi.fn() },
         },
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_COMPARE),
-          useValue: { add: jest.fn() },
+          useValue: { add: vi.fn() },
         },
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_OCR),
-          useValue: { add: jest.fn() },
+          useValue: { add: vi.fn() },
         },
       ],
     }).compile();
@@ -53,7 +54,7 @@ describe("AnalyzeImageService", () => {
   describe("toFilePayloads", () => {
     it("maps MultipartFile to buffer + meta payload", async () => {
       const buffer = Buffer.from("image-bytes");
-      (hashPayload as jest.Mock).mockReturnValue("hash123");
+      (hashPayload as vi.Mock).mockReturnValue("hash123");
 
       const file: MultipartFile = {
         type: "file",
@@ -63,7 +64,7 @@ describe("AnalyzeImageService", () => {
         mimetype: "image/jpeg",
         fields: {},
         file: mockFileStream(),
-        toBuffer: jest.fn().mockResolvedValue(buffer),
+        toBuffer: vi.fn().mockResolvedValue(buffer),
       };
 
       const result = await service.toFilePayloads("batch-1", [file]);

@@ -38,11 +38,15 @@ conv
 conventionalcommits
 cres
 cuda
+datefns
 datetime
 dbaeumer
 dbfilename
 dccs
 DCCS
+depbadge
+Depbadge
+depcheck
 depcruise
 depcruiserrc
 docgen
@@ -56,6 +60,7 @@ ehildt
 embeddinggemma
 eqalpha
 errorlens
+esnext
 euclid
 everysec
 fastify
@@ -76,9 +81,11 @@ Identificator
 initdb
 INITDB
 Iobroker
+ioredis
 ismaster
 jackspeak
 jinja
+jiti
 kafdrop
 kafkajs
 keepalive
@@ -106,6 +113,7 @@ metatype
 mhutchie
 mikestead
 ministral
+mockedhash
 mongodb
 mongosh
 mosquitto
@@ -166,6 +174,7 @@ sonarjs
 sopts
 spdx
 sropts
+stefanzweifel
 supertest
 tailwindcss
 tanstack

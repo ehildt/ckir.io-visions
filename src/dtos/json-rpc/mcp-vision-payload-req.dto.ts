@@ -10,14 +10,14 @@ import {
   ValidateNested,
 } from "class-validator";
 
-import { VisionTask } from "../classic/get-fastify-multipart-data-req.dto";
-import { Prompt } from "../prompt.dto";
+import { VisionTask } from "../classic/get-fastify-multipart-data-req.dto.js";
+import { Prompt } from "../prompt.dto.js";
 
 import {
   McpGenericType,
   SupportedToolFunction,
   SupportedToolMethod,
-} from "./mcp.model";
+} from "./mcp.model.js";
 
 class JsonRpcVisionPayloadReq_Params_Arguments {
   constructor(obj?: JsonRpcVisionPayloadReq_Params_Arguments) {
@@ -51,7 +51,7 @@ export class McpVisionPayloadReq_Params {
     example: "visions.analyze" satisfies SupportedToolFunction,
     enum: ["visions.analyze"] satisfies Array<SupportedToolFunction>,
   })
-  function: SupportedToolFunction;
+  function!: SupportedToolFunction;
 
   @ApiProperty({
     type: JsonRpcVisionPayloadReq_Params_Arguments,
@@ -60,24 +60,24 @@ export class McpVisionPayloadReq_Params {
   @IsObject()
   @Type(() => JsonRpcVisionPayloadReq_Params_Arguments)
   @ValidateNested()
-  arguments: JsonRpcVisionPayloadReq_Params_Arguments;
+  arguments!: JsonRpcVisionPayloadReq_Params_Arguments;
 }
 
 export class McpVisionPayloadReq implements McpGenericType {
   @ApiProperty({ example: 2 })
   @IsNumber()
-  id: number;
+  id!: number;
 
   @ApiProperty({ example: "2.0" })
   @IsIn(["2.0"])
-  jsonrpc: "2.0";
+  jsonrpc!: "2.0";
 
   @ApiProperty({ example: "tools/call" satisfies SupportedToolMethod })
   @IsString()
-  method: SupportedToolMethod;
+  method!: SupportedToolMethod;
 
   @ApiProperty({ type: McpVisionPayloadReq_Params })
   @ValidateNested()
   @Type(() => McpVisionPayloadReq_Params)
-  params: McpVisionPayloadReq_Params;
+  params!: McpVisionPayloadReq_Params;
 }

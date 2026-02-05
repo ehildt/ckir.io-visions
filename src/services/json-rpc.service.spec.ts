@@ -1,12 +1,14 @@
 import { BadRequestException } from "@nestjs/common";
 
+// ! there shouldn't be any env in libs
+// it breaks the tests and code
+import { JSON_RPC_TOOLS_LIST } from "../tools/tools.constants";
+
 import { AnalyzeImageService } from "./analyze-image.service";
 import { JsonRpcService } from "./json-rpc.service";
 
-import { JSON_RPC_TOOLS_LIST } from "@/tools/tools.constants";
-
-jest.mock("@ehildt/ckir-helpers", () => ({
-  hashPayload: jest.fn(() => "mockedhash"),
+vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
+  hashPayload: vi.fn(() => "mockedhash"),
 }));
 
 describe("JsonRpcService", () => {
@@ -14,7 +16,7 @@ describe("JsonRpcService", () => {
   let analyzeImageService: AnalyzeImageService;
 
   beforeEach(() => {
-    analyzeImageService = { emit: jest.fn() } as any;
+    analyzeImageService = { emit: vi.fn() } as any;
     service = new JsonRpcService(analyzeImageService);
   });
 
@@ -54,12 +56,12 @@ describe("JsonRpcService", () => {
         {
           filename: "file1.png",
           mimetype: "image/png",
-          toBuffer: jest.fn().mockResolvedValue(Buffer.from("data1")),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from("data1")),
         },
         {
           filename: "file2.jpg",
           mimetype: "image/jpeg",
-          toBuffer: jest.fn().mockResolvedValue(Buffer.from("data2")),
+          toBuffer: vi.fn().mockResolvedValue(Buffer.from("data2")),
         },
       ] as any;
 

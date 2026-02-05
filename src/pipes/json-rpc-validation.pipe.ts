@@ -2,7 +2,7 @@ import { BadRequestException, PipeTransform, Type } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 
-import { McpGenericType } from "@/dtos/json-rpc/mcp.model";
+import { McpGenericType } from "../dtos/json-rpc/mcp.model.js";
 
 export class JsonRpcValidationPipe<T> implements PipeTransform {
   constructor(private readonly funcDtoMap: Map<T, Type>) {}

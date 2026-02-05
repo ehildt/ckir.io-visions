@@ -7,7 +7,7 @@ import {
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 
-import { Prompt } from "@/dtos/prompt.dto";
+import { Prompt } from "../dtos/prompt.dto.js";
 
 type Maybe<T> = T | ReadonlyArray<T> | undefined | null;
 

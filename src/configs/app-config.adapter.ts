@@ -1,28 +1,30 @@
-import { AppConfig, getBooleanEnv, getNumberEnv } from "@ehildt/ckir-helpers";
+import { AppConfig } from "@ehildt/ckir-helpers/bootstrap";
+import { getBooleanEnv } from "@ehildt/ckir-helpers/get-boolean-env";
+import { getNumberEnv } from "@ehildt/ckir-helpers/get-number-env";
 import { LogLevel } from "@nestjs/common";
 
-export function AppConfigAdapter(): AppConfig {
+export function AppConfigAdapter(env = process.env): AppConfig {
   return {
-    address: process.env.ADDRESS,
-    nodeEnv: process.env.NODE_ENV,
-    port: getNumberEnv(process.env.PORT) as number,
-    bodyLimit: getNumberEnv(process.env.BODY_LIMIT) as number,
-    printConfig: getBooleanEnv(process.env.PRINT_CONFIG),
-    enableSwagger: getBooleanEnv(process.env.ENABLE_SWAGGER),
-    logLevel: process.env.LOG_LEVEL.split(",")?.filter(
-      Boolean,
-    ) as Array<LogLevel>,
-    cors: process.env.CORS_ORIGIN
+    address: env.ADDRESS ?? "0.0.0.0",
+    nodeEnv: env.NODE_ENV ?? "development",
+    port: Number(getNumberEnv(env.PORT)),
+    bodyLimit: Number(getNumberEnv(env.BODY_LIMIT)),
+    printConfig: getBooleanEnv(env.PRINT_CONFIG) ?? false,
+    enableSwagger: getBooleanEnv(env.ENABLE_SWAGGER) ?? false,
+    logLevel: (env.LOG_LEVEL?.split(",")?.filter(Boolean) ??
+      []) as Array<LogLevel>,
+    cors: env.CORS_ORIGIN
       ? {
-          origin: process.env.CORS_ORIGIN,
-          methods: process.env.CORS_METHODS,
-          preflightContinue: getBooleanEnv(process.env.CORS_PREFLIGHT_CONTINUE),
-          optionsSuccessStatus: getNumberEnv(
-            process.env.CORS_OPTIONS_SUCCESS_STATUS,
-          ) as number,
-          credentials: getBooleanEnv(process.env.CORS_CREDENTIALS),
+          origin: env.CORS_ORIGIN,
+          methods: env.CORS_METHODS,
+          preflightContinue:
+            getBooleanEnv(env.CORS_PREFLIGHT_CONTINUE) ?? false,
+          optionsSuccessStatus: Number(
+            getNumberEnv(env.CORS_OPTIONS_SUCCESS_STATUS),
+          ),
+          credentials: getBooleanEnv(env.CORS_CREDENTIALS) ?? false,
           allowedHeaders: "Content-Type,Accept,X-Vision-LLM",
         }
-      : null,
+      : undefined,
   };
 }

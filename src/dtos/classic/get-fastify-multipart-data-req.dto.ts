@@ -1,4 +1,4 @@
-import { Prompt } from "../prompt.dto";
+import { Prompt } from "../prompt.dto.js";
 
 export type FastifyMultipartMeta = {
   name: string;

@@ -17,15 +17,15 @@ import {
   ROOM_ID,
   STREAM,
   X_VISION_LLM,
-} from "@/decorators/constants";
+} from "../decorators/constants.js";
 import {
   MultiPartImages,
   MultiPartPayload,
-} from "@/decorators/json-rpc.decorators";
-import { ApiMcpJsonRpc } from "@/decorators/json-rpc.openapi.decorators";
-import { McpGenericType } from "@/dtos/json-rpc/mcp.model";
-import { McpVisionPayloadReq_Params } from "@/dtos/json-rpc/mcp-vision-payload-req.dto";
-import { JsonRpcService } from "@/services/json-rpc.service";
+} from "../decorators/json-rpc.decorators.js";
+import { ApiMcpJsonRpc } from "../decorators/json-rpc.openapi.decorators.js";
+import { McpGenericType } from "../dtos/json-rpc/mcp.model.js";
+import { McpVisionPayloadReq_Params } from "../dtos/json-rpc/mcp-vision-payload-req.dto.js";
+import { JsonRpcService } from "../services/json-rpc.service.js";
 
 @Controller("mcp")
 export class JsonRpcController {
@@ -47,7 +47,7 @@ export class JsonRpcController {
       return this.jsonRpcService.getRequestedTools(req);
 
     if (!vLLM) throw new BadRequestException("Missing x-vision-llm header");
-    if (!images.length) throw new BadRequestException("Missing images");
+    if (!images?.length) throw new BadRequestException("Missing images");
 
     const results = await this.jsonRpcService.toFilePayloads(batchId, images);
 

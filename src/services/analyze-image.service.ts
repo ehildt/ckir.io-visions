@@ -1,14 +1,14 @@
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "@ehildt/ckir-bullmq";
-import { hashPayload } from "@ehildt/ckir-helpers";
+import { hashPayload } from "@ehildt/ckir-helpers/hash-payload";
 import { MultipartFile } from "@fastify/multipart";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable } from "@nestjs/common";
 import { Queue } from "bullmq";
 
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
 import {
   FastifyMultipartDataWithFiltersReq,
   FastifyMultipartMeta,
-} from "@/dtos/classic/get-fastify-multipart-data-req.dto";
+} from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
 @Injectable()
 export class AnalyzeImageService {

@@ -1,30 +1,15 @@
-import {
-  BullMQArgsAdapter,
-  BullMQArgsSchema,
-  BullMQConfigAdapter,
-  BullMQConfigSchema,
-} from "@ehildt/ckir-bullmq";
-import {
-  BullMQPinoAdapter,
-  BullMQPinoLoggerSchema,
-} from "@ehildt/ckir-bullmq-logger";
-import { CacheReturnValue } from "@ehildt/ckir-config-factory";
+import { BullMQConfig } from "@ehildt/nestjs-bullmq/models";
+import { BullMQConfigSchema } from "@ehildt/nestjs-bullmq/schema";
+import { CacheReturnValue } from "@ehildt/nestjs-config-factory/cache-return-value";
 import { Injectable } from "@nestjs/common";
+
+import { BullMQConfigAdapter } from "./bullmq-config.adapter.js";
 
 @Injectable()
 export class BullMQConfigService {
-  @CacheReturnValue(BullMQArgsSchema)
-  get bullMQArgs() {
-    return BullMQArgsAdapter();
-  }
-
   @CacheReturnValue(BullMQConfigSchema)
-  get bullMQConfig() {
+  get config(): BullMQConfig {
+    console.log("[TESTING] CacheReturnValue in BullMQConfigAdapter");
     return BullMQConfigAdapter();
-  }
-
-  @CacheReturnValue(BullMQPinoLoggerSchema)
-  get pinoConfig() {
-    return BullMQPinoAdapter();
   }
 }

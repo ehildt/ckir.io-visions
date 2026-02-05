@@ -1,11 +1,14 @@
-import { CacheReturnValue } from "@ehildt/ckir-config-factory";
-import { SocketIOAdapter, SocketIOConfigSchema } from "@ehildt/ckir-socket-io";
+import { CacheReturnValue } from "@ehildt/nestjs-config-factory/cache-return-value";
+import { SocketIOConfigSchema } from "@ehildt/nestjs-socket.io";
+import { SocketIOServerConfig } from "@ehildt/nestjs-socket.io";
 import { Injectable } from "@nestjs/common";
+
+import { SocketIOConfigAdapter } from "./socket-io-config.adapter.js";
 
 @Injectable()
 export class SocketIOConfigService {
   @CacheReturnValue(SocketIOConfigSchema)
-  get config() {
-    return SocketIOAdapter("vision");
+  get config(): SocketIOServerConfig {
+    return SocketIOConfigAdapter();
   }
 }

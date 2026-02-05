@@ -1,35 +1,25 @@
-process.env.ADDRESS = "127.0.0.1";
-process.env.NODE_ENV = "development";
-process.env.PORT = "3000";
-process.env.BODY_LIMIT = "1024";
-process.env.LOG_LEVEL = "warn";
-process.env.PRINT_CONFIG = "true";
-process.env.ENABLE_SWAGGER = "false";
-process.env.CORS_ORIGIN = "https://example.com";
-process.env.CORS_METHODS = "GET,POST";
-process.env.CORS_PREFLIGHT_CONTINUE = "true";
-process.env.CORS_OPTIONS_SUCCESS_STATUS = "204";
-process.env.CORS_CREDENTIALS = "true";
-process.env.CORS_ALLOWED_HEADERS = "Authorization";
-
-import { AppConfigSchema } from "@ehildt/ckir-helpers";
+import { AppConfigSchema } from "@ehildt/ckir-helpers/bootstrap";
 
 import { AppConfigAdapter } from "./app-config.adapter";
 
 describe("AppConfigAdapter", () => {
-  const originalEnv = process.env;
+  it("returns expected config from env object", () => {
+    const config = AppConfigAdapter({
+      ADDRESS: "127.0.0.1",
+      NODE_ENV: "development",
+      PORT: "3000",
+      BODY_LIMIT: "1024",
+      LOG_LEVEL: "warn",
+      PRINT_CONFIG: "true",
+      ENABLE_SWAGGER: "false",
+      CORS_ORIGIN: "https://example.com",
+      CORS_METHODS: "GET,POST",
+      CORS_PREFLIGHT_CONTINUE: "true",
+      CORS_OPTIONS_SUCCESS_STATUS: "204",
+      CORS_CREDENTIALS: "true",
+      CORS_ALLOWED_HEADERS: "Authorization",
+    });
 
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
-  });
-
-  afterAll(() => {
-    process.env = originalEnv;
-  });
-
-  it("returns expected config from environment variables", () => {
-    const config = AppConfigAdapter();
     expect(config).toEqual({
       address: "127.0.0.1",
       nodeEnv: "development",

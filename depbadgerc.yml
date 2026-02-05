@@ -1,0 +1,214 @@
+integrity: 8aeee5b8b2ea769507e266fdb701ea5bfe44e19433c0c62107407a91695badf7
+target: README.md
+manifest: package.json
+
+dependenciesLayout: &DEPENDENCIES_LAYOUT
+  position: center
+  showHeader: false
+
+devDependenciesLayout: &DEV_DEPENDENCIES_LAYOUT
+  <<: *DEPENDENCIES_LAYOUT
+  position: left
+  showHeader: false
+  header: my-new-header-name
+
+statusBadgesLayout: &STATUS_BADGES_LAYOUT
+  position: center
+  showHeader: true
+
+dependenciesStyle: &DEPENDENCIES_STYLE
+  labelColor: '#333'
+  isError: false
+  namedLogo: npm
+  logoSvg: ''
+  logoWidth: 40
+  style: for-the-badge
+  cacheSeconds: 3600
+  link: https://www.npmjs.com/package/example_package
+
+devDependenciesStyle: &DEV_DEPENDENCIES_STYLE
+  <<: *DEPENDENCIES_STYLE
+  style: flat-square
+
+statusBadgesStyle: &STATUS_BADGES_STYLE   
+  labelColor: '#333'
+  isError: false
+  namedLogo: 'npm'
+  logoSvg: ''
+  logoWidth: 40
+  style: for-the-badge
+  cacheSeconds: 3600
+
+dependencies:
+  layout:
+    <<: *DEPENDENCIES_LAYOUT
+  badgeStyle: *DEPENDENCIES_STYLE
+  items:
+    - name: "@ehildt/ckir-bullmq"
+      namedLogo: npm
+    - name: "@ehildt/ckir-bullmq-logger"
+      namedLogo: npm
+    - name: "@ehildt/ckir-config-factory"
+      namedLogo: npm
+    - name: "@ehildt/ckir-helpers"
+      namedLogo: npm
+    - name: "@ehildt/ckir-ollama"
+      namedLogo: npm
+    - name: "@ehildt/ckir-qdrant"
+      namedLogo: npm
+    - name: "@ehildt/ckir-socket-io"
+      namedLogo: npm
+    - name: "@fastify/compress"
+      namedLogo: fastify
+    - name: "@fastify/multipart"
+      namedLogo: fastify
+    - name: "@fastify/static"
+      namedLogo: fastify
+    - name: "@nestjs/bullmq"
+      namedLogo: nestjs
+    - name: "@nestjs/common"
+      namedLogo: nestjs
+    - name: "@nestjs/core"
+      namedLogo: nestjs
+    - name: "@nestjs/microservices"
+      namedLogo: nestjs
+    - name: "@nestjs/platform-fastify"
+      namedLogo: nestjs
+    - name: "@nestjs/swagger"
+      namedLogo: nestjs
+    - name: "@qdrant/js-client-rest"
+      namedLogo: qdrant
+    - name: bullmq
+      namedLogo: npm
+    - name: class-transformer
+      namedLogo: npm
+    - name: class-validator
+      namedLogo: npm
+    - name: date-fns
+      namedLogo: datefns
+    - name: fastify
+      namedLogo: fastify
+    - name: ioredis
+      namedLogo: redis
+    - name: joi
+      namedLogo: npm
+    - name: ollama
+      namedLogo: npm
+    - name: pino
+      namedLogo: pino
+    - name: pino-pretty
+      namedLogo: pino
+    - name: reflect-metadata
+      namedLogo: npm
+    - name: rxjs
+      namedLogo: rxjs
+
+devDependencies:
+  layout:
+    <<: *DEV_DEPENDENCIES_LAYOUT
+    position: center
+  badgeStyle: *DEV_DEPENDENCIES_STYLE
+  items:
+    - name: "@changesets/cli"
+      namedLogo: npm
+    - name: "@eslint/js"
+      namedLogo: eslint
+    - name: "@nestjs/cli"
+      namedLogo: nestjs
+    - name: "@nestjs/schematics"
+      namedLogo: nestjs
+    - name: "@nestjs/testing"
+      namedLogo: nestjs
+    - name: "@types/eslint"
+      namedLogo: eslint
+    - name: "@types/jest"
+      namedLogo: jest
+    - name: "@types/node"
+      namedLogo: node
+    - name: "@types/supertest"
+      namedLogo: npm
+    - name: depcheck
+      namedLogo: npm
+    - name: dependency-cruiser
+      namedLogo: npm
+    - name: dotenv-cli
+      namedLogo: npm
+    - name: eslint
+      namedLogo: eslint
+    - name: eslint-config-prettier
+      namedLogo: prettier
+    - name: eslint-plugin-prettier
+      namedLogo: prettier
+    - name: eslint-plugin-simple-import-sort
+      namedLogo: npm
+    - name: eslint-plugin-sonarjs
+      namedLogo: sonar
+    - name: globals
+      namedLogo: npm
+    - name: husky
+      namedLogo: husky
+    - name: jest
+      namedLogo: jest
+    - name: jest-extended
+      namedLogo: jest
+    - name: jest-junit
+      namedLogo: jest
+    - name: jiti
+      namedLogo: npm
+    - name: js-yaml
+      namedLogo: npm
+    - name: lint-staged
+      namedLogo: npm
+    - name: npm-check-updates
+      namedLogo: npm
+    - name: rimraf
+      namedLogo: npm
+    - name: source-map-support
+      namedLogo: npm
+    - name: supertest
+      namedLogo: npm
+    - name: ts-jest
+      namedLogo: jest
+    - name: ts-loader
+      namedLogo: npm
+    - name: ts-node
+      namedLogo: npm
+    - name: ts-unused-exports
+      namedLogo: npm
+    - name: tsconfig-paths
+      namedLogo: npm
+    - name: typescript
+      namedLogo: typescript
+    - name: typescript-eslint
+      namedLogo: eslint
+
+statusBadges:
+  layout:
+    <<: *STATUS_BADGES_LAYOUT
+    header: Highlights
+    showHeader: false
+  badgeStyle: *STATUS_BADGES_STYLE
+  items:
+    - name: github
+      metric: release
+      user: ehildt
+      repo: "ckir.io-visions"
+      branch: main
+      namedLogo: github
+    - name: github
+      metric: stars
+      user: ehildt
+      repo: "ckir.io-visions"
+      branch: main
+      namedLogo: github
+    - name: github
+      metric: license
+      user: ehildt
+      repo: "ckir.io-visions"
+      branch: main
+      namedLogo: github
+    - name: codecov
+      user: ehildt
+      repo: "ckir.io-visions"
+      branch: main
+      flag: c
