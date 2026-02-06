@@ -1,179 +1,130 @@
 #!/usr/bin/env node
 /**
- * badges.js
- * =========
- *
- * Generates Shields-compatible badges for your Node.js project dependencies.
- * Produces:
- *   1. badges.json – JSON file compatible with Shields.io dynamic badges
- *   2. BADGES_README.md – optional README snippet with badges for dependencies and devDependencies
- *
- * Features:
- *   - Supports explicit dependency names via CLI arguments
- *   - Supports `--all` to include all dependencies/devDependencies/peerDependencies
- *   - Reads `.badgesrc.yml` if it exists (takes precedence over --all)
- *   - Auto-generates `.badgesrc.yml` template if missing
- *   - Auto-detects current Git branch (via `git rev-parse`) for badge URLs
- *   - Optional override of branch via `--b <branch>`
- *   - Deterministic color generation per dependency
- *
- * Usage:
- *   # Generate badges for all dependencies, auto-detect branch
- *   node badges.js --all
- *
- *   # Generate badges for specific dependencies
- *   node badges.js bullmq rxjs
- *
- *   # Override branch explicitly
- *   node badges.js --all --b feature/ci-badges
- *
- * Output:
- *   - badges.json: { "<dep>": { label, message, color, schemaVersion } }
- *   - BADGES_README.md: Markdown snippet ready to paste into README
- *
- * Author: Eugen Hildt <eugen.hildt@gmail.com>
- * Project: ckir.io-visions
+ * badges.js – hash-aware badge generator without glob
+ * Stores _hash in .badgesrc.yml, ensures badges.json exists
+ * Supports Shields.io-safe URLs
+ * HSL hue is always non-negative
  */
 
 const fs = require("fs");
-const { execSync } = require("child_process");
 const yaml = require("js-yaml");
+const crypto = require("crypto");
 
-// --- Load package.json ---
+// --- Files ---
+const BADGES_RC = ".badgesrc.yml";
+const BADGES_JSON = "badges.json";
+const BADGES_README = "BADGES_README.md";
+
+// --- Read .badgesrc.yml ---
+if (!fs.existsSync(BADGES_RC)) {
+  console.error(`${BADGES_RC} not found`);
+  process.exit(1);
+}
+
+let rcContent = fs.readFileSync(BADGES_RC, "utf8");
+let rc = yaml.load(rcContent) || {};
+
+// Extract previous hash and remove for hashing
+const previousHash = rc._hash || null;
+delete rc._hash;
+
+// Compute hash of YAML content (without _hash)
+const yamlString = yaml.dump(rc);
+const yamlHash = crypto.createHash("sha256").update(yamlString, "utf8").digest("hex");
+
+// --- Read package.json for versions ---
 const PKG = JSON.parse(fs.readFileSync("package.json", "utf8"));
-
 const ALL_DEPS = {
   ...(PKG.dependencies || {}),
   ...(PKG.devDependencies || {}),
   ...(PKG.peerDependencies || {})
 };
 
-// --- CLI argument parsing ---
-const ARGS = process.argv.slice(2);
+// --- Ensure sections exist ---
+const sections = {
+  dependencies: Array.isArray(rc.dependencies) ? rc.dependencies : [],
+  devDependencies: Array.isArray(rc.devDependencies) ? rc.devDependencies : [],
+  peerDependencies: Array.isArray(rc.peerDependencies) ? rc.peerDependencies : [],
+  internalDependencies: Array.isArray(rc.internalDependencies) ? rc.internalDependencies : []
+};
 
-// Branch detection (auto or override)
-let BRANCH;
-const branchIndex = ARGS.indexOf("--b");
-if (branchIndex !== -1 && ARGS[branchIndex + 1]) {
-  BRANCH = ARGS[branchIndex + 1];
-  ARGS.splice(branchIndex, 2);
-} else {
+// Assign versions for internalDependencies from package.json
+sections.internalDependencies.forEach(dep => {
+  if (!ALL_DEPS[dep]) ALL_DEPS[dep] = "unknown";
+});
+
+// --- Helpers ---
+const colorFromName = name => {
+  let h = 0;
+  for (let i = 0; i < name.length; i++)
+    h = name.charCodeAt(i) + ((h << 5) - h);
+  const hue = ((h % 360) + 360) % 360; // ensure 0 <= hue < 360
+  return `hsl(${hue},70%,45%)`;
+};
+const encodeLabelURL = str => encodeURIComponent(str.replace(/[^a-zA-Z0-9]/g, "_"));
+const encodeMessageURL = str => encodeURIComponent(str.replace(/^\^/, "v"));
+const encodeColor = str => encodeURIComponent(str);
+
+// --- Determine if badges.json needs regeneration ---
+let badges = {};
+let regenerate = previousHash !== yamlHash || !fs.existsSync(BADGES_JSON);
+
+if (!regenerate) {
   try {
-    BRANCH = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf8" }).trim();
-    if (!BRANCH) throw new Error("Empty branch");
+    badges = JSON.parse(fs.readFileSync(BADGES_JSON, "utf8"));
+    console.log("No changes detected; using existing badges.json");
   } catch {
-    console.error("Cannot detect Git branch. Use --b <branch>.");
-    process.exit(1);
+    regenerate = true;
   }
 }
 
-const USE_ALL = ARGS.includes("--all");
-const NAMES = ARGS.filter(a => a !== "--all");
-
-const BADGES_RC = ".badgesrc.yml";
-
-// --- Helpers ---
-/**
- * Generates a deterministic HSL color from a string
- * @param {string} name Dependency name
- * @returns {string} HSL color
- */
-const colorFromName = name => {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return `hsl(${h % 360},70%,45%)`;
-};
-
-/**
- * Ensures that .badgesrc.yml exists. If not, creates a template.
- * @returns {boolean} true if created, false if already exists
- */
-const ensureBadgesRc = () => {
-  if (fs.existsSync(BADGES_RC)) return false;
-  const example = {
-    dependencies: ["bullmq"],
-    devDependencies: ["jest"],
-    peerDependencies: ["react"]
-  };
-  const content = Object.entries(example)
-    .map(([k, arr]) => `${k}:\n${arr.map(dep => `  - ${dep}`).join("\n")}`)
-    .join("\n\n");
-  fs.writeFileSync(BADGES_RC, content);
-  console.log(`Created ${BADGES_RC} (edit it and re-run)`);
-  return true;
-};
-
-/**
- * Reads .badgesrc.yml using js-yaml
- * @returns {object} { dependencies: [], devDependencies: [], peerDependencies: [] }
- */
-const readBadgesRc = () => {
-  if (!fs.existsSync(BADGES_RC)) return {};
-  return yaml.load(fs.readFileSync(BADGES_RC, "utf8")) || {};
-};
-
-// --- Determine targets ---
-let targets = [];
-
-if (NAMES.length) {
-  targets = NAMES;
-} else if (fs.existsSync(BADGES_RC)) {
-  const cfg = readBadgesRc();
-  targets = [
-    ...(cfg.dependencies || []),
-    ...(cfg.devDependencies || []),
-    ...(cfg.peerDependencies || [])
-  ];
-} else if (USE_ALL) {
-  targets = Object.keys(ALL_DEPS);
-} else if (ensureBadgesRc()) {
-  process.exit(0);
-}
-
-if (!targets || !targets.length) {
-  console.error("No dependencies selected. Use --all, .badgesrc.yml, or provide names as arguments.");
-  process.exit(1);
-}
-
 // --- Generate badges.json ---
-const badges = Object.fromEntries(
-  [...new Set(targets)].map(n => {
-    if (!ALL_DEPS[n]) throw new Error(`Dependency not found: ${n}`);
-    return [
-      n,
-      {
+if (regenerate) {
+  const targets = [
+    ...sections.dependencies,
+    ...sections.devDependencies,
+    ...sections.peerDependencies,
+    ...sections.internalDependencies
+  ];
+
+  badges = Object.fromEntries(
+    targets.filter(n => n).map(dep => {
+      const version = ALL_DEPS[dep] || "unknown";
+      return [dep, {
         schemaVersion: 1,
-        label: n,
-        message: ALL_DEPS[n],
-        color: colorFromName(n)
-      }
-    ];
-  })
-);
+        label: dep,
+        message: version,
+        color: colorFromName(dep)
+      }];
+    })
+  );
 
-fs.writeFileSync("badges.json", JSON.stringify(badges, null, 2));
-console.log(`Generated badges.json (${Object.keys(badges).length} badges)`);
+  fs.writeFileSync(BADGES_JSON, JSON.stringify(badges, null, 2));
+  console.log(`Generated badges.json (${targets.length} badges)`);
 
-// --- Generate README snippet ---
-const deps = Object.keys(PKG.dependencies || {});
-const devDeps = Object.keys(PKG.devDependencies || {});
-const peerDeps = Object.keys(PKG.peerDependencies || {});
+  // Update _hash in .badgesrc.yml
+  rc._hash = yamlHash;
+  fs.writeFileSync(BADGES_RC, yaml.dump(rc));
+  console.log(`Updated _hash in ${BADGES_RC}`);
+}
 
-// Helper to construct Shields URL for a dependency
-const urlFor = dep => `https://raw.githubusercontent.com/ehildt/ckir.io-visions/${BRANCH}/badges.json`;
+// --- Generate BADGES_README.md from badges.json ---
+const readmeLines = [];
 
-// Compose README snippet
-const readmeSection = `
-## Dependencies
+for (const [section, deps] of Object.entries(sections)) {
+  if (!deps.length) continue;
+  readmeLines.push(`## ${section[0].toUpperCase() + section.slice(1)}`);
+  deps.forEach(dep => {
+    if (!badges[dep]) {
+      console.warn(`Warning: ${dep} not found in badges.json, skipping`);
+      return;
+    }
+    const { label, message, color } = badges[dep];
+    const url = `https://img.shields.io/badge/${encodeLabelURL(label)}-${encodeMessageURL(message)}-${encodeColor(color)}.svg`;
+    readmeLines.push(`![${label}](${url})`);
+  });
+  readmeLines.push("");
+}
 
-${deps.map(dep => `![${dep}](${urlFor(dep)}&query=$.${encodeURIComponent(dep)})`).join("\n")}
-
-## Dev Dependencies
-
-${devDeps.map(dep => `![${dep}](${urlFor(dep)}&query=$.${encodeURIComponent(dep)})`).join("\n")}
-
-${peerDeps.length ? "## Peer Dependencies\n\n" + peerDeps.map(dep => `![${dep}](${urlFor(dep)}&query=$.${encodeURIComponent(dep)})`).join("\n") : ""}
-`;
-
-fs.writeFileSync("BADGES_README.md", readmeSection.trim());
-console.log("Generated BADGES_README.md for README usage");
+fs.writeFileSync(BADGES_README, readmeLines.join("\n"));
+console.log("Generated BADGES_README.md from badges.json with URL-safe encoding");

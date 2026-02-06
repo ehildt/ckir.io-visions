@@ -1,46 +1,4 @@
 {
-  "@ehildt/ckir-bullmq": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-bullmq",
-    "message": "^0.1.17",
-    "color": "hsl(-206,70%,45%)"
-  },
-  "@ehildt/ckir-bullmq-logger": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-bullmq-logger",
-    "message": "^0.1.14",
-    "color": "hsl(219,70%,45%)"
-  },
-  "@ehildt/ckir-config-factory": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-config-factory",
-    "message": "^0.1.9",
-    "color": "hsl(-278,70%,45%)"
-  },
-  "@ehildt/ckir-helpers": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-helpers",
-    "message": "^0.1.22",
-    "color": "hsl(346,70%,45%)"
-  },
-  "@ehildt/ckir-ollama": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-ollama",
-    "message": "^0.1.12",
-    "color": "hsl(-199,70%,45%)"
-  },
-  "@ehildt/ckir-qdrant": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-qdrant",
-    "message": "^0.1.8",
-    "color": "hsl(-269,70%,45%)"
-  },
-  "@ehildt/ckir-socket-io": {
-    "schemaVersion": 1,
-    "label": "@ehildt/ckir-socket-io",
-    "message": "^0.1.17",
-    "color": "hsl(325,70%,45%)"
-  },
   "@fastify/compress": {
     "schemaVersion": 1,
     "label": "@fastify/compress",
@@ -51,7 +9,7 @@
     "schemaVersion": 1,
     "label": "@fastify/multipart",
     "message": "^9.4.0",
-    "color": "hsl(-203,70%,45%)"
+    "color": "hsl(157,70%,45%)"
   },
   "@fastify/static": {
     "schemaVersion": 1,
@@ -63,19 +21,19 @@
     "schemaVersion": 1,
     "label": "@nestjs/bullmq",
     "message": "^11.0.4",
-    "color": "hsl(-267,70%,45%)"
+    "color": "hsl(93,70%,45%)"
   },
   "@nestjs/common": {
     "schemaVersion": 1,
     "label": "@nestjs/common",
     "message": "^11.1.13",
-    "color": "hsl(-271,70%,45%)"
+    "color": "hsl(89,70%,45%)"
   },
   "@nestjs/core": {
     "schemaVersion": 1,
     "label": "@nestjs/core",
     "message": "^11.1.13",
-    "color": "hsl(-259,70%,45%)"
+    "color": "hsl(101,70%,45%)"
   },
   "@nestjs/microservices": {
     "schemaVersion": 1,
@@ -87,7 +45,7 @@
     "schemaVersion": 1,
     "label": "@nestjs/platform-fastify",
     "message": "^11.1.13",
-    "color": "hsl(-204,70%,45%)"
+    "color": "hsl(156,70%,45%)"
   },
   "@nestjs/swagger": {
     "schemaVersion": 1,
@@ -99,19 +57,19 @@
     "schemaVersion": 1,
     "label": "@qdrant/js-client-rest",
     "message": "^1.16.2",
-    "color": "hsl(-39,70%,45%)"
+    "color": "hsl(321,70%,45%)"
   },
   "bullmq": {
     "schemaVersion": 1,
     "label": "bullmq",
     "message": "^5.67.3",
-    "color": "hsl(-353,70%,45%)"
+    "color": "hsl(7,70%,45%)"
   },
   "class-transformer": {
     "schemaVersion": 1,
     "label": "class-transformer",
     "message": "^0.5.1",
-    "color": "hsl(-196,70%,45%)"
+    "color": "hsl(164,70%,45%)"
   },
   "class-validator": {
     "schemaVersion": 1,
@@ -123,7 +81,7 @@
     "schemaVersion": 1,
     "label": "date-fns",
     "message": "^4.1.0",
-    "color": "hsl(-116,70%,45%)"
+    "color": "hsl(244,70%,45%)"
   },
   "fastify": {
     "schemaVersion": 1,
@@ -147,7 +105,7 @@
     "schemaVersion": 1,
     "label": "ollama",
     "message": "^0.6.3",
-    "color": "hsl(-346,70%,45%)"
+    "color": "hsl(14,70%,45%)"
   },
   "pino": {
     "schemaVersion": 1,
@@ -177,13 +135,13 @@
     "schemaVersion": 1,
     "label": "@changesets/cli",
     "message": "^2.29.8",
-    "color": "hsl(-278,70%,45%)"
+    "color": "hsl(82,70%,45%)"
   },
   "@eslint/js": {
     "schemaVersion": 1,
     "label": "@eslint/js",
     "message": "^9.39.2",
-    "color": "hsl(-81,70%,45%)"
+    "color": "hsl(279,70%,45%)"
   },
   "@nestjs/cli": {
     "schemaVersion": 1,
@@ -195,7 +153,7 @@
     "schemaVersion": 1,
     "label": "@nestjs/schematics",
     "message": "^11.0.9",
-    "color": "hsl(-28,70%,45%)"
+    "color": "hsl(332,70%,45%)"
   },
   "@nestjs/testing": {
     "schemaVersion": 1,
@@ -207,7 +165,7 @@
     "schemaVersion": 1,
     "label": "@types/eslint",
     "message": "^9.6.1",
-    "color": "hsl(-57,70%,45%)"
+    "color": "hsl(303,70%,45%)"
   },
   "@types/jest": {
     "schemaVersion": 1,
@@ -225,37 +183,37 @@
     "schemaVersion": 1,
     "label": "@types/supertest",
     "message": "^6.0.3",
-    "color": "hsl(-41,70%,45%)"
+    "color": "hsl(319,70%,45%)"
   },
   "depcheck": {
     "schemaVersion": 1,
     "label": "depcheck",
     "message": "^1.4.7",
-    "color": "hsl(-215,70%,45%)"
+    "color": "hsl(145,70%,45%)"
   },
   "dependency-cruiser": {
     "schemaVersion": 1,
     "label": "dependency-cruiser",
     "message": "^17.3.7",
-    "color": "hsl(-5,70%,45%)"
+    "color": "hsl(355,70%,45%)"
   },
   "dotenv-cli": {
     "schemaVersion": 1,
     "label": "dotenv-cli",
     "message": "^11.0.0",
-    "color": "hsl(-25,70%,45%)"
+    "color": "hsl(335,70%,45%)"
   },
   "eslint": {
     "schemaVersion": 1,
     "label": "eslint",
     "message": "^9.39.2",
-    "color": "hsl(-111,70%,45%)"
+    "color": "hsl(249,70%,45%)"
   },
   "eslint-config-prettier": {
     "schemaVersion": 1,
     "label": "eslint-config-prettier",
     "message": "^10.1.8",
-    "color": "hsl(-318,70%,45%)"
+    "color": "hsl(42,70%,45%)"
   },
   "eslint-plugin-prettier": {
     "schemaVersion": 1,
@@ -267,13 +225,13 @@
     "schemaVersion": 1,
     "label": "eslint-plugin-simple-import-sort",
     "message": "^12.1.1",
-    "color": "hsl(-247,70%,45%)"
+    "color": "hsl(113,70%,45%)"
   },
   "eslint-plugin-sonarjs": {
     "schemaVersion": 1,
     "label": "eslint-plugin-sonarjs",
     "message": "^3.0.6",
-    "color": "hsl(-26,70%,45%)"
+    "color": "hsl(334,70%,45%)"
   },
   "globals": {
     "schemaVersion": 1,
@@ -303,7 +261,7 @@
     "schemaVersion": 1,
     "label": "jest-junit",
     "message": "^16.0.0",
-    "color": "hsl(-267,70%,45%)"
+    "color": "hsl(93,70%,45%)"
   },
   "jiti": {
     "schemaVersion": 1,
@@ -321,7 +279,7 @@
     "schemaVersion": 1,
     "label": "lint-staged",
     "message": "^16.2.7",
-    "color": "hsl(-312,70%,45%)"
+    "color": "hsl(48,70%,45%)"
   },
   "npm-check-updates": {
     "schemaVersion": 1,
@@ -333,43 +291,43 @@
     "schemaVersion": 1,
     "label": "rimraf",
     "message": "^6.1.2",
-    "color": "hsl(-215,70%,45%)"
+    "color": "hsl(145,70%,45%)"
   },
   "source-map-support": {
     "schemaVersion": 1,
     "label": "source-map-support",
     "message": "^0.5.21",
-    "color": "hsl(-236,70%,45%)"
+    "color": "hsl(124,70%,45%)"
   },
   "supertest": {
     "schemaVersion": 1,
     "label": "supertest",
     "message": "^7.2.2",
-    "color": "hsl(-43,70%,45%)"
+    "color": "hsl(317,70%,45%)"
   },
   "ts-jest": {
     "schemaVersion": 1,
     "label": "ts-jest",
     "message": "^29.4.6",
-    "color": "hsl(-166,70%,45%)"
+    "color": "hsl(194,70%,45%)"
   },
   "ts-loader": {
     "schemaVersion": 1,
     "label": "ts-loader",
     "message": "^9.5.4",
-    "color": "hsl(-135,70%,45%)"
+    "color": "hsl(225,70%,45%)"
   },
   "ts-node": {
     "schemaVersion": 1,
     "label": "ts-node",
     "message": "^10.9.2",
-    "color": "hsl(-32,70%,45%)"
+    "color": "hsl(328,70%,45%)"
   },
   "ts-unused-exports": {
     "schemaVersion": 1,
     "label": "ts-unused-exports",
     "message": "^11.0.1",
-    "color": "hsl(-98,70%,45%)"
+    "color": "hsl(262,70%,45%)"
   },
   "tsconfig-paths": {
     "schemaVersion": 1,
@@ -381,12 +339,54 @@
     "schemaVersion": 1,
     "label": "typescript",
     "message": "^5.9.3",
-    "color": "hsl(-107,70%,45%)"
+    "color": "hsl(253,70%,45%)"
   },
   "typescript-eslint": {
     "schemaVersion": 1,
     "label": "typescript-eslint",
     "message": "^8.54.0",
     "color": "hsl(345,70%,45%)"
+  },
+  "@ehildt/ckir-bullmq": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-bullmq",
+    "message": "^0.1.17",
+    "color": "hsl(154,70%,45%)"
+  },
+  "@ehildt/ckir-bullmq-logger": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-bullmq-logger",
+    "message": "^0.1.14",
+    "color": "hsl(219,70%,45%)"
+  },
+  "@ehildt/ckir-config-factory": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-config-factory",
+    "message": "^0.1.9",
+    "color": "hsl(82,70%,45%)"
+  },
+  "@ehildt/ckir-helpers": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-helpers",
+    "message": "^0.1.22",
+    "color": "hsl(346,70%,45%)"
+  },
+  "@ehildt/ckir-ollama": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-ollama",
+    "message": "^0.1.12",
+    "color": "hsl(161,70%,45%)"
+  },
+  "@ehildt/ckir-qdrant": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-qdrant",
+    "message": "^0.1.8",
+    "color": "hsl(91,70%,45%)"
+  },
+  "@ehildt/ckir-socket-io": {
+    "schemaVersion": 1,
+    "label": "@ehildt/ckir-socket-io",
+    "message": "^0.1.17",
+    "color": "hsl(325,70%,45%)"
   }
 }
