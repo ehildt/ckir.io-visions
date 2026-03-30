@@ -1,25 +1,5 @@
 <div align="center">
 
-# @CKIR.IO/VISIONS
-
-A NestJS microservice for AI-powered image analysis using Ollama vision models. Supports image description, comparison, and OCR via REST API or MCP (Model Context Protocol) with JSON‑RPC 2.0 transport.
-
-</div>
-
-<br>
-
-<!-- DEPBADGE:START -->
-<div align="center">
-
-![github](https://img.shields.io/github/release/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
-![github](https://img.shields.io/github/stars/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
-![github](https://img.shields.io/github/license/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
-
-</div>
-
-<br>
-
-<div align="center">
 
 [![@ehildt/ckir-helpers](https://img.shields.io/badge/_ehildt_ckir_helpers-v1.3.2-a82947.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=a82947&logoWidth=40&style=flat-square)](https://github.com/ehildt/ckir-helpers)
 [![@fastify/compress](https://img.shields.io/badge/_fastify_compress-v8.3.1-c62478.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=c62478&logoWidth=40&style=flat-square)](https://github.com/fastify/fastify-compress)
@@ -44,13 +24,7 @@ A NestJS microservice for AI-powered image analysis using Ollama vision models. 
 [![reflect-metadata](https://img.shields.io/badge/reflect_metadata-v0.2.2-2489db.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=2489db&logoWidth=40&style=flat-square)](https://github.com/rbuckton/reflect-metadata)
 [![rxjs](https://img.shields.io/badge/rxjs-v7.8.2-256cd0.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=256cd0&logoWidth=40&style=flat-square)](https://github.com/reactivex/rxjs)
 
-</div>
-
-<br>
-
-<div align="center">
-
-
+</div><div align="center">
 
 # DevDependencies
 
@@ -88,13 +62,3 @@ A NestJS microservice for AI-powered image analysis using Ollama vision models. 
 [![vitest](https://img.shields.io/badge/vitest-v4.1.2-80c026.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=80c026&logoWidth=40&style=flat-square)](https://github.com/vitest-dev/vitest)
 
 </div>
-<!-- DEPBADGE:END -->
-
-<br>
-
-<div align="center">
-
-[E-MAIL](mailto:eugen.hildt@gmail.com) &nbsp;—&nbsp; [WIKI](https://github.com/ehildt/ckir.io-visions/wiki) &nbsp;—&nbsp; [ISSUES](https://github.com/ehildt/ckir.io-visions/issues) &nbsp;—&nbsp; [DONATE](https://github.com/sponsors/ehildt)
-
-</div>
-<br>

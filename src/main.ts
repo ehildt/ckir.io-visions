@@ -8,6 +8,7 @@ import {
   SWAGGER_DOCUMENT,
   VALIDATION_PIPE,
 } from "@ehildt/ckir-helpers/bootstrap";
+import { SocketIOModule } from "@ehildt/nestjs-socket.io";
 import compress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
 import { Logger, VersioningType } from "@nestjs/common";
@@ -26,11 +27,14 @@ void (async () => {
   const adapter = new FastifyAdapter({
     bodyLimit: getBodyLimit(process.env.BODY_LIMIT),
   });
+
   const APP = await NestFactory.create<NestFastifyApplication>(
     MainModule,
     adapter,
     logger,
   );
+
+  await SocketIOModule.attach(APP);
   const appConfigService = APP.get(AppConfigService);
   await APP.register(fastifyMultipart as any, { attachFieldsToBody: true });
   await APP.register(compress as any, {
@@ -38,19 +42,23 @@ void (async () => {
     encodings: ["br", "gzip"], // optional: restrict Brotli/gzip
     global: true, // default behavior – compress all
   });
+
   APP.enableCors(appConfigService.config.cors);
   APP.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: "1",
     prefix: "api/v",
   });
+
   APP.useGlobalPipes(VALIDATION_PIPE);
   APP.enableShutdownHooks(["SIGINT", "SIGTERM", "SIGQUIT"]);
+
   SwaggerModule.setup(
     API_DOCS,
     APP,
     SwaggerModule.createDocument(APP, SWAGGER_DOCUMENT),
   );
+
   await APP.listen(
     {
       port: appConfigService.config.port,

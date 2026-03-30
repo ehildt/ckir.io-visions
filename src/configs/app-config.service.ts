@@ -8,7 +8,6 @@ import { AppConfigAdapter } from "./app-config.adapter.js";
 export class AppConfigService {
   @CacheReturnValue(AppConfigSchema)
   get config() {
-    console.log(AppConfigAdapter());
     return AppConfigAdapter();
   }
 }

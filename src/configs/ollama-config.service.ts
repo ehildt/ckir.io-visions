@@ -1,19 +1,34 @@
 import { CacheReturnValue } from "@ehildt/nestjs-config-factory/cache-return-value";
-import { OllamaConfigSchema } from "@ehildt/nestjs-ollama/schema";
+import { OllamaConfigSchema } from "@ehildt/nestjs-ollama";
 import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { Config } from "ollama";
 
-import { OllamaConfigAdapter } from "./ollama-config.adapter.js";
+import {
+  OllamaConfigAdapter,
+  OllamaSystemPrompts,
+} from "./ollama-config.adapter.js";
 
 const extendedSchema = OllamaConfigSchema.concat(
-  Joi.object({ keepAlive: Joi.string().optional() }),
+  Joi.object({
+    keepAlive: Joi.string().optional(),
+    systemPrompts: Joi.object({
+      DESCRIBE: Joi.string().optional(),
+      COMPARE: Joi.string().optional(),
+      OCR: Joi.string().optional(),
+    }).optional(),
+  }),
 );
+
+export type OllamaConfig = Config & {
+  keepAlive: string;
+  systemPrompts: OllamaSystemPrompts;
+};
 
 @Injectable()
 export class OllamaConfigService {
   @CacheReturnValue(extendedSchema)
-  get config(): Config & { keepAlive: string } {
-    return OllamaConfigAdapter();
+  get config(): OllamaConfig {
+    return OllamaConfigAdapter() as OllamaConfig;
   }
 }

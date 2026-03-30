@@ -1,40 +1,33 @@
-integrity: 8aeee5b8b2ea769507e266fdb701ea5bfe44e19433c0c62107407a91695badf7
+integrity: 946961efac03f8cbc354ed20f8cdeca82f15ef30e261096404e30024e07858d0
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
+
 target: README.md
+
 manifest: package.json
+
+output:
+  - markdown
 
 dependenciesLayout: &DEPENDENCIES_LAYOUT
   position: center
   showHeader: false
 
-devDependenciesLayout: &DEV_DEPENDENCIES_LAYOUT
-  <<: *DEPENDENCIES_LAYOUT
-  position: left
-  showHeader: false
-  header: my-new-header-name
-
-statusBadgesLayout: &STATUS_BADGES_LAYOUT
-  position: center
-  showHeader: true
-
 dependenciesStyle: &DEPENDENCIES_STYLE
-  labelColor: '#333'
+  labelColor: "333"
   isError: false
   namedLogo: npm
-  logoSvg: ''
   logoWidth: 40
-  style: for-the-badge
+  style: flat-square
   cacheSeconds: 3600
-  link: https://www.npmjs.com/package/example_package
 
 devDependenciesStyle: &DEV_DEPENDENCIES_STYLE
   <<: *DEPENDENCIES_STYLE
   style: flat-square
 
-statusBadgesStyle: &STATUS_BADGES_STYLE   
-  labelColor: '#333'
+statusBadgesStyle: &STATUS_BADGES_STYLE
+  labelColor: "333"
   isError: false
-  namedLogo: 'npm'
-  logoSvg: ''
+  namedLogo: github
   logoWidth: 40
   style: for-the-badge
   cacheSeconds: 3600
@@ -45,170 +38,158 @@ dependencies:
   badgeStyle: *DEPENDENCIES_STYLE
   items:
     - name: "@ehildt/ckir-bullmq"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-bullmq
     - name: "@ehildt/ckir-bullmq-logger"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-bullmq-logger
     - name: "@ehildt/ckir-config-factory"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-config-factory
     - name: "@ehildt/ckir-helpers"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-helpers
     - name: "@ehildt/ckir-ollama"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-ollama
     - name: "@ehildt/ckir-qdrant"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-qdrant
     - name: "@ehildt/ckir-socket-io"
-      namedLogo: npm
+      link: https://github.com/ehildt/ckir-socket-io
     - name: "@fastify/compress"
-      namedLogo: fastify
+      link: https://github.com/fastify/fastify-compress
     - name: "@fastify/multipart"
-      namedLogo: fastify
+      link: https://github.com/fastify/fastify-multipart
     - name: "@fastify/static"
-      namedLogo: fastify
+      link: https://github.com/fastify/fastify-static
     - name: "@nestjs/bullmq"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/bullmq
     - name: "@nestjs/common"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/core"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/microservices"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/platform-fastify"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/swagger"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@qdrant/js-client-rest"
-      namedLogo: qdrant
+      link: https://github.com/qdrant/qdrant-client
     - name: bullmq
-      namedLogo: npm
+      link: https://github.com/taskforcesh/bullmq
     - name: class-transformer
-      namedLogo: npm
+      link: https://github.com/typestack/class-transformer
     - name: class-validator
-      namedLogo: npm
+      link: https://github.com/typestack/class-validator
     - name: date-fns
-      namedLogo: datefns
+      link: https://github.com/date-fns/date-fns
     - name: fastify
-      namedLogo: fastify
+      link: https://github.com/fastify/fastify
     - name: ioredis
-      namedLogo: redis
+      link: https://github.com/luin/ioredis
     - name: joi
-      namedLogo: npm
+      link: https://github.com/sideway/joi
     - name: ollama
-      namedLogo: npm
+      link: https://github.com/ollama/ollama
     - name: pino
-      namedLogo: pino
+      link: https://github.com/pinojs/pino
     - name: pino-pretty
-      namedLogo: pino
+      link: https://github.com/pinojs/pino-pretty
     - name: reflect-metadata
-      namedLogo: npm
+      link: https://github.com/rbuckton/reflect-metadata
     - name: rxjs
-      namedLogo: rxjs
+      link: https://github.com/reactivex/rxjs
 
 devDependencies:
   layout:
-    <<: *DEV_DEPENDENCIES_LAYOUT
+    <<: *DEPENDENCIES_LAYOUT
+    header: DevDependencies
+    showHeader: true
     position: center
   badgeStyle: *DEV_DEPENDENCIES_STYLE
   items:
     - name: "@changesets/cli"
-      namedLogo: npm
+      link: https://github.com/changesets/changesets
     - name: "@eslint/js"
-      namedLogo: eslint
+      link: https://github.com/eslint/eslint
     - name: "@nestjs/cli"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/schematics"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@nestjs/testing"
-      namedLogo: nestjs
+      link: https://github.com/nestjs/nest
     - name: "@types/eslint"
-      namedLogo: eslint
-    - name: "@types/jest"
-      namedLogo: jest
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: "@types/node"
-      namedLogo: node
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: "@types/supertest"
-      namedLogo: npm
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: depcheck
-      namedLogo: npm
+      link: https://github.com/depcheck/depcheck
     - name: dependency-cruiser
-      namedLogo: npm
+      link: https://github.com/sverweij/dependency-cruiser
     - name: dotenv-cli
-      namedLogo: npm
+      link: https://github.com/entropia/dotenv-cli
     - name: eslint
-      namedLogo: eslint
+      link: https://github.com/eslint/eslint
     - name: eslint-config-prettier
-      namedLogo: prettier
+      link: https://github.com/prettier/eslint-config-prettier
     - name: eslint-plugin-prettier
-      namedLogo: prettier
+      link: https://github.com/prettier/eslint-plugin-prettier
     - name: eslint-plugin-simple-import-sort
-      namedLogo: npm
+      link: https://github.com/lydell/eslint-plugin-simple-import-sort
     - name: eslint-plugin-sonarjs
-      namedLogo: sonar
+      link: https://github.com/SonarSource/eslint-plugin-sonarjs
     - name: globals
-      namedLogo: npm
+      link: https://github.com/sindresorhus/globals
     - name: husky
-      namedLogo: husky
-    - name: jest
-      namedLogo: jest
-    - name: jest-extended
-      namedLogo: jest
-    - name: jest-junit
-      namedLogo: jest
+      link: https://github.com/typicode/husky
     - name: jiti
-      namedLogo: npm
+      link: https://github.com/unjs/jiti
     - name: js-yaml
-      namedLogo: npm
+      link: https://github.com/nodeca/js-yaml
     - name: lint-staged
-      namedLogo: npm
+      link: https://github.com/lint-staged/lint-staged
     - name: npm-check-updates
-      namedLogo: npm
+      link: https://github.com/raineorshine/npm-check-updates
     - name: rimraf
-      namedLogo: npm
+      link: https://github.com/isaacs/rimraf
     - name: source-map-support
-      namedLogo: npm
+      link: https://github.com/evanw/source-map-support
     - name: supertest
-      namedLogo: npm
-    - name: ts-jest
-      namedLogo: jest
+      link: https://github.com/visionmedia/supertest
     - name: ts-loader
-      namedLogo: npm
+      link: https://github.com/TypeStrong/ts-loader
     - name: ts-node
-      namedLogo: npm
+      link: https://github.com/TypeStrong/ts-node
     - name: ts-unused-exports
-      namedLogo: npm
+      link: https://github.com/pinterest/ts-unused-exports
     - name: tsconfig-paths
-      namedLogo: npm
+      link: https://github.com/david-driscoll/tsconfig-paths
     - name: typescript
-      namedLogo: typescript
+      link: https://github.com/Microsoft/TypeScript
     - name: typescript-eslint
-      namedLogo: eslint
+      link: https://github.com/typescript-eslint/typescript-eslint
+    - name: vitest
+      link: https://github.com/vitest-dev/vitest
 
 statusBadges:
   layout:
-    <<: *STATUS_BADGES_LAYOUT
-    header: Highlights
+    position: center
     showHeader: false
   badgeStyle: *STATUS_BADGES_STYLE
   items:
     - name: github
       metric: release
       user: ehildt
-      repo: "ckir.io-visions"
+      repo: ckir.io-visions
       branch: main
       namedLogo: github
     - name: github
       metric: stars
       user: ehildt
-      repo: "ckir.io-visions"
+      repo: ckir.io-visions
       branch: main
       namedLogo: github
     - name: github
       metric: license
       user: ehildt
-      repo: "ckir.io-visions"
+      repo: ckir.io-visions
       branch: main
       namedLogo: github
-    - name: codecov
-      user: ehildt
-      repo: "ckir.io-visions"
-      branch: main
-      flag: c

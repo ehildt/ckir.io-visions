@@ -1,14 +1,14 @@
 dependencies:
-  - '@fastify/compress'
-  - '@fastify/multipart'
-  - '@fastify/static'
-  - '@nestjs/bullmq'
-  - '@nestjs/common'
-  - '@nestjs/core'
-  - '@nestjs/microservices'
-  - '@nestjs/platform-fastify'
-  - '@nestjs/swagger'
-  - '@qdrant/js-client-rest'
+  - "@fastify/compress"
+  - "@fastify/multipart"
+  - "@fastify/static"
+  - "@nestjs/bullmq"
+  - "@nestjs/common"
+  - "@nestjs/core"
+  - "@nestjs/microservices"
+  - "@nestjs/platform-fastify"
+  - "@nestjs/swagger"
+  - "@qdrant/js-client-rest"
   - bullmq
   - class-transformer
   - class-validator
@@ -22,15 +22,15 @@ dependencies:
   - reflect-metadata
   - rxjs
 devDependencies:
-  - '@changesets/cli'
-  - '@eslint/js'
-  - '@nestjs/cli'
-  - '@nestjs/schematics'
-  - '@nestjs/testing'
-  - '@types/eslint'
-  - '@types/jest'
-  - '@types/node'
-  - '@types/supertest'
+  - "@changesets/cli"
+  - "@eslint/js"
+  - "@nestjs/cli"
+  - "@nestjs/schematics"
+  - "@nestjs/testing"
+  - "@types/eslint"
+  - "@types/jest"
+  - "@types/node"
+  - "@types/supertest"
   - depcheck
   - dependency-cruiser
   - dotenv-cli
@@ -60,11 +60,11 @@ devDependencies:
   - typescript-eslint
 peerDependencies: []
 internalDependencies:
-  - '@ehildt/ckir-bullmq'
-  - '@ehildt/ckir-bullmq-logger'
-  - '@ehildt/ckir-config-factory'
-  - '@ehildt/ckir-helpers'
-  - '@ehildt/ckir-ollama'
-  - '@ehildt/ckir-qdrant'
-  - '@ehildt/ckir-socket-io'
+  - "@ehildt/ckir-bullmq"
+  - "@ehildt/ckir-bullmq-logger"
+  - "@ehildt/ckir-config-factory"
+  - "@ehildt/ckir-helpers"
+  - "@ehildt/ckir-ollama"
+  - "@ehildt/ckir-qdrant"
+  - "@ehildt/ckir-socket-io"
 _hash: be12a051ecd9606f4abc3733da93de4c15c5f3f895153437a0477534cb927267

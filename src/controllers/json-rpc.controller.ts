@@ -51,7 +51,7 @@ export class JsonRpcController {
 
     const results = await this.jsonRpcService.toFilePayloads(batchId, images);
 
-    if (req.params.function === "visions.analyze")
+    if (req.params.name === "visions.analyze") {
       return this.jsonRpcService.analyze({
         buffers: results.map((r) => r.buffer).filter(Boolean),
         meta: results.map((r) => r.meta).filter(Boolean),
@@ -65,5 +65,6 @@ export class JsonRpcController {
           task: req.params.arguments.task,
         },
       });
+    }
   }
 }

@@ -1,96 +1,30 @@
-import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger/service";
-import { OllamaService } from "@ehildt/nestjs-ollama/service";
-import { SocketIOService } from "@ehildt/nestjs-socket.io";
-import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Processor } from "@nestjs/bullmq";
 import { Job } from "bullmq";
-import { ChatResponse, Message } from "ollama";
 
-import { OllamaConfigService } from "../configs/ollama-config.service.js";
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
+import { BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
 import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
+import { VisionsProcessor } from "./visions.processor.js";
+
 @Processor(BULLMQ_QUEUE.IMAGE_OCR)
-export class VisionsOCRProcessor extends WorkerHost {
-  constructor(
-    private readonly io: SocketIOService,
-    private readonly ollamaService: OllamaService,
-    private readonly ollamaConfigService: OllamaConfigService,
-    private readonly bullMQLogger: BullMQLoggerService,
-  ) {
-    super();
-  }
-
+export class VisionsOCRProcessor extends VisionsProcessor {
   async process(job: Job<FastifyMultipartDataWithFiltersReq>) {
-    if (job.name !== BULLMQ_JOB.OCR_IMAGE)
-      throw new Error("Unexpected job name");
-    await this.handleVisions(job);
-  }
-
-  private async handleVisions(job: Job<FastifyMultipartDataWithFiltersReq>) {
     const { buffers, meta, filters } = job.data;
-
-    if (!Array.isArray(job.data.meta) || !job.data.meta.length)
-      throw new Error("Missing meta");
-    if (!Array.isArray(buffers) || !buffers.length)
-      throw new Error("Missing buffers");
-    if (buffers.length !== meta.length)
-      throw new Error("buffers/meta length mismatch");
+    this.validateInput(buffers, meta);
 
     const filenames = meta.map(({ name }) => name).join(",");
-    await this.ollamaService.chat(
-      {
-        messages: [
-          {
-            role: "system",
-            content: [
-              "You are an OCR engine.",
-              "Extract all visible text exactly as written,",
-              "preserving case, punctuation, emojis and spacing.",
-              "Do not describe the image or add commentary.",
-              "Output plain text only.",
-            ].join("\n"),
-          },
-          ...(filters.prompt ?? []),
-          {
-            role: "user",
-            images: buffers,
-            content: `Image(s): ${filenames}`,
-          },
-        ] satisfies Array<Message>,
-        options: {
-          num_ctx: filters.numCtx,
-        },
-        stream: filters.stream,
-        model: filters.vLLM!,
-        keep_alive: this.ollamaConfigService.config.keepAlive,
-      },
-      async (cres: ChatResponse) => {
-        this.io.emitTo("vision", filters.roomId ?? filters.vLLM!, {
+    const request = this.buildChatRequest(buffers, filenames, filters, "OCR");
+
+    await this.handleChat(
+      request,
+      filters.stream ?? false,
+      async (response) => {
+        await this.emitToSocket(filters.roomId, {
           meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
           task: filters.task,
-          ...cres,
+          ...response,
         });
       },
     );
-  }
-
-  @OnWorkerEvent("completed")
-  async onCompleted(job: Job) {
-    await this.bullMQLogger.log(job);
-  }
-
-  @OnWorkerEvent("error")
-  async onError(job: Job) {
-    await this.bullMQLogger.log(job);
-  }
-
-  @OnWorkerEvent("active")
-  async onActive(job: Job) {
-    await this.bullMQLogger.log(job);
-  }
-
-  @OnWorkerEvent("failed")
-  async onFailed(job: Job) {
-    await this.bullMQLogger.error(job);
   }
 }

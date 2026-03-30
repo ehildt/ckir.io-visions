@@ -24,7 +24,7 @@ export class JsonRpcValidationPipe<T> implements PipeTransform {
       throw new BadRequestException(`Unsupported method: ${value.method}`);
 
     // Resolve DTO
-    const func = value.params?.function as T;
+    const func = value.params?.name as T;
     const dto = this.funcDtoMap.get(func);
 
     if (!dto) throw new BadRequestException(`Unsupported function: ${func}`);

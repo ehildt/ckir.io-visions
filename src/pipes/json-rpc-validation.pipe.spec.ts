@@ -17,7 +17,7 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     jsonrpc: "2.0",
     method: "tools/call",
     params: {
-      function: "visions.analyze",
+      name: "visions.analyze",
       arguments: {},
     },
   };
@@ -26,7 +26,7 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     const result = await pipe.transform(validBasePayload);
     expect(result).toBeInstanceOf(McpVisionPayloadReq);
     expect(result.id).toBe(1);
-    expect(result.params.function).toBe("visions.analyze");
+    expect(result.params.name).toBe("visions.analyze");
   });
 
   it("should throw if jsonrpc version is invalid", async () => {
@@ -51,10 +51,10 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     );
   });
 
-  it("should throw if function is unsupported", async () => {
+  it("should throw if name is unsupported", async () => {
     const payload = {
       ...validBasePayload,
-      params: { function: "unknown", arguments: {} },
+      params: { name: "unknown", arguments: {} },
     };
     await expect(pipe.transform(payload)).rejects.toThrow(
       "Unsupported function: unknown",
@@ -65,7 +65,7 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     const payload = {
       ...validBasePayload,
       params: {
-        function: "visions.analyze",
+        name: "visions.analyze",
         arguments: { task: 123 }, // invalid, should be string
       },
     };
@@ -76,7 +76,7 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     const payload = {
       ...validBasePayload,
       params: {
-        function: "visions.analyze",
+        name: "visions.analyze",
         arguments: { task: "describe" },
       },
     };
@@ -101,6 +101,39 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
       fields: { payload: { value: JSON.stringify(validBasePayload) } },
     };
     const result = await pipe.transform(payload);
+    expect(result).toBeInstanceOf(McpVisionPayloadReq);
+  });
+
+  it("should handle user payload format with name and arguments", async () => {
+    const payload = {
+      id: 1,
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: {
+        name: "visions.analyze",
+        arguments: {
+          task: "describe",
+          prompt: [{ role: "user", content: "optional prompt" }],
+        },
+      },
+    };
+    const result = await pipe.transform(payload);
+    expect(result.params.name).toBe("visions.analyze");
+    expect(result.params.arguments.task).toBe("describe");
+    expect(result.params.arguments.prompt).toEqual([
+      { role: "user", content: "optional prompt" },
+    ]);
+  });
+
+  it("should unwrap fastify multipart file payload", async () => {
+    const multipartPayload = {
+      type: "field",
+      filename: "payload",
+      encoding: "7bit",
+      mimetype: "application/json",
+      value: JSON.stringify(validBasePayload),
+    };
+    const result = await pipe.transform(multipartPayload);
     expect(result).toBeInstanceOf(McpVisionPayloadReq);
   });
 });

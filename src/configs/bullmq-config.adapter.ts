@@ -1,6 +1,6 @@
 import { getBooleanEnv } from "@ehildt/ckir-helpers/get-boolean-env";
 import { getNumberEnv } from "@ehildt/ckir-helpers/get-number-env";
-import { BullMQConfig } from "@ehildt/nestjs-bullmq/models";
+import { BullMQConfig } from "@ehildt/nestjs-bullmq";
 import type { RedisOptions } from "ioredis";
 
 export function BullMQConfigAdapter(env = process.env): BullMQConfig {

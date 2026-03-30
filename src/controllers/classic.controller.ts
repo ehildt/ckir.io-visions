@@ -35,7 +35,7 @@ import { AnalyzeImageService } from "../services/analyze-image.service.js";
 @ApiTags("Images")
 @Controller("vision")
 export class ClassicController {
-  constructor(private readonly visionsService: AnalyzeImageService) {}
+  constructor(private readonly analyzeImageService: AnalyzeImageService) {}
 
   @Post()
   @ApiVision()
@@ -55,12 +55,12 @@ export class ClassicController {
     images?: Array<MultipartFile>,
   ) {
     if (!vLLM) throw new BadRequestException("Missing x-vision-llm header");
-    const results = await this.visionsService.toFilePayloads(
+    const results = await this.analyzeImageService.toFilePayloads(
       batchId,
       images ?? [],
     );
 
-    void this.visionsService.emit({
+    void this.analyzeImageService.emit({
       buffers: results.map((r) => r.buffer).filter(Boolean),
       meta: results.map((r) => r.meta).filter(Boolean),
       filters: {

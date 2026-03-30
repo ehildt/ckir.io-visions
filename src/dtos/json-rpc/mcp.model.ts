@@ -5,11 +5,11 @@ export type SupportedToolFunction = "visions.analyze";
 export type McpGenericType<
   T extends {
     requestedTools?: any;
-    function?: SupportedToolFunction;
+    name?: SupportedToolFunction;
   } = {
     arguments: any;
     requestedTools?: any;
-    function: SupportedToolFunction;
+    name?: SupportedToolFunction;
   },
 > = {
   id: number;

@@ -31,6 +31,8 @@ class JsonRpcVisionPayloadReq_Params_Arguments {
   @ApiPropertyOptional({
     type: Prompt,
     isArray: true,
+    description:
+      "Optional textual instruction to guide the selected vision task",
   })
   prompt?: Array<Prompt>;
 
@@ -51,7 +53,7 @@ export class McpVisionPayloadReq_Params {
     example: "visions.analyze" satisfies SupportedToolFunction,
     enum: ["visions.analyze"] satisfies Array<SupportedToolFunction>,
   })
-  function!: SupportedToolFunction;
+  name?: SupportedToolFunction;
 
   @ApiProperty({
     type: JsonRpcVisionPayloadReq_Params_Arguments,

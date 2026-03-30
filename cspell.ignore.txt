@@ -1,4 +1,5 @@
 acap
+acfg
 adpyke
 aiplorer
 aisync
@@ -67,6 +68,7 @@ fastify
 fieldname
 fieldtypes
 fontawesome
+FSIO
 genpose
 gitconfiglocal
 github
@@ -133,6 +135,7 @@ nomic
 nrwl
 nvidia
 obsidiandynamics
+ocfg
 ocrs
 oderwat
 ollama
