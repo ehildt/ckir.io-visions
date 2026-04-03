@@ -136,4 +136,35 @@ describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
     const result = await pipe.transform(multipartPayload);
     expect(result).toBeInstanceOf(McpVisionPayloadReq);
   });
+
+  it("should throw if JSON string is invalid", async () => {
+    const payload = "not valid json";
+    await expect(pipe.transform(payload)).rejects.toThrow(
+      "Invalid JSON payload",
+    );
+  });
+
+  it("should throw if payload is not an object", async () => {
+    const payload = 123;
+    await expect(pipe.transform(payload)).rejects.toThrow(
+      "Invalid request payload",
+    );
+  });
+
+  it("should throw if payload is null", async () => {
+    const payload = null;
+    await expect(pipe.transform(payload)).rejects.toThrow(
+      "Invalid request payload",
+    );
+  });
+
+  it("should pass through tools/list method", async () => {
+    const payload = {
+      id: 1,
+      jsonrpc: "2.0",
+      method: "tools/list",
+    };
+    const result = await pipe.transform(payload);
+    expect(result.method).toBe("tools/list");
+  });
 });

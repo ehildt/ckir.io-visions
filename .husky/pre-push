@@ -1,0 +1,23 @@
+#!/bin/sh
+. "$(dirname "$0")/_/prepare.sh"
+
+check_working_directory
+check_branch_identifier
+
+# makes sure all dependencies are up to date
+info 'pnpm ncu:validate' && pnpm ncu:validate
+
+info 'pnpm lint' && pnpm lint
+
+# dry run tests
+info 'pnpm test --silent' && pnpm test --silent
+info 'pnpm test:cov' && pnpm test:cov
+
+# no unused exports
+info 'pnpm lint:unused' && pnpm lint:unused
+
+# add known orphans to .depcruiserrc.json
+info 'pnpm depcruise' && pnpm depcruise
+
+# whitelist by adding the package to depcheckrc.yml
+info 'pnpm depcheck' && pnpm depcheck

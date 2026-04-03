@@ -26,17 +26,21 @@ describe("SocketIOConfigAdapter", () => {
         cors: {
           origin: "*",
           credentials: true,
-          methods: "GET,POST",
+          methods: ["GET", "POST"],
         },
         pingInterval: 25000,
         pingTimeout: 5000,
+        connectTimeout: 45000,
         allowEIO3: false,
       },
     });
   });
 
   it("uses default values when env vars are not provided", () => {
-    const config = SocketIOConfigAdapter({});
+    const config = SocketIOConfigAdapter({
+      SOCKET_IO_EVENT: "vision",
+      SOCKET_IO_PORT: "4005",
+    });
 
     expect(config.event).toBe("vision");
     expect(config.port).toBe(4005);
@@ -47,10 +51,29 @@ describe("SocketIOConfigAdapter", () => {
 
   it("handles missing optional env vars", () => {
     const config = SocketIOConfigAdapter({
+      SOCKET_IO_EVENT: "vision",
       SOCKET_IO_PORT: "3000",
     });
 
     expect(config.port).toBe(3000);
-    expect(config.opts.transports).toBeUndefined();
+    expect(config.opts.transports).toEqual(["websocket", "polling"]);
+  });
+
+  it("uses default values for all optional settings", () => {
+    const config = SocketIOConfigAdapter({
+      SOCKET_IO_EVENT: "vision",
+      SOCKET_IO_PORT: "3000",
+    });
+
+    expect(config.opts.connectTimeout).toBe(45000);
+    expect(config.opts.allowEIO3).toBe(true);
+    expect(config.opts.cors.origin).toBe("*");
+    expect(config.opts.cors.credentials).toBe(false);
+    expect(config.opts.cors.methods).toEqual(["GET", "POST"]);
+  });
+
+  it("handles missing SOCKET_IO_EVENT returns undefined event", () => {
+    const config = SocketIOConfigAdapter({});
+    expect(config.event).toBeUndefined();
   });
 });

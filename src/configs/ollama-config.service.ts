@@ -20,7 +20,7 @@ const extendedSchema = OllamaConfigSchema.concat(
   }),
 );
 
-export type OllamaConfig = Config & {
+type OllamaConfig = Config & {
   keepAlive: string;
   systemPrompts: OllamaSystemPrompts;
 };

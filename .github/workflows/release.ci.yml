@@ -33,7 +33,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: "@ehildt:registry=https://npm.pkg.github.com/"
 
       - uses: actions/cache@v3
         with:
@@ -87,7 +86,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: "@ehildt:registry=https://npm.pkg.github.com/"
 
       - run: pnpm install --frozen-lockfile
 

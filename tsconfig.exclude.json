@@ -6,7 +6,7 @@
     ".storybook",
     "node_modules",
     "src/**/*.stories.?sx",
-    "jest.config.ts",
+    "vitest.config.ts",
     "eslint.config.ts"
   ],
   "extends": "./tsconfig.json"

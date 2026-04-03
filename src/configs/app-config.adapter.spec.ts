@@ -28,6 +28,12 @@ describe("AppConfigAdapter", () => {
       logLevel: ["warn"],
       printConfig: true,
       enableSwagger: false,
+      health: {
+        memoryHeap: 268435456,
+        memoryRSS: 268435456,
+        diskPath: "/",
+        diskThresholdPercent: 0.8,
+      },
       cors: {
         origin: "https://example.com",
         methods: "GET,POST",
@@ -68,5 +74,48 @@ describe("AppConfigSchema", () => {
     expect(
       result.error?.details.some((d) => d.message.includes("printConfig")),
     ).toBe(true);
+  });
+});
+
+describe("AppConfigAdapter", () => {
+  it("uses default values when env vars are not provided", () => {
+    const config = AppConfigAdapter({});
+
+    expect(config.address).toBe("0.0.0.0");
+    expect(config.nodeEnv).toBe("development");
+    expect(config.port).toBe(0);
+    expect(config.bodyLimit).toBe(0);
+    expect(config.printConfig).toBe(false);
+    expect(config.enableSwagger).toBe(false);
+    expect(config.logLevel).toEqual([]);
+    expect(config.cors).toBeUndefined();
+  });
+
+  it("handles missing health env vars with defaults", () => {
+    const config = AppConfigAdapter({});
+
+    expect(config.health.memoryHeap).toBe(268435456);
+    expect(config.health.memoryRSS).toBe(268435456);
+    expect(config.health.diskPath).toBe("/");
+    expect(config.health.diskThresholdPercent).toBe(0.8);
+  });
+
+  it("applies cors config when CORS_ORIGIN is provided", () => {
+    const config = AppConfigAdapter({
+      CORS_ORIGIN: "https://example.com",
+    });
+
+    expect(config.cors).toBeDefined();
+    expect(config.cors?.origin).toBe("https://example.com");
+  });
+
+  it("applies cors defaults when only CORS_ORIGIN is set", () => {
+    const config = AppConfigAdapter({
+      CORS_ORIGIN: "https://example.com",
+    });
+
+    expect(config.cors?.preflightContinue).toBe(false);
+    expect(config.cors?.optionsSuccessStatus).toBe(0);
+    expect(config.cors?.credentials).toBe(false);
   });
 });
