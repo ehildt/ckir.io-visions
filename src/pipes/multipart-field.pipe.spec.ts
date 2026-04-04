@@ -1,6 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 
-import { MultipartFieldPipe } from "./multipart-field.pipe";
+import { MultipartFieldPipe } from "./multipart-field.pipe.js";
 
 describe("MultipartFieldPipe", () => {
   let pipe: MultipartFieldPipe;
@@ -40,19 +40,22 @@ describe("MultipartFieldPipe", () => {
 
     it("throws BadRequestException when value is null", () => {
       expect(() =>
-        pipe.transform(null, { type: "body", data: "testField" } as any),
+        pipe.transform(null as any, { type: "body", data: "testField" } as any),
       ).toThrow(BadRequestException);
     });
 
     it("throws BadRequestException when value is undefined", () => {
       expect(() =>
-        pipe.transform(undefined, { type: "body", data: "testField" } as any),
+        pipe.transform(
+          undefined as any,
+          { type: "body", data: "testField" } as any,
+        ),
       ).toThrow(BadRequestException);
     });
 
     it("throws BadRequestException with field name in error message", () => {
       expect(() =>
-        pipe.transform(null, { type: "body", data: "myField" } as any),
+        pipe.transform(null as any, { type: "body", data: "myField" } as any),
       ).toThrow("Invalid multipart field myField");
     });
   });

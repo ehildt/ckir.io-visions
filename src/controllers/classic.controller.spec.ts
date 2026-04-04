@@ -3,9 +3,9 @@ import { Readable } from "node:stream";
 import { MultipartFile } from "@fastify/multipart";
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { AnalyzeImageService } from "../services/analyze-image.service";
+import { AnalyzeImageService } from "../services/analyze-image.service.js";
 
-import { ClassicController } from "./classic.controller";
+import { ClassicController } from "./classic.controller.js";
 
 vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
   hashPayload: vi.fn(() => "hash123"),
@@ -64,6 +64,7 @@ describe("ClassicController", () => {
           undefined as any,
           stream,
           task,
+          undefined,
           undefined,
           undefined,
           images,

@@ -2,10 +2,10 @@ import { BadRequestException } from "@nestjs/common";
 
 // ! there shouldn't be any env in libs
 // it breaks the tests and code
-import { JSON_RPC_TOOLS_LIST } from "../tools/tools.constants";
+import { JSON_RPC_TOOLS_LIST } from "../tools/tools.constants.js";
 
-import { AnalyzeImageService } from "./analyze-image.service";
-import { JsonRpcService } from "./json-rpc.service";
+import { AnalyzeImageService } from "./analyze-image.service.js";
+import { JsonRpcService } from "./json-rpc.service.js";
 
 vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
   hashPayload: vi.fn(() => "mockedhash"),

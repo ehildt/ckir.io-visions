@@ -1,6 +1,6 @@
-import { McpVisionPayloadReq } from "../dtos/json-rpc/mcp-vision-payload-req.dto";
+import { McpVisionPayloadReq } from "../dtos/json-rpc/mcp-vision-payload-req.dto.js";
 
-import { JsonRpcValidationPipe } from "./json-rpc-validation.pipe";
+import { JsonRpcValidationPipe } from "./json-rpc-validation.pipe.js";
 
 describe("JsonRpcValidationPipe with McpVisionPayloadReq", () => {
   let pipe: JsonRpcValidationPipe<string>;

@@ -22,7 +22,6 @@ services:
       - ./node_modules:/node_modules:ro
     depends_on:
       - keydb
-      - ollama
     env_file:
       - ./.env
     environment:
@@ -30,10 +29,9 @@ services:
       - PRINT_CONFIG=true
       - ENABLE_SWAGGER=true
     ports:
-      - 3005:3005
-      - 4005:4005
+      - 3000:3000
     networks:
-      - ckir-network
+      - ckir.io-visions
 
   ollama:
     image: ollama/ollama:latest
@@ -41,14 +39,13 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama_data:/root/.ollama
-    # Uncomment for GPU support:
-    # gpus: all
+      - ollama:/root/.ollama
+    gpus: all
     environment:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
     networks:
-      - ckir-network
+      - ckir.io-visions
 
   keydb:
     image: eqalpha/keydb
@@ -58,19 +55,18 @@ services:
       - 6379:6379
     volumes:
       - keydb_data:/data
-      # Uncomment to use custom config:
-      # - ./keydb.conf:/usr/local/etc/keydb/keydb.conf
-    # command: keydb-server /usr/local/etc/keydb/keydb.conf
+      - ./keydb.conf:/usr/local/etc/keydb/keydb.conf
+    command: keydb-server /usr/local/etc/keydb/keydb.conf
     networks:
-      - ckir-network
+      - ckir.io-visions
 
 volumes:
-  ollama_data:
+  ollama:
   keydb_data:
 
 networks:
-  ckir-network:
-    name: ckir-network
+  ckir.io-visions:
+    name: ckir.io-visions
     driver: bridge
 ```
 
@@ -78,7 +74,7 @@ networks:
 
 | Service | Port | Description |
 |---------|------|-------------|
-| `visions` | 3005 (HTTP), 4005 (Socket.IO) | Main application |
+| `visions` | 3000 (HTTP/Socket.IO) | Main application |
 | `ollama` | 11434 | Ollama AI server |
 | `keydb` | 6379 | KeyDB (Redis-compatible) for job queue |
 

@@ -1,10 +1,10 @@
-import { SocketIOConfigAdapter } from "./socket-io-config.adapter";
+import { SocketIOConfigAdapter } from "./socket-io-config.adapter.js";
 
 describe("SocketIOConfigAdapter", () => {
   it("returns expected config from env object", () => {
     const config = SocketIOConfigAdapter({
       SOCKET_IO_EVENT: "vision",
-      SOCKET_IO_PORT: "4005",
+      SOCKET_IO_PORT: "3000",
       SOCKET_IO_MAX_HTTP_BUFFER_SIZE: "262144",
       SOCKET_IO_CLEANUP_EMPTY_CHILD_NAMESPACES: "false",
       SOCKET_IO_TRANSPORTS: "websocket,polling,webtransport",
@@ -18,7 +18,6 @@ describe("SocketIOConfigAdapter", () => {
 
     expect(config).toEqual({
       event: "vision",
-      port: 4005,
       opts: {
         maxHttpBufferSize: 262144,
         cleanupEmptyChildNamespaces: false,
@@ -39,14 +38,13 @@ describe("SocketIOConfigAdapter", () => {
   it("uses default values when env vars are not provided", () => {
     const config = SocketIOConfigAdapter({
       SOCKET_IO_EVENT: "vision",
-      SOCKET_IO_PORT: "4005",
+      SOCKET_IO_PORT: "3000",
     });
 
     expect(config.event).toBe("vision");
-    expect(config.port).toBe(4005);
-    expect(config.opts.maxHttpBufferSize).toBe(262144);
-    expect(config.opts.pingInterval).toBe(25000);
-    expect(config.opts.pingTimeout).toBe(5000);
+    expect(config.opts!.maxHttpBufferSize).toBe(262144);
+    expect(config.opts!.pingInterval).toBe(25000);
+    expect(config.opts!.pingTimeout).toBe(5000);
   });
 
   it("handles missing optional env vars", () => {
@@ -55,8 +53,7 @@ describe("SocketIOConfigAdapter", () => {
       SOCKET_IO_PORT: "3000",
     });
 
-    expect(config.port).toBe(3000);
-    expect(config.opts.transports).toEqual(["websocket", "polling"]);
+    expect(config.opts!.transports).toEqual(["websocket", "polling"]);
   });
 
   it("uses default values for all optional settings", () => {
@@ -65,11 +62,16 @@ describe("SocketIOConfigAdapter", () => {
       SOCKET_IO_PORT: "3000",
     });
 
-    expect(config.opts.connectTimeout).toBe(45000);
-    expect(config.opts.allowEIO3).toBe(true);
-    expect(config.opts.cors.origin).toBe("*");
-    expect(config.opts.cors.credentials).toBe(false);
-    expect(config.opts.cors.methods).toEqual(["GET", "POST"]);
+    expect(config.opts!.connectTimeout).toBe(45000);
+    expect(config.opts!.allowEIO3).toBe(true);
+    const cors = config.opts!.cors as {
+      origin: string;
+      credentials: boolean;
+      methods: string[];
+    };
+    expect(cors.origin).toBe("*");
+    expect(cors.credentials).toBe(false);
+    expect(cors.methods).toEqual(["GET", "POST"]);
   });
 
   it("handles missing SOCKET_IO_EVENT returns undefined event", () => {

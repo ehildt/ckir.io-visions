@@ -6,10 +6,10 @@ import {
 } from "@nestjs/terminus";
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { AppConfigService } from "../configs/app-config.service";
-import { OllamaConfigService } from "../configs/ollama-config.service";
+import { AppConfigService } from "../configs/app-config.service.js";
+import { OllamaConfigService } from "../configs/ollama-config.service.js";
 
-import { HealthService } from "./health.service";
+import { HealthService } from "./health.service.js";
 
 describe("HealthService", () => {
   let service: HealthService;

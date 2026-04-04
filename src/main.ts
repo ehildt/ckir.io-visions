@@ -52,12 +52,8 @@ void (async () => {
 
   APP.useGlobalPipes(VALIDATION_PIPE);
   APP.enableShutdownHooks(["SIGINT", "SIGTERM", "SIGQUIT"]);
-
-  SwaggerModule.setup(
-    API_DOCS,
-    APP,
-    SwaggerModule.createDocument(APP, SWAGGER_DOCUMENT),
-  );
+  const swaggerDocument = SwaggerModule.createDocument(APP, SWAGGER_DOCUMENT);
+  SwaggerModule.setup(API_DOCS, APP, swaggerDocument);
 
   await APP.listen(
     {
