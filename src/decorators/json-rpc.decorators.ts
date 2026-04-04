@@ -22,3 +22,5 @@ export const MultiPartImages = () =>
     fieldName: IMAGES,
     allowedMimeTypes: ALLOWED_MIME_TYPES,
   });
+
+export const MCP_SYNC_METHODS = ["tools/list", "initialize"];

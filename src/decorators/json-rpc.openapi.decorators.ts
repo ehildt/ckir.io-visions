@@ -5,10 +5,16 @@ import {
   ApiConsumes,
   ApiExtraModels,
   ApiHeader,
+  ApiOkResponse,
   ApiOperation,
   getSchemaPath,
 } from "@nestjs/swagger";
 
+import {
+  McpInitializeResponse,
+  McpToolsCallResponse,
+  McpToolsListResponse,
+} from "../dtos/json-rpc/mcp-response.dto.js";
 import {
   McpToolsListReq,
   McpToolsListReq_Params,
@@ -20,8 +26,9 @@ import {
 
 import { X_VISION_LLM } from "./constants.js";
 import {
-  ApiQueryBatchId,
+  ApiQueryEvent,
   ApiQueryNumCtx,
+  ApiQueryRequestId,
   ApiQueryRoomId,
   ApiQueryStream,
 } from "./visions.openapi.js";
@@ -77,7 +84,8 @@ export function ApiMcpJsonRpc() {
   return applyDecorators(
     ApiQueryNumCtx(),
     ApiQueryStream(),
-    ApiQueryBatchId(),
+    ApiQueryRequestId(),
+    ApiQueryEvent(),
     ApiQueryRoomId(),
     ApiConsumes("multipart/form-data"),
     ApiExtraModels(
@@ -85,11 +93,25 @@ export function ApiMcpJsonRpc() {
       McpToolsListReq,
       McpToolsListReq_Params,
       McpVisionPayloadReq_Params,
+      McpInitializeResponse,
+      McpToolsListResponse,
+      McpToolsCallResponse,
     ),
     ApiJsonRpcBodySchema(),
+    ApiOkResponse({
+      description: "MCP initialize or tools/list response",
+      schema: {
+        oneOf: [
+          { $ref: getSchemaPath(McpInitializeResponse) },
+          { $ref: getSchemaPath(McpToolsListResponse) },
+        ],
+      },
+    }),
     ApiAcceptedResponse({
-      description:
-        "The request was accepted and is being processed asynchronously.",
+      description: "MCP tools/call response (async processing)",
+      schema: {
+        $ref: getSchemaPath(McpToolsCallResponse),
+      },
     }),
     ApiOperation({
       description: `

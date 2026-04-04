@@ -20,7 +20,8 @@ POST /mcp
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `batchId` | Yes | Unique batch identifier |
+| `requestId` | Yes | Request correlation identifier |
+| `event` | No | Socket.IO event name (default: `vision`) |
 | `stream` | No | Enable streaming responses |
 | `roomId` | No | Socket.IO room for real-time results |
 | `numCtx` | No | Context window size for the model |
@@ -36,12 +37,52 @@ POST /mcp
 
 ## JSON-RPC Methods
 
+### initialize
+
+Initialize the MCP server connection. Returns server capabilities and info.
+
+**Query Parameters:**
+- `requestId` (required)
+
+**Payload:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": {},
+    "clientInfo": { "name": "my-client", "version": "1.0.0" }
+  },
+  "id": 0
+}
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": { "tools": { "listChanged": false } },
+    "serverInfo": { "name": "@ckir.io/visions", "version": "1.1.0" }
+  }
+}
+```
+
+> Note: `serverInfo.name` and `serverInfo.version` are dynamically read from `package.json`.
+
+---
+
 ### tools/list
 
 List available MCP tools. No images required.
 
 **Query Parameters:**
-- `batchId` (required)
+- `requestId` (required)
 
 **Payload:**
 
@@ -62,19 +103,22 @@ List available MCP tools. No images required.
   "result": {
     "tools": [
       {
+        "title": "Vision Analysis",
         "name": "visions.analyze",
         "description": "Perform a specific visual analysis on provided images based on the selected task: description, comparison, or optical character recognition (OCR).",
         "inputSchema": {
           "type": "object",
           "additionalProperties": false,
+          "required": ["images", "prompt", "task"],
           "properties": {
             "prompt": {
-              "type": "array",
-              "description": "Optional array of Prompt objects to guide the vision task"
+              "type": "string",
+              "description": "Optional textual instruction to guide the selected vision task. For example, provide context or specify what to focus on during analysis."
             },
             "task": {
               "type": "string",
               "default": "describe",
+              "description": "Specifies which type of analysis to perform. Only one task is executed per request: \"describe\": generates a description of the image content. \"compare\": evaluates similarities or differences between images. \"ocr\": extracts text content from the images.",
               "enum": ["describe", "compare", "ocr"]
             }
           }
@@ -95,7 +139,7 @@ Perform image analysis.
 - `x-vision-llm` (required)
 
 **Query Parameters:**
-- `batchId` (required)
+- `requestId` (required)
 
 **Payload:**
 
@@ -191,27 +235,41 @@ Extract text content from images.
 
 ---
 
-## Socket.IO Response
+## MCP Response Flow
 
-Results are emitted via Socket.IO event (default: `vision`):
+The MCP protocol is real-time via Socket.IO. When you call `tools/call`:
+
+1. The server queues the image processing task
+2. Returns an immediate MCP response with `realtime` info
+3. Subscribe to Socket.IO for live results
 
 ```json
 {
-  "meta": [
-    {
-      "name": "image.jpg",
-      "type": "image/jpeg",
-      "hash": "abc123...",
-      "batchId": "batch-001"
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Processing started. Connect to Socket.IO for real-time results."
+      }
+    ],
+    "isError": false,
+    "realtime": {
+      "event": "vision",
+      "roomId": "optional-room-id",
+      "requestId": "batch-001"
     }
-  ],
-  "task": "describe",
-  "message": {
-    "role": "assistant",
-    "content": "Analysis result..."
   }
 }
 ```
+
+The `realtime` object contains:
+- `event`: Socket.IO event name (default: `vision`)
+- `roomId`: Room ID for subscribing to results (if provided)
+- `requestId`: Batch identifier for tracking
+
+---
 
 ## Error Responses
 
@@ -227,7 +285,7 @@ Results are emitted via Socket.IO event (default: `vision`):
 ### List available tools
 
 **Query Parameters:**
-- `batchId`: `1234`
+- `requestId`: `1234`
 
 **Body (multipart/form-data):**
 - `payload`:
@@ -247,7 +305,7 @@ Results are emitted via Socket.IO event (default: `vision`):
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `1234`
+- `requestId`: `1234`
 
 **Body (multipart/form-data):**
 - `images`: (image file)
@@ -274,7 +332,7 @@ Results are emitted via Socket.IO event (default: `vision`):
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `5678`
+- `requestId`: `5678`
 
 **Body (multipart/form-data):**
 - `images`: (multiple image files)
@@ -301,7 +359,7 @@ Results are emitted via Socket.IO event (default: `vision`):
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `9012`
+- `requestId`: `9012`
 
 **Body (multipart/form-data):**
 - `images`: (image file)
@@ -328,7 +386,7 @@ Results are emitted via Socket.IO event (default: `vision`):
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `3456`
+- `requestId`: `3456`
 
 **Body (multipart/form-data):**
 - `images`: (image file)

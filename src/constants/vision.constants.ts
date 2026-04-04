@@ -2,6 +2,7 @@ import { IMAGES, PROMPT, TASK } from "../decorators/constants.js";
 import { SupportedToolFunction } from "../dtos/json-rpc/mcp.model.js";
 
 export const VISIONS_ANALYZE = {
+  title: "Vision Analysis",
   name: "visions.analyze" satisfies SupportedToolFunction,
   description: [
     "Perform a specific visual analysis on provided images based on the selected task:",

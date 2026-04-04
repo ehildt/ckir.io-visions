@@ -19,6 +19,9 @@ export class JsonRpcValidationPipe<T> implements PipeTransform {
     // tools/list passthrough
     if (value.method === "tools/list") return value;
 
+    // initialize passthrough
+    if (value.method === "initialize") return value;
+
     // Only tools/call supported
     if (value.method !== "tools/call")
       throw new BadRequestException(`Unsupported method: ${value.method}`);

@@ -7,11 +7,13 @@ import {
   ApiResponse,
 } from "@nestjs/swagger";
 
+import { ClassicControllerResponse } from "../dtos/classic/classic-response.dto.js";
 import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
 import {
-  BATCH_ID,
+  EVENT,
   NUM_CTX,
+  REQUEST_ID,
   ROOM_ID,
   STREAM,
   X_VISION_LLM,
@@ -45,17 +47,31 @@ export const ApiQueryRoomId = () =>
     ].join("\n"),
   });
 
-export const ApiQueryBatchId = () =>
+export const ApiQueryRequestId = () =>
   ApiQuery({
-    name: BATCH_ID,
+    name: REQUEST_ID,
     type: String,
     required: false,
     example: "1234",
     description: [
-      "**Batch correlation identifier**",
+      "**Request correlation identifier**",
       "",
-      "Client-defined identifier for grouping uploaded files.",
-      "Used to associate multiple assets with a single logical request.",
+      "Client-provided identifier for correlating request and response.",
+      "Returned in the response realtime info for client-side tracking.",
+    ].join("\n"),
+  });
+
+export const ApiQueryEvent = () =>
+  ApiQuery({
+    name: EVENT,
+    type: String,
+    required: false,
+    example: "vision",
+    description: [
+      "**Socket.IO event name**",
+      "",
+      "Specifies the Socket.IO event name for receiving real-time results.",
+      "Default: `vision`",
     ].join("\n"),
   });
 
@@ -162,10 +178,12 @@ export const ApiVision = () =>
         "The request has been accepted and queued for processing.",
         "Results are emitted asynchronously via Socket.IO.",
       ].join("\n"),
+      type: ClassicControllerResponse,
     }),
     ApiBodySchema(),
     ApiQueryRoomId(),
-    ApiQueryBatchId(),
+    ApiQueryRequestId(),
+    ApiQueryEvent(),
     ApiQueryStream(),
     ApiQueryNumCtx(),
   );
