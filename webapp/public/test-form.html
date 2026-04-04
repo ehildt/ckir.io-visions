@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Form</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #0d1117; color: #c9d1d9; }
+    .form-group { margin: 10px 0; }
+    label { display: block; margin-bottom: 5px; }
+    input, select, textarea { padding: 8px; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
+    button { padding: 10px 20px; background: #58a6ff; color: #0d1117; border: none; cursor: pointer; }
+    button:hover { background: #79c0ff; }
+    pre { background: #161b22; padding: 10px; border: 1px solid #30363d; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Test Vision API</h1>
+  <form id="testForm">
+    <div class="form-group">
+      <label>Model:</label>
+      <input type="text" id="model" value="llama3.2-vision" />
+    </div>
+    <div class="form-group">
+      <label>Request ID:</label>
+      <input type="text" id="requestId" value="test-123" />
+    </div>
+    <div class="form-group">
+      <label>Task:</label>
+      <select id="task">
+        <option value="describe">describe</option>
+        <option value="compare">compare</option>
+        <option value="ocr">ocr</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Images:</label>
+      <input type="file" id="images" multiple accept="image/*" />
+    </div>
+    <div class="form-group">
+      <label>Prompt (JSON):</label>
+      <textarea id="prompt" rows="3">[{"role": "user", "content": "Describe this image"}]</textarea>
+    </div>
+    <button type="submit">Send Request</button>
+  </form>
+
+  <h2>Response:</h2>
+  <pre id="response">Waiting...</pre>
+
+  <script>
+    document.getElementById('testForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const model = document.getElementById('model').value;
+      const requestId = document.getElementById('requestId').value;
+      const task = document.getElementById('task').value;
+      const prompt = document.getElementById('prompt').value;
+      const fileInput = document.getElementById('images');
+      
+      const formData = new FormData();
+      formData.append('task', task);
+      formData.append('prompt', prompt);
+      
+      // Log what we're sending
+      console.log('Files selected:', fileInput.files.length);
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+        console.log(`File ${i}:`, file.name, file.type, file.size);
+        formData.append('images', file, file.name);
+      }
+      
+      const params = new URLSearchParams();
+      params.append('requestId', requestId);
+      params.append('stream', 'false');
+      params.append('event', 'vision');
+      
+      const url = `/api/v1/vision?${params.toString()}`;
+      console.log('Request URL:', url);
+      
+      // Inspect FormData
+      console.log('FormData entries:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0], ':', pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]);
+      }
+      
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'x-vision-llm': model,
+            'accept': 'application/json'
+          },
+          body: formData
+        });
+        
+        const text = await response.text();
+        document.getElementById('response').textContent = 
+          `Status: ${response.status}\n\n${text}`;
+      } catch (err) {
+        document.getElementById('response').textContent = `Error: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

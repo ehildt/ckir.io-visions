@@ -22,10 +22,11 @@ import { VisionsOCRProcessor } from "./processors/visions-ocr.processor.js";
 import { AnalyzeImageService } from "./services/analyze-image.service.js";
 import { HealthService } from "./services/health.service.js";
 import { JsonRpcService } from "./services/json-rpc.service.js";
+import { OllamaModelsService } from "./services/ollama-models.service.js";
 
 @Module({
   controllers: [ClassicController, JsonRpcController, HealthController],
-  providers: [Logger, AnalyzeImageService, HealthService, JsonRpcService],
+  providers: [Logger, AnalyzeImageService, HealthService, JsonRpcService, OllamaModelsService],
   imports: [
     HttpModule,
     TerminusModule.forRoot({

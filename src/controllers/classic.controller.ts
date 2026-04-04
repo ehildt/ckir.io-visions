@@ -2,6 +2,7 @@ import { MultipartFile, MultipartValue } from "@fastify/multipart";
 import {
   BadRequestException,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpStatus,
@@ -34,12 +35,14 @@ import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.j
 import { Prompt } from "../dtos/prompt.dto.js";
 import { ParsePromptPipe } from "../pipes/parse-prompt.pipe.js";
 import { AnalyzeImageService } from "../services/analyze-image.service.js";
+import { OllamaModelsService } from "../services/ollama-models.service.js";
 
 @ApiTags("Images")
 @Controller("vision")
 export class ClassicController {
   constructor(
     private readonly analyzeImageService: AnalyzeImageService,
+    private readonly ollamaModelsService: OllamaModelsService,
     private readonly socketIOConfigService: SocketIOConfigService,
   ) {}
 
@@ -91,5 +94,10 @@ export class ClassicController {
         requestId,
       },
     };
+  }
+
+  @Get("models")
+  async getModels() {
+    return this.ollamaModelsService.getModels();
   }
 }

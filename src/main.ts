@@ -11,6 +11,7 @@ import {
 import { SocketIOModule } from "@ehildt/nestjs-socket.io";
 import compress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
 import { Logger, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import {
@@ -18,9 +19,14 @@ import {
   NestFastifyApplication,
 } from "@nestjs/platform-fastify";
 import { SwaggerModule } from "@nestjs/swagger";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 import { AppConfigService } from "./configs/app-config.service.js";
 import { MainModule } from "./main.module.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 void (async () => {
   const logger = { logger: getLogLevel(process.env.LOG_LEVEL) };
@@ -41,6 +47,29 @@ void (async () => {
     threshold: 1024, // minimum payload size to compress
     encodings: ["br", "gzip"], // optional: restrict Brotli/gzip
     global: true, // default behavior – compress all
+  });
+
+  // Serve static webapp files
+  await APP.register(fastifyStatic as any, {
+    root: join(__dirname, "..", "webapp", "dist"),
+    prefix: "/webapp/",
+    wildcard: false,
+  });
+
+  // Get underlying Fastify instance
+  const fastifyInstance = APP.getHttpAdapter().getInstance();
+
+  // SPA fallback - serve index.html for any /webapp/* routes not found
+  fastifyInstance.get("/webapp/*", async (_request: any, reply: any) => {
+    return reply.sendFile(
+      "index.html",
+      join(__dirname, "..", "webapp", "dist"),
+    );
+  });
+
+  // Redirect root to webapp
+  fastifyInstance.get("/", async (_request: any, reply: any) => {
+    return reply.redirect("/webapp/");
   });
 
   APP.enableCors(appConfigService.config.cors);
