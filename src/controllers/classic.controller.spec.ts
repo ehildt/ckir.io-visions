@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { MultipartFile } from "@fastify/multipart";
 import { Test, TestingModule } from "@nestjs/testing";
 
+import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import { AnalyzeImageService } from "../services/analyze-image.service.js";
 
 import { ClassicController } from "./classic.controller.js";
@@ -24,7 +25,7 @@ describe("ClassicController", () => {
   beforeEach(async () => {
     const toFilePayloadsMock = vi
       .fn()
-      .mockImplementation(async (_batchId: string, files: unknown[]) => {
+      .mockImplementation(async (_requestId: string, files: unknown[]) => {
         if (!files || files.length === 0) return [];
         return [
           {
@@ -44,6 +45,14 @@ describe("ClassicController", () => {
             emit: vi.fn(),
           },
         },
+        {
+          provide: SocketIOConfigService,
+          useValue: {
+            config: {
+              event: "vision",
+            },
+          },
+        },
       ],
     }).compile();
 
@@ -53,17 +62,18 @@ describe("ClassicController", () => {
 
   describe("visionStream", () => {
     it("throws BadRequestException when x-vision-llm header is missing", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = false;
       const task = { value: "describe" } as any;
       const images: Array<MultipartFile> = [] as any;
 
       await expect(
         controller.visionStream(
-          batchId,
+          requestId,
           undefined as any,
           stream,
           task,
+          undefined,
           undefined,
           undefined,
           undefined,
@@ -73,7 +83,7 @@ describe("ClassicController", () => {
     });
 
     it("calls analyzeImageService with correct parameters", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const vLLM = "llama3.2-vision";
       const stream = false;
       const task = { value: "describe" } as any;
@@ -93,18 +103,19 @@ describe("ClassicController", () => {
       ] as any;
 
       await controller.visionStream(
-        batchId,
+        requestId,
         vLLM,
         stream,
         task,
         roomId,
         undefined,
         numCtx,
+        undefined,
         images,
       );
 
       expect(analyzeImageService.toFilePayloads).toHaveBeenCalledWith(
-        batchId,
+        requestId,
         images,
       );
       expect(analyzeImageService.emit).toHaveBeenCalledWith({
@@ -112,18 +123,19 @@ describe("ClassicController", () => {
         meta: [{ name: "photo.jpg", type: "image/jpeg", hash: "hash123" }],
         filters: {
           vLLM,
-          batchId,
+          requestId,
           roomId,
           stream,
           numCtx,
           prompt: undefined,
           task: "describe",
+          event: "vision",
         },
       });
     });
 
     it("processes images and calls analyzeImageService.emit", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const vLLM = "llama3.2-vision";
       const stream = true;
       const task = { value: "compare" } as any;
@@ -141,10 +153,11 @@ describe("ClassicController", () => {
       ] as any;
 
       await controller.visionStream(
-        batchId,
+        requestId,
         vLLM,
         stream,
         task,
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -152,7 +165,7 @@ describe("ClassicController", () => {
       );
 
       expect(analyzeImageService.toFilePayloads).toHaveBeenCalledWith(
-        batchId,
+        requestId,
         images,
       );
       expect(analyzeImageService.emit).toHaveBeenCalledWith({
@@ -160,24 +173,25 @@ describe("ClassicController", () => {
         meta: [{ name: "photo.jpg", type: "image/jpeg", hash: "hash123" }],
         filters: {
           vLLM,
-          batchId,
+          requestId,
           roomId: undefined,
           stream: true,
           numCtx: undefined,
           prompt: undefined,
           task: "compare",
+          event: "vision",
         },
       });
     });
 
     it("handles empty images array", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const vLLM = "llama3.2-vision";
       const stream = false;
       const task = { value: "ocr" } as any;
 
       await controller.visionStream(
-        batchId,
+        requestId,
         vLLM,
         stream,
         task,
@@ -185,10 +199,11 @@ describe("ClassicController", () => {
         undefined,
         undefined,
         undefined,
+        undefined,
       );
 
       expect(analyzeImageService.toFilePayloads).toHaveBeenCalledWith(
-        batchId,
+        requestId,
         [],
       );
       expect(analyzeImageService.emit).toHaveBeenCalledWith({
@@ -196,12 +211,13 @@ describe("ClassicController", () => {
         meta: [],
         filters: {
           vLLM,
-          batchId,
+          requestId,
           roomId: undefined,
           stream: false,
           numCtx: undefined,
           prompt: undefined,
           task: "ocr",
+          event: "vision",
         },
       });
     });

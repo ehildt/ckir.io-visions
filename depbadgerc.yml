@@ -35,6 +35,9 @@ statusBadgesStyle: &STATUS_BADGES_STYLE
 dependencies:
   layout:
     <<: *DEPENDENCIES_LAYOUT
+    header: Dependencies
+    showHeader: true
+    position: center
   badgeStyle: *DEPENDENCIES_STYLE
   items:
     - name: "@ehildt/ckir-bullmq"
@@ -193,3 +196,10 @@ statusBadges:
       repo: ckir.io-visions
       branch: main
       namedLogo: github
+    - name: codecov
+      user: ehildt
+      repo: ckir.io-visions
+      namedLogo: codecov
+      branch: main
+      flag: c
+      link: https://about.codecov.io/

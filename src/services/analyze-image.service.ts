@@ -21,14 +21,14 @@ export class AnalyzeImageService {
     private readonly ocrQueue: Queue,
   ) {}
 
-  async toFilePayloads(batchId: string, images: Array<MultipartFile>) {
+  async toFilePayloads(requestId: string, images: Array<MultipartFile>) {
     return await Promise.all(
       images.map(async (file) => {
         const buffer = await file.toBuffer();
         const meta: FastifyMultipartMeta = {
           name: file.filename,
           type: file.mimetype,
-          hash: `${hashPayload(buffer, "sha256")}_${batchId}`,
+          hash: `${hashPayload(buffer, "sha256")}_${requestId}`,
         };
         return { buffer, meta };
       }),

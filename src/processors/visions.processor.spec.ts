@@ -37,8 +37,12 @@ class TestVisionsProcessor extends VisionsProcessor {
     );
   }
 
-  async testEmitToSocket(roomId: string | undefined, data: unknown) {
-    return this.emitToSocket(roomId, data);
+  async testEmitToSocket(
+    roomId: string | undefined,
+    event: string,
+    data: unknown,
+  ) {
+    return this.emitToSocket(roomId, event, data);
   }
 
   async testHandleChat(
@@ -46,7 +50,7 @@ class TestVisionsProcessor extends VisionsProcessor {
     stream: boolean,
     onChunk: (response: { message: { content: string } }) => Promise<void>,
   ) {
-    return this.handleChat(request, stream, onChunk);
+    return this.handleVision(request, stream, onChunk);
   }
 }
 
@@ -247,7 +251,7 @@ describe("VisionsProcessor", () => {
     it("emits to room when roomId is provided", async () => {
       const data = { message: "test" };
 
-      await processor.testEmitToSocket("room-1", data);
+      await processor.testEmitToSocket("room-1", "vision", data);
 
       expect(socketIOService.emitTo).toHaveBeenCalledWith(
         "vision",
@@ -259,7 +263,7 @@ describe("VisionsProcessor", () => {
     it("emits globally when roomId is undefined", async () => {
       const data = { message: "test" };
 
-      await processor.testEmitToSocket(undefined, data);
+      await processor.testEmitToSocket(undefined, "vision", data);
 
       expect(socketIOService.emit).toHaveBeenCalledWith("vision", data);
     });
@@ -270,7 +274,7 @@ describe("VisionsProcessor", () => {
       });
 
       await expect(
-        processor.testEmitToSocket(undefined, {}),
+        processor.testEmitToSocket(undefined, "vision", {}),
       ).resolves.not.toThrow();
     });
   });

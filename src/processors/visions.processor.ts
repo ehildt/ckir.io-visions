@@ -37,7 +37,7 @@ export abstract class VisionsProcessor extends WorkerHost {
       throw new Error("buffers/meta length mismatch");
   }
 
-  protected async handleChat(
+  protected async handleVision(
     request: Parameters<typeof this.ollamaService.chat>[0],
     stream: boolean,
     onChunk: (response: ChatResponse) => Promise<void>,
@@ -87,12 +87,13 @@ export abstract class VisionsProcessor extends WorkerHost {
 
   protected async emitToSocket(
     roomId: string | undefined,
+    event: string | undefined,
     data: unknown,
   ): Promise<void> {
-    const event = this.socketIOConfigService.config.event;
+    const socketEvent = event ?? "vision";
     try {
-      if (roomId) this.io.emitTo(event, roomId, data);
-      else this.io.emit(event, data);
+      if (roomId) this.io.emitTo(socketEvent, roomId, data);
+      else this.io.emit(socketEvent, data);
     } catch (err) {
       console.error(
         `Socket emit failed: roomId=${roomId}, data=${JSON.stringify(

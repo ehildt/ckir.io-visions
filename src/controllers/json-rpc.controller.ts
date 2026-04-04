@@ -3,17 +3,17 @@ import {
   BadRequestException,
   Controller,
   Headers,
-  HttpCode,
-  HttpStatus,
   ParseBoolPipe,
   ParseIntPipe,
   Post,
   Query,
 } from "@nestjs/common";
 
+import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import {
-  BATCH_ID,
+  EVENT,
   NUM_CTX,
+  REQUEST_ID,
   ROOM_ID,
   STREAM,
   X_VISION_LLM,
@@ -25,46 +25,54 @@ import {
 import { ApiMcpJsonRpc } from "../decorators/json-rpc.openapi.decorators.js";
 import { McpGenericType } from "../dtos/json-rpc/mcp.model.js";
 import { McpVisionPayloadReq_Params } from "../dtos/json-rpc/mcp-vision-payload-req.dto.js";
+import { MCPHttpStatusCode } from "../interceptors/mcp-status.interceptor.js";
 import { JsonRpcService } from "../services/json-rpc.service.js";
 
 @Controller("mcp")
 export class JsonRpcController {
-  constructor(private readonly jsonRpcService: JsonRpcService) {}
+  constructor(
+    private readonly jsonRpcService: JsonRpcService,
+    private readonly socketIOConfigService: SocketIOConfigService,
+  ) {}
 
   @Post()
   @ApiMcpJsonRpc()
-  @HttpCode(HttpStatus.ACCEPTED)
+  @MCPHttpStatusCode()
   async rpc(
-    @Query(BATCH_ID) batchId: string,
+    @Query(REQUEST_ID) requestId: string,
     @Query(STREAM, new ParseBoolPipe({ optional: true })) stream: boolean,
     @Headers(X_VISION_LLM) vLLM: string,
     @MultiPartPayload() req: McpGenericType<McpVisionPayloadReq_Params>,
     @Query(ROOM_ID) roomId?: string,
     @Query(NUM_CTX, new ParseIntPipe({ optional: true })) numCtx?: number,
+    @Query(EVENT) eventQuery?: string,
     @MultiPartImages() images?: Array<MultipartFile>,
   ) {
+    if (req.method === "initialize") return this.jsonRpcService.initialize();
     if (req.method === "tools/list")
       return this.jsonRpcService.getRequestedTools(req);
 
     if (!vLLM) throw new BadRequestException("Missing x-vision-llm header");
     if (!images?.length) throw new BadRequestException("Missing images");
 
-    const results = await this.jsonRpcService.toFilePayloads(batchId, images);
+    const event = eventQuery ?? this.socketIOConfigService.config.event;
 
-    if (req.params.name === "visions.analyze") {
+    const results = await this.jsonRpcService.toFilePayloads(requestId, images);
+
+    if (req.params.name === "visions.analyze")
       return this.jsonRpcService.analyze({
         buffers: results.map((r) => r.buffer).filter(Boolean),
         meta: results.map((r) => r.meta).filter(Boolean),
         filters: {
           vLLM,
-          batchId,
+          requestId,
           roomId,
           stream,
           numCtx,
           prompt: req.params.arguments.prompt,
           task: req.params.arguments.task,
+          event,
         },
       });
-    }
   }
 }

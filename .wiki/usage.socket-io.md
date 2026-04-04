@@ -52,7 +52,7 @@ Each chunk is emitted as it arrives:
       "name": "image.jpg",
       "type": "image/jpeg",
       "hash": "abc123...",
-      "batchId": "batch-001"
+      "requestId": "batch-001"
     }
   ],
   "task": "describe",
@@ -75,7 +75,7 @@ Single response with complete content:
       "name": "image.jpg",
       "type": "image/jpeg",
       "hash": "abc123...",
-      "batchId": "batch-001"
+      "requestId": "batch-001"
     }
   ],
   "task": "describe",
@@ -90,7 +90,7 @@ Single response with complete content:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `meta` | array | Array of image metadata (name, type, hash, batchId) |
+| `meta` | array | Array of image metadata (name, type, hash, requestId) |
 | `task` | string | Task type: `describe`, `compare`, or `ocr` |
 | `message` | object | Response from the model |
 | `message.role` | string | Always `assistant` |

@@ -20,12 +20,12 @@ export class VisionsDescribeProcessor extends VisionsProcessor {
       "DESCRIBE",
     );
 
-    await this.handleChat(
+    await this.handleVision(
       request,
       filters.stream ?? false,
       async (response) => {
-        await this.emitToSocket(filters.roomId, {
-          meta: meta.map((m) => ({ ...m, batchId: filters.batchId })),
+        await this.emitToSocket(filters.roomId, filters.event, {
+          meta: meta.map((m) => ({ ...m, requestId: filters.requestId })),
           task: filters.task,
           ...response,
         });

@@ -1,4 +1,4 @@
-export type SupportedToolMethod = "tools/list" | "tools/call";
+export type SupportedToolMethod = "tools/list" | "tools/call" | "initialize";
 
 export type SupportedToolFunction = "visions.analyze";
 
