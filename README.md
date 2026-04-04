@@ -14,12 +14,17 @@ A NestJS microservice for AI-powered image analysis using Ollama vision models. 
 ![github](https://img.shields.io/github/release/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
 ![github](https://img.shields.io/github/stars/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
 ![github](https://img.shields.io/github/license/ehildt/ckir.io-visions?labelColor=333&style=for-the-badge&cacheSeconds=3600&color=b16425&logo=github&logoColor=b16425&logoWidth=40&branch=main)
+[![codecov](https://img.shields.io/codecov/c/github/ehildt/ckir.io-visions?labelColor=333&cacheSeconds=3600&logo=codecov&logoColor=4021b0&logoWidth=40&style=for-the-badge&color=4021b0&branch=main)](https://about.codecov.io/)
 
 </div>
 
 <br>
 
 <div align="center">
+
+
+
+# Dependencies
 
 [![@ehildt/ckir-helpers](https://img.shields.io/badge/_ehildt_ckir_helpers-v1.3.2-a82947.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=a82947&logoWidth=40&style=flat-square)](https://github.com/ehildt/ckir-helpers)
 [![@fastify/compress](https://img.shields.io/badge/_fastify_compress-v8.3.1-c62478.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=c62478&logoWidth=40&style=flat-square)](https://github.com/fastify/fastify-compress)
@@ -64,7 +69,7 @@ A NestJS microservice for AI-powered image analysis using Ollama vision models. 
 [![depcheck](https://img.shields.io/badge/depcheck-v1.4.7-28a95e.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=28a95e&logoWidth=40&style=flat-square)](https://github.com/depcheck/depcheck)
 [![dependency-cruiser](https://img.shields.io/badge/dependency_cruiser-v17.3.10-c22431.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=c22431&logoWidth=40&style=flat-square)](https://github.com/sverweij/dependency-cruiser)
 [![dotenv-cli](https://img.shields.io/badge/dotenv_cli-v11.0.0-d53074.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=d53074&logoWidth=40&style=flat-square)](https://github.com/entropia/dotenv-cli)
-[![eslint](https://img.shields.io/badge/eslint-v10.1.0-3f2ab7.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=3f2ab7&logoWidth=40&style=flat-square)](https://github.com/eslint/eslint)
+[![eslint](https://img.shields.io/badge/eslint-v10.2.0-3f2ab7.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=3f2ab7&logoWidth=40&style=flat-square)](https://github.com/eslint/eslint)
 [![eslint-config-prettier](https://img.shields.io/badge/eslint_config_prettier-v10.1.8-c4921c.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=c4921c&logoWidth=40&style=flat-square)](https://github.com/prettier/eslint-config-prettier)
 [![eslint-plugin-prettier](https://img.shields.io/badge/eslint_plugin_prettier-v5.5.5-d19d2e.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=d19d2e&logoWidth=40&style=flat-square)](https://github.com/prettier/eslint-plugin-prettier)
 [![eslint-plugin-simple-import-sort](https://img.shields.io/badge/eslint_plugin_simple_import_sort-v12.1.1-39d025.svg?labelColor=333&cacheSeconds=3600&logo=npm&logoColor=39d025&logoWidth=40&style=flat-square)](https://github.com/lydell/eslint-plugin-simple-import-sort)
