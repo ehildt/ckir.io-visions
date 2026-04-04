@@ -85,6 +85,55 @@ describe("AnalyzeImageService", () => {
         },
       ]);
     });
+
+    it("handles multiple image files", async () => {
+      const buffer1 = Buffer.from("image-bytes-1");
+      const buffer2 = Buffer.from("image-bytes-2");
+      const hashMock = hashPayload as ReturnType<typeof vi.fn>;
+      hashMock.mockReturnValueOnce("hash1").mockReturnValueOnce("hash2");
+
+      const file1: MultipartFile = {
+        type: "file",
+        fieldname: "image",
+        filename: "photo1.jpg",
+        encoding: "7bit",
+        mimetype: "image/jpeg",
+        fields: {},
+        file: mockFileStream(),
+        toBuffer: vi.fn().mockResolvedValue(buffer1),
+      };
+
+      const file2: MultipartFile = {
+        type: "file",
+        fieldname: "image",
+        filename: "photo2.png",
+        encoding: "7bit",
+        mimetype: "image/png",
+        fields: {},
+        file: mockFileStream(),
+        toBuffer: vi.fn().mockResolvedValue(buffer2),
+      };
+
+      const result = await service.toFilePayloads("req-456", [file1, file2]);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].meta).toEqual({
+        name: "photo1.jpg",
+        type: "image/jpeg",
+        hash: "hash1_req-456",
+      });
+      expect(result[1].meta).toEqual({
+        name: "photo2.png",
+        type: "image/png",
+        hash: "hash2_req-456",
+      });
+    });
+
+    it("handles empty image array", async () => {
+      const result = await service.toFilePayloads("batch-1", []);
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe("emit", () => {

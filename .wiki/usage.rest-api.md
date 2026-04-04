@@ -20,7 +20,8 @@ POST /vision
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `batchId` | Yes | Unique batch identifier |
+| `requestId` | Yes | Request correlation identifier |
+| `event` | No | Socket.IO event name (default: `vision`) |
 | `stream` | No | Enable streaming responses (default: `false`) |
 | `roomId` | No | Socket.IO room for real-time results |
 | `numCtx` | No | Context window size for the model |
@@ -35,7 +36,24 @@ POST /vision
 
 ## Response
 
-Returns `202 Accepted` immediately. Results are streamed via Socket.IO.
+Returns `202 Accepted` with realtime info. Results are streamed via Socket.IO.
+
+### Response Body
+
+```json
+{
+  "realtime": {
+    "event": "vision",
+    "roomId": "room-123",
+    "requestId": "1234"
+  }
+}
+```
+
+The `realtime` object contains:
+- `event`: Socket.IO event name (default: `vision`)
+- `roomId`: Room ID for subscribing (if provided)
+- `requestId`: Your provided request correlation identifier
 
 ### Socket.IO Event: `vision` (configurable via `SOCKET_IO_EVENT`)
 
@@ -46,7 +64,7 @@ Returns `202 Accepted` immediately. Results are streamed via Socket.IO.
       "name": "image.jpg",
       "type": "image/jpeg",
       "hash": "abc123...",
-      "batchId": "batch-001"
+      "requestId": "batch-001"
     }
   ],
   "task": "describe",
@@ -64,7 +82,7 @@ Returns `202 Accepted` immediately. Results are streamed via Socket.IO.
 Generate a description of the image content.
 
 **Query Parameters:**
-- `batchId` (required)
+- `requestId` (required)
 
 **Body Fields:**
 - `task`: `describe`
@@ -76,7 +94,7 @@ Generate a description of the image content.
 Evaluate similarities or differences between multiple images.
 
 **Query Parameters:**
-- `batchId` (required)
+- `requestId` (required)
 
 **Body Fields:**
 - `task`: `compare`
@@ -89,7 +107,7 @@ Evaluate similarities or differences between multiple images.
 Extract text content from images.
 
 **Query Parameters:**
-- `batchId` (required)
+- `requestId` (required)
 - `stream` (optional)
 
 **Body Fields:**
@@ -105,7 +123,7 @@ Extract text content from images.
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `1234`
+- `requestId`: `1234`
 
 **Body (multipart/form-data):**
 - `task`: `describe`
@@ -119,7 +137,7 @@ Extract text content from images.
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `5678`
+- `requestId`: `5678`
 
 **Body (multipart/form-data):**
 - `task`: `compare`
@@ -133,7 +151,7 @@ Extract text content from images.
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `9012`
+- `requestId`: `9012`
 - `stream`: `true`
 
 **Body (multipart/form-data):**
@@ -148,7 +166,7 @@ Extract text content from images.
 - `x-vision-llm`: `llama3.2-vision`
 
 **Query Parameters:**
-- `batchId`: `3456`
+- `requestId`: `3456`
 
 **Body (multipart/form-data):**
 - `task`: `describe`

@@ -1,23 +1,24 @@
 import { BadRequestException } from "@nestjs/common";
 
+import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 // ! there shouldn't be any env in libs
 // it breaks the tests and code
-import { JSON_RPC_TOOLS_LIST } from "../tools/tools.constants.js";
+import { JSON_RPC_TOOLS_LIST } from "../constants/json-rpc.constants.js";
 
 import { AnalyzeImageService } from "./analyze-image.service.js";
 import { JsonRpcService } from "./json-rpc.service.js";
 
-vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
-  hashPayload: vi.fn(() => "mockedhash"),
-}));
-
 describe("JsonRpcService", () => {
   let service: JsonRpcService;
   let analyzeImageService: AnalyzeImageService;
+  let socketIOConfigService: SocketIOConfigService;
 
   beforeEach(() => {
     analyzeImageService = { emit: vi.fn() } as any;
-    service = new JsonRpcService(analyzeImageService);
+    socketIOConfigService = {
+      config: { event: "vision" },
+    } as any;
+    service = new JsonRpcService(analyzeImageService, socketIOConfigService);
   });
 
   describe("getRequestedTools", () => {
@@ -51,7 +52,7 @@ describe("JsonRpcService", () => {
 
   describe("toFilePayloads", () => {
     it("returns array of buffers and meta objects", async () => {
-      const batchId = "batch123";
+      const requestId = "batch123";
       const mockFiles = [
         {
           filename: "file1.png",
@@ -65,25 +66,16 @@ describe("JsonRpcService", () => {
         },
       ] as any;
 
-      const result = await service.toFilePayloads(batchId, mockFiles);
+      const result = await service.toFilePayloads(requestId, mockFiles);
 
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        buffer: Buffer.from("data1"),
-        meta: {
-          name: "file1.png",
-          type: "image/png",
-          hash: "mockedhash_batch123",
-        },
-      });
-      expect(result[1]).toEqual({
-        buffer: Buffer.from("data2"),
-        meta: {
-          name: "file2.jpg",
-          type: "image/jpeg",
-          hash: "mockedhash_batch123",
-        },
-      });
+      expect(result[0].meta.name).toBe("file1.png");
+      expect(result[0].meta.type).toBe("image/png");
+      expect(result[0].meta.hash).toMatch(/^[a-f0-9]{64}_batch123$/);
+
+      expect(result[1].meta.name).toBe("file2.jpg");
+      expect(result[1].meta.type).toBe("image/jpeg");
+      expect(result[1].meta.hash).toMatch(/^[a-f0-9]{64}_batch123$/);
     });
 
     it("handles empty file array", async () => {

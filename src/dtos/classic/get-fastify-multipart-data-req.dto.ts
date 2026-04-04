@@ -12,10 +12,11 @@ type FastifyMultipartFilter = {
   roomId: string;
   stream: boolean;
   prompt: Array<Prompt>;
-  batchId: string;
+  requestId: string;
   vLLM: string;
   task: VisionTask;
   numCtx: number;
+  event: string;
 };
 
 export type FastifyMultipartDataWithFiltersReq = {

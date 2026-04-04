@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { MultipartFile } from "@fastify/multipart";
 import { Test, TestingModule } from "@nestjs/testing";
 
+import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import { JsonRpcService } from "../services/json-rpc.service.js";
 
 import { JsonRpcController } from "./json-rpc.controller.js";
@@ -36,7 +37,7 @@ describe("JsonRpcController", () => {
             toFilePayloads: vi
               .fn()
               .mockImplementation(
-                async (_batchId: string, files: unknown[]) => {
+                async (_requestId: string, files: unknown[]) => {
                   if (!files || files.length === 0) return [];
                   return [
                     {
@@ -53,6 +54,14 @@ describe("JsonRpcController", () => {
             analyze: vi.fn(),
           },
         },
+        {
+          provide: SocketIOConfigService,
+          useValue: {
+            config: {
+              event: "vision",
+            },
+          },
+        },
       ],
     }).compile();
 
@@ -62,16 +71,17 @@ describe("JsonRpcController", () => {
 
   describe("rpc", () => {
     it("throws BadRequestException when x-vision-llm header is missing", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = false;
       const req = { method: "tools/call" } as any;
 
       await expect(
         controller.rpc(
-          batchId,
+          requestId,
           stream,
           undefined as any,
           req,
+          undefined,
           undefined,
           undefined,
           undefined,
@@ -80,7 +90,7 @@ describe("JsonRpcController", () => {
     });
 
     it("throws BadRequestException when images are missing for tools/call", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = false;
       const vLLM = "llama3.2-vision";
       const req = {
@@ -90,10 +100,11 @@ describe("JsonRpcController", () => {
 
       await expect(
         controller.rpc(
-          batchId,
+          requestId,
           stream,
           vLLM,
           req,
+          undefined,
           undefined,
           undefined,
           undefined,
@@ -102,16 +113,17 @@ describe("JsonRpcController", () => {
     });
 
     it("returns tools list for tools/list method", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = false;
       const vLLM = "llama3.2-vision";
       const req = { method: "tools/list" } as any;
 
       const result = await controller.rpc(
-        batchId,
+        requestId,
         stream,
         vLLM,
         req,
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -126,7 +138,7 @@ describe("JsonRpcController", () => {
     });
 
     it("calls analyze for visions.analyze with images", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = true;
       const vLLM = "llama3.2-vision";
       const roomId = "room-1";
@@ -154,10 +166,19 @@ describe("JsonRpcController", () => {
         },
       ] as any;
 
-      await controller.rpc(batchId, stream, vLLM, req, roomId, numCtx, images);
+      await controller.rpc(
+        requestId,
+        stream,
+        vLLM,
+        req,
+        roomId,
+        numCtx,
+        undefined,
+        images,
+      );
 
       expect(jsonRpcService.toFilePayloads).toHaveBeenCalledWith(
-        batchId,
+        requestId,
         images,
       );
       expect(jsonRpcService.analyze).toHaveBeenCalledWith({
@@ -165,18 +186,19 @@ describe("JsonRpcController", () => {
         meta: [{ name: "photo.jpg", type: "image/jpeg", hash: "hash123" }],
         filters: {
           vLLM,
-          batchId,
+          requestId,
           roomId,
           stream,
           numCtx,
           prompt: [{ role: "user", content: "test" }],
           task: "describe",
+          event: "vision",
         },
       });
     });
 
     it("throws BadRequestException when images array is empty for tools/call", async () => {
-      const batchId = "batch-1";
+      const requestId = "batch-1";
       const stream = false;
       const vLLM = "llama3.2-vision";
       const req = {
@@ -190,10 +212,11 @@ describe("JsonRpcController", () => {
 
       await expect(
         controller.rpc(
-          batchId,
+          requestId,
           stream,
           vLLM,
           req,
+          undefined,
           undefined,
           undefined,
           images,

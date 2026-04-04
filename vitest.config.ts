@@ -8,11 +8,7 @@ export default defineConfig({
     globals: true,
     include: ["src/**/*.spec.ts"],
     coverage: {
-      exclude: [
-        "**/*.dto.ts",
-        "**/*.model.ts",
-        "**/dtos/**/*.ts",
-      ],
+      exclude: ["**/*.dto.ts", "**/*.model.ts", "**/dtos/**/*.ts"],
     },
   },
   resolve: {
