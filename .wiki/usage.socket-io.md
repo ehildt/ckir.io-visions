@@ -7,15 +7,16 @@ Socket.IO is used for real-time streaming of analysis results. The event name is
 | Environment Variable | Default | Description |
 |----------------------|---------|-------------|
 | `SOCKET_IO_EVENT` | `vision` | Socket.IO event name |
-| `SOCKET_IO_PORT` | `4005` | Socket.IO server port |
 | `SOCKET_IO_TRANSPORTS` | `websocket,polling,webtransport` | Allowed transport protocols |
+
+**Note:** Socket.IO runs on the same port as the main HTTP server (default: 3000).
 
 ## Connection
 
 ```javascript
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:4005", {
+const socket = io("http://localhost:3000", {
   transports: ["websocket", "polling"],
 });
 ```

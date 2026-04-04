@@ -1,8 +1,8 @@
 import { ArgumentMetadata, BadRequestException } from "@nestjs/common";
 
-import { Prompt } from "../dtos/prompt.dto";
+import { Prompt } from "../dtos/prompt.dto.js";
 
-import { ParsePromptPipe } from "./parse-prompt.pipe";
+import { ParsePromptPipe } from "./parse-prompt.pipe.js";
 
 describe("ParsePromptPipe", () => {
   let pipe: ParsePromptPipe;

@@ -15,7 +15,7 @@ process.env.CORS_ALLOWED_HEADERS =
 
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { AppConfigService } from "./app-config.service";
+import { AppConfigService } from "./app-config.service.js";
 
 describe("ConfigFactoryService", () => {
   let service: AppConfigService;
@@ -39,8 +39,8 @@ describe("ConfigFactoryService", () => {
     expect(appConfig.nodeEnv).toBe("local");
     expect(appConfig.printConfig).toBe(true);
     expect(appConfig.cors).toBeDefined();
-    expect(appConfig.cors.origin).toBe("*");
-    expect(appConfig.cors.methods).toBe(
+    expect(appConfig.cors!.origin).toBe("*");
+    expect(appConfig.cors!.methods).toBe(
       "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
     );
   });

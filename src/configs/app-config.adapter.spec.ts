@@ -1,6 +1,6 @@
 import { AppConfigSchema } from "@ehildt/ckir-helpers/bootstrap";
 
-import { AppConfigAdapter } from "./app-config.adapter";
+import { AppConfigAdapter } from "./app-config.adapter.js";
 
 describe("AppConfigAdapter", () => {
   it("returns expected config from env object", () => {
@@ -94,10 +94,10 @@ describe("AppConfigAdapter", () => {
   it("handles missing health env vars with defaults", () => {
     const config = AppConfigAdapter({});
 
-    expect(config.health.memoryHeap).toBe(268435456);
-    expect(config.health.memoryRSS).toBe(268435456);
-    expect(config.health.diskPath).toBe("/");
-    expect(config.health.diskThresholdPercent).toBe(0.8);
+    expect(config.health!.memoryHeap).toBe(268435456);
+    expect(config.health!.memoryRSS).toBe(268435456);
+    expect(config.health!.diskPath).toBe("/");
+    expect(config.health!.diskThresholdPercent).toBe(0.8);
   });
 
   it("applies cors config when CORS_ORIGIN is provided", () => {

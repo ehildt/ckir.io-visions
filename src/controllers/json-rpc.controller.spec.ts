@@ -3,9 +3,9 @@ import { Readable } from "node:stream";
 import { MultipartFile } from "@fastify/multipart";
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { JsonRpcService } from "../services/json-rpc.service";
+import { JsonRpcService } from "../services/json-rpc.service.js";
 
-import { JsonRpcController } from "./json-rpc.controller";
+import { JsonRpcController } from "./json-rpc.controller.js";
 
 vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
   hashPayload: vi.fn(() => "hash123"),

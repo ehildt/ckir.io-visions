@@ -6,7 +6,6 @@ import { SocketIOConfig } from "./socket-io-config.service.js";
 export function SocketIOConfigAdapter(env = process.env): SocketIOConfig {
   return {
     event: env.SOCKET_IO_EVENT!,
-    port: Number(getNumberEnv(env.SOCKET_IO_PORT)),
     opts: {
       maxHttpBufferSize: Number(
         getNumberEnv(env.SOCKET_IO_MAX_HTTP_BUFFER_SIZE, 262144),

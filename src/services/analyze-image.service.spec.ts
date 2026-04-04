@@ -5,10 +5,11 @@ import { MultipartFile } from "@fastify/multipart";
 import { getQueueToken } from "@nestjs/bullmq";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Queue } from "bullmq";
+import { Mock, vi } from "vitest";
 
-import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants";
+import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
 
-import { AnalyzeImageService } from "./analyze-image.service";
+import { AnalyzeImageService } from "./analyze-image.service.js";
 
 vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
   hashPayload: vi.fn(),
@@ -16,9 +17,9 @@ vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
 
 describe("AnalyzeImageService", () => {
   let service: AnalyzeImageService;
-  let describeQueue: vi.Mocked<Queue>;
-  let compareQueue: vi.Mocked<Queue>;
-  let ocrQueue: vi.Mocked<Queue>;
+  let describeQueue: Queue & { add: Mock };
+  let compareQueue: Queue & { add: Mock };
+  let ocrQueue: Queue & { add: Mock };
 
   const mockFileStream = () =>
     Object.assign(new Readable({ read() {} }), {
@@ -54,7 +55,9 @@ describe("AnalyzeImageService", () => {
   describe("toFilePayloads", () => {
     it("maps MultipartFile to buffer + meta payload", async () => {
       const buffer = Buffer.from("image-bytes");
-      (hashPayload as vi.Mock).mockReturnValue("hash123");
+      (
+        hashPayload as unknown as { mockReturnValue: (value: string) => void }
+      ).mockReturnValue("hash123");
 
       const file: MultipartFile = {
         type: "file",

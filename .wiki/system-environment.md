@@ -6,9 +6,9 @@ All configuration is done via environment variables. Create a `.env` file in the
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `3005` | HTTP server port |
+| `PORT` | `3000` | HTTP server port |
 | `ADDRESS` | `0.0.0.0` | Server bind address |
-| `NODE_ENV` | `local` | Node environment |
+| `NODE_ENV` | `development` | Node environment |
 | `PRINT_CONFIG` | `true` | Print config on startup |
 | `ENABLE_SWAGGER` | `true` | Enable Swagger/OpenAPI docs |
 | `BODY_LIMIT` | `104857600` | Max request body size (100MB) |
@@ -32,14 +32,13 @@ All configuration is done via environment variables. Create a `.env` file in the
 | `CORS_PREFLIGHT_CONTINUE` | `false` | Pass CORS preflight to handler |
 | `CORS_OPTIONS_SUCCESS_STATUS` | `204` | Success status for OPTIONS |
 | `CORS_CREDENTIALS` | `true` | Allow credentials |
-| `CORS_ALLOWED_HEADERS` | `Content-Type,Accept,X-Visions-llm` | Allowed headers |
+| `CORS_ALLOWED_HEADERS` | `Content-Type,Accept,X-Vision-LLM` | Allowed headers |
 
 ## Socket.IO
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SOCKET_IO_EVENT` | `vision` | Socket.IO event name |
-| `SOCKET_IO_PORT` | `4005` | Socket.IO server port |
 | `SOCKET_IO_CONNECT_TIMEOUT` | `45000` | Connection timeout (ms) |
 | `SOCKET_IO_MAX_HTTP_BUFFER_SIZE` | `262144` | Max HTTP buffer size |
 | `SOCKET_IO_CLEANUP_EMPTY_CHILD_NAMESPACES` | `false` | Auto-cleanup empty namespaces |
@@ -79,12 +78,12 @@ All configuration is done via environment variables. Create a `.env` file in the
 |----------|---------|-------------|
 | `BULLMQ_JOB_DELAY` | `0` | Job delay (ms) |
 | `BULLMQ_JOB_LIFO` | `false` | Last-in-first-out |
-| `BULLMQ_JOB_PRIORITY` | `0` | Job priority |
+| `BULLMQ_JOB_PRIORITY` | `1` | Job priority |
 | `BULLMQ_JOB_ATTEMPTS` | `15` | Max attempts |
 | `BULLMQ_JOB_STACK_TRACE_LIMIT` | `10` | Stack trace limit |
-| `BULLMQ_REMOVE_ON_COMPLETED_AGE` | `604800000` | Remove completed after (ms) |
+| `BULLMQ_REMOVE_ON_COMPLETED_AGE` | `604800` | Remove completed after (seconds) |
 | `BULLMQ_REMOVE_ON_COMPLETED_COUNT` | `1000` | Max completed jobs to keep |
-| `BULLMQ_REMOVE_ON_FAIL_AGE` | `604800000` | Remove failed after (ms) |
+| `BULLMQ_REMOVE_ON_FAIL_AGE` | `604800` | Remove failed after (seconds) |
 | `BULLMQ_REMOVE_ON_FAIL_COUNT` | `1000` | Max failed jobs to keep |
 
 ## BullMQ Backoff
@@ -111,7 +110,7 @@ All configuration is done via environment variables. Create a `.env` file in the
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_HOST` | `http://ollama:11434` | Ollama server URL |
-| `OLLAMA_KEEP_ALIVE` | `1m` | Model keep-alive duration |
+| `OLLAMA_KEEP_ALIVE` | `5m` | Model keep-alive duration |
 | `OLLAMA_SYSTEM_PROMPT_DESCRIBE` | (default constant) | System prompt for describe task |
 | `OLLAMA_SYSTEM_PROMPT_COMPARE` | (default constant) | System prompt for compare task |
 | `OLLAMA_SYSTEM_PROMPT_OCR` | (default constant) | System prompt for OCR task |
@@ -120,9 +119,9 @@ All configuration is done via environment variables. Create a `.env` file in the
 
 ```bash
 # Base
-PORT=3005
+PORT=3000
 ADDRESS=0.0.0.0
-NODE_ENV=local
+NODE_ENV=development
 PRINT_CONFIG=true
 ENABLE_SWAGGER=true
 BODY_LIMIT=104857600
@@ -140,11 +139,10 @@ CORS_METHODS=GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE
 CORS_PREFLIGHT_CONTINUE=false
 CORS_OPTIONS_SUCCESS_STATUS=204
 CORS_CREDENTIALS=true
-CORS_ALLOWED_HEADERS=Content-Type,Accept,X-Visions-llm
+CORS_ALLOWED_HEADERS=Content-Type,Accept,X-Vision-LLM
 
 # Socket.IO
 SOCKET_IO_EVENT=vision
-SOCKET_IO_PORT=4005
 SOCKET_IO_CONNECT_TIMEOUT=45000
 SOCKET_IO_MAX_HTTP_BUFFER_SIZE=262144
 SOCKET_IO_CLEANUP_EMPTY_CHILD_NAMESPACES=false
@@ -175,12 +173,12 @@ BULLMQ_PASSPHRASE=test
 # BullMQ Job Options
 BULLMQ_JOB_DELAY=0
 BULLMQ_JOB_LIFO=false
-BULLMQ_JOB_PRIORITY=0
+BULLMQ_JOB_PRIORITY=1
 BULLMQ_JOB_ATTEMPTS=15
 BULLMQ_JOB_STACK_TRACE_LIMIT=10
-BULLMQ_REMOVE_ON_COMPLETED_AGE=604800000
+BULLMQ_REMOVE_ON_COMPLETED_AGE=604800
 BULLMQ_REMOVE_ON_COMPLETED_COUNT=1000
-BULLMQ_REMOVE_ON_FAIL_AGE=604800000
+BULLMQ_REMOVE_ON_FAIL_AGE=604800
 BULLMQ_REMOVE_ON_FAIL_COUNT=1000
 
 # BullMQ Backoff
@@ -198,7 +196,7 @@ BULLMQ_LOG_TRANSPORT_IGNORE=pid,hostname
 
 # Ollama
 OLLAMA_HOST=http://ollama:11434
-OLLAMA_KEEP_ALIVE=1m
+OLLAMA_KEEP_ALIVE=5m
 # OLLAMA_SYSTEM_PROMPT_DESCRIBE=
 # OLLAMA_SYSTEM_PROMPT_COMPARE=
 # OLLAMA_SYSTEM_PROMPT_OCR=

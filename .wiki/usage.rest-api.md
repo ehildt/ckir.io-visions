@@ -162,4 +162,4 @@ Extract text content from images.
 | Status | Description |
 |--------|-------------|
 | `400 Bad Request` | Missing required parameters or invalid image format |
-| `422 Unprocessable Entity` | Missing `x-vision-llm` header |
+| `400 Bad Request` | Missing `x-vision-llm` header |
