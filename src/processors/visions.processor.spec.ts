@@ -3,17 +3,18 @@ import { OllamaService } from "@ehildt/nestjs-ollama";
 import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { Test, TestingModule } from "@nestjs/testing";
 
-import { OllamaConfigService } from "../configs/ollama-config.service";
-import { SocketIOConfigService } from "../configs/socket-io-config.service";
-import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto";
+import { OllamaConfigService } from "../configs/ollama-config.service.js";
+import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
+import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
-import { SystemPromptKey, VisionsProcessor } from "./visions.processor";
+import { SystemPromptKey, VisionsProcessor } from "./visions.processor.js";
 
 class TestVisionsProcessor extends VisionsProcessor {
-  async process(job: { data: FastifyMultipartDataWithFiltersReq }) {
-    const { buffers, meta, filters } = job.data;
+  async process(_job: { data: FastifyMultipartDataWithFiltersReq }) {
+    const { buffers, meta, filters } = _job.data;
     this.validateInput(buffers, meta);
-    return this.buildChatRequest(buffers, "test.jpg", filters, "DESCRIBE");
+    this.buildChatRequest(buffers, "test.jpg", filters, "DESCRIBE");
+    return undefined as unknown as void;
   }
 
   testValidateInput(buffers: unknown, meta: unknown) {

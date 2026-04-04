@@ -3,7 +3,7 @@ import { Readable } from "node:stream";
 import { MultipartFile } from "@fastify/multipart";
 import { BadRequestException } from "@nestjs/common";
 
-import { MultipartFilesPipe } from "./multipart-files.pipe";
+import { MultipartFilesPipe } from "./multipart-files.pipe.js";
 
 const mockFile = (filename: string, mimetype: string): MultipartFile => ({
   type: "file",

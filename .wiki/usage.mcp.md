@@ -67,11 +67,10 @@ List available MCP tools. No images required.
         "inputSchema": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["task"],
           "properties": {
             "prompt": {
-              "type": "string",
-              "description": "Optional textual instruction to guide the selected vision task."
+              "type": "array",
+              "description": "Optional array of Prompt objects to guide the vision task"
             },
             "task": {
               "type": "string",

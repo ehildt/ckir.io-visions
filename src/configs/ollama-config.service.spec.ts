@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { OllamaConfigAdapter } from "./ollama-config.adapter";
-import { OllamaConfigService } from "./ollama-config.service";
+import { OllamaConfigAdapter } from "./ollama-config.adapter.js";
+import { OllamaConfigService } from "./ollama-config.service.js";
 
 describe("OllamaConfigAdapter", () => {
   it("returns expected config from env object", () => {
