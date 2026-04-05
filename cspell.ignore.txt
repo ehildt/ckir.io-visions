@@ -30,6 +30,7 @@ chatbox
 chathub
 CHATHUB
 ckir
+clahe
 cmps
 cobertura
 codecov
@@ -45,9 +46,14 @@ dbaeumer
 dbfilename
 dccs
 DCCS
+deathspace
+deepspace
+Deepspace
 depbadge
 Depbadge
+depbadgerc
 depcheck
+depcheckrc
 depcruise
 depcruiserrc
 docgen
@@ -70,6 +76,7 @@ fieldtypes
 fontawesome
 FSIO
 genpose
+ghostwire
 gitconfiglocal
 github
 gitlab
@@ -129,6 +136,7 @@ nestjs
 nginx
 ngrok
 NGROK
+nioh
 NKEY
 nodenext
 nomic
@@ -150,6 +158,7 @@ pinia
 pkief
 pokemon
 postcss
+pproc
 qdrant
 Qdrant
 rabbitmq
@@ -165,6 +174,7 @@ reqs
 requirepass
 rimraf
 safelisted
+scanline
 Securityscorecard
 sendfile
 Servicestack

@@ -26,18 +26,18 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r install --frozen-lockfile
 
       - name: Lint
         run: |
-          pnpm lint
-          pnpm depcruise
-          pnpm lint:unused
+          pnpm -r lint
+          pnpm -r depcruise
+          pnpm -r lint:unused
 
       - name: Build
-        run: pnpm build
+        run: pnpm -r build
 
       - name: Test
         run: |
-          pnpm test
-          pnpm test:cov
+          pnpm -r test
+          pnpm -r test:cov

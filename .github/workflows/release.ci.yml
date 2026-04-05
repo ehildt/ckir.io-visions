@@ -39,35 +39,75 @@ jobs:
           path: ~/.pnpm-store
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r install --frozen-lockfile
 
-      - name: Lint
+      - name: Lint — Server
         run: |
+          cd server
           pnpm lint
           pnpm depcruise
           pnpm lint:unused
 
-      - name: Build
-        run: pnpm build
-
-      - name: Test
+      - name: Lint — Dashboard
         run: |
+          cd dashboard
+          pnpm lint
+          pnpm depcruise
+          pnpm lint:unused
+
+      - name: Build — Server
+        run: |
+          cd server
+          pnpm build:prod
+
+      - name: Build — Dashboard
+        run: |
+          cd dashboard
+          pnpm build
+
+      - name: Test — Server
+        run: |
+          cd server
           pnpm test
           pnpm test:cov
 
-      - name: Upload Coverage
+      - name: Test — Dashboard
+        run: |
+          cd dashboard
+          pnpm test
+          pnpm test:cov
+
+      - name: Upload Coverage — Server
         if: github.event_name == 'push'
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
+          flags: server
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Coverage — Dashboard
         if: github.event_name == 'push'
+        uses: codecov/codecov-action@v5
         with:
-          name: dist
-          path: dist/
+          fail_ci_if_error: true
+          flags: dashboard
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Build Artifact — Server
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-dist
+          path: server/dist/
+
+      - name: Build Artifact — Dashboard
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-dist
+          path: dashboard/dist/
 
   repo-update:
     if: github.event_name == 'push'
@@ -87,10 +127,11 @@ jobs:
         with:
           node-version: 22
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r install --frozen-lockfile
 
       - name: Changeset
         run: pnpm changeset version
+
       - name: Commit version bump
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
@@ -98,13 +139,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - name: Download Server dist
+        uses: actions/download-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: server-dist
+          path: server/dist/
 
-      - name: Depbadge
-        uses: ehildt/depbadge@v1
+      - name: Download Dashboard dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dashboard-dist
+          path: dashboard/dist/
+
+      - name: Depbadge — Server
+        run: cd server && npx @ehildt/depbadge
+
+      - name: Depbadge — Dashboard
+        run: cd dashboard && npx @ehildt/depbadge
 
       - name: Commit badge bump
         uses: stefanzweifel/git-auto-commit-action@v4

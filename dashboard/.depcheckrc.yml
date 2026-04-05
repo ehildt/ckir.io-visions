@@ -1,0 +1,35 @@
+skip-missing: true
+ignores:
+  - '@nestjs/schematics'
+  - '@types/jest'
+  - '@types/prettier'
+  - '@changesets/cli'
+  - '@vitest/coverage-v8'
+  - 'conventional-changelog-conventionalcommits'
+  - 'dependency-cruiser'
+  - 'husky'
+  - 'jest-junit'
+  - 'source-map-support'
+  - 'ts-jest'
+  - 'ts-loader'
+  - 'ts-node'
+  - 'tsconfig-paths'
+  - 'pino-pretty'
+  - '@types/supertest'
+  - rimraf
+  - supertest
+  # Required by postcss.config.mjs and style.css
+  - '@tailwindcss/postcss'
+  - postcss
+  - tailwindcss
+  # Required by style.css @plugin
+  - '@iconify/json'
+  - '@iconify/tailwind4'
+  # Required for testing (no tests yet)
+  - '@testing-library/jest-dom'
+  - '@testing-library/vue'
+  - '@vue/test-utils'
+  # ESLint plugins - not directly imported but used by ESLint ecosystem
+  - '@eslint/css'
+  - '@eslint/json'
+  - '@eslint/markdown'
