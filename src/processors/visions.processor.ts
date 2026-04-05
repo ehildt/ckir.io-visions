@@ -2,24 +2,28 @@ import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger";
 import { OllamaService } from "@ehildt/nestjs-ollama";
 import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { OnWorkerEvent, WorkerHost } from "@nestjs/bullmq";
-import { Injectable } from "@nestjs/common";
-import { Job } from "bullmq";
+import { Injectable, Logger } from "@nestjs/common";
+import { Job, UnrecoverableError } from "bullmq";
 import { ChatResponse, Message } from "ollama";
 
 import { OllamaConfigService } from "../configs/ollama-config.service.js";
 import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
+import { JobTrackingService } from "../services/job-tracking.service.js";
 
 export type SystemPromptKey = "DESCRIBE" | "COMPARE" | "OCR";
 
 @Injectable()
 export abstract class VisionsProcessor extends WorkerHost {
+  protected readonly logger = new Logger(this.constructor.name);
+
   constructor(
     protected readonly io: SocketIOService,
     protected readonly ollamaService: OllamaService,
     protected readonly ollamaConfigService: OllamaConfigService,
     protected readonly socketIOConfigService: SocketIOConfigService,
     protected readonly bullMQLogger: BullMQLoggerService,
+    protected readonly jobTracking: JobTrackingService,
   ) {
     super();
   }
@@ -38,16 +42,78 @@ export abstract class VisionsProcessor extends WorkerHost {
   }
 
   protected async handleVision(
+    job: Job<FastifyMultipartDataWithFiltersReq>,
     request: Parameters<typeof this.ollamaService.chat>[0],
     stream: boolean,
     onChunk: (response: ChatResponse) => Promise<void>,
+    requestId: string,
+    token: string | undefined,
+    roomId?: string,
+    event?: string,
   ): Promise<void> {
+    let cancelHandled = false;
+
+    const wrappedOnChunk = async (response: ChatResponse) => {
+      // Check cancel status at the start of each chunk
+      if (this.jobTracking.isCanceled(requestId)) {
+        // Only handle cancel once to prevent spam
+        if (cancelHandled) {
+          return;
+        }
+        cancelHandled = true;
+
+        await this.emitToSocket(roomId, event, {
+          requestId,
+          status: "canceled",
+          canceled: true,
+          pending: false,
+        });
+        // We can't easily stop the Ollama stream, but we stop emitting
+        if (token) {
+          try {
+            await job.moveToCompleted("canceled", token, true);
+          } catch {
+            // Lock may have expired for long-running jobs - this is expected
+            // The UnrecoverableError below will ensure no retries happen
+          }
+        }
+        // Throw error to stop processing and prevent retries
+        // We throw after the socket emission so it completes first
+        throw new UnrecoverableError("Job canceled during streaming");
+      }
+      await onChunk(response);
+    };
+
     if (stream) {
-      await this.ollamaService.chat(request, onChunk);
+      await this.ollamaService.chat(request, wrappedOnChunk);
     } else {
+      // Check once at the start for non-streaming
+      if (this.jobTracking.isCanceled(requestId)) {
+        await this.emitToSocket(roomId, event, {
+          requestId,
+          status: "canceled",
+          canceled: true,
+          pending: false,
+        });
+        // Throw UnrecoverableError to prevent retries
+        throw new UnrecoverableError("Job canceled");
+      }
       const reply = await this.ollamaService.chat(request);
+
+      // Check cancel again after getting response but before emitting
+      if (this.jobTracking.isCanceled(requestId)) {
+        await this.emitToSocket(roomId, event, {
+          requestId,
+          status: "canceled",
+          canceled: true,
+          pending: false,
+        });
+        // Throw UnrecoverableError to prevent retries
+        throw new UnrecoverableError("Job canceled");
+      }
+
       const message = reply?.message;
-      if (message) await onChunk({ message } as ChatResponse);
+      if (message) await wrappedOnChunk({ message } as ChatResponse);
     }
   }
 
@@ -69,12 +135,14 @@ export abstract class VisionsProcessor extends WorkerHost {
       content: `${userMessagePrefix} ${filenames}`,
     };
 
-    const prompts = filters.prompt ?? [];
-    const messages: Message[] = [
-      systemPrompt,
-      ...prompts.filter(Boolean),
-      userMessage,
-    ];
+    const prompts = (filters.prompt ?? []).filter(
+      (p): p is { role: string; content: string } =>
+        p &&
+        typeof p.role === "string" &&
+        typeof p.content === "string" &&
+        p.content.trim().length > 0,
+    );
+    const messages: Message[] = [systemPrompt, ...prompts, userMessage];
 
     return {
       messages,
@@ -92,10 +160,17 @@ export abstract class VisionsProcessor extends WorkerHost {
   ): Promise<void> {
     const socketEvent = event ?? "vision";
     try {
-      if (roomId) this.io.emitTo(socketEvent, roomId, data);
-      else this.io.emit(socketEvent, data);
+      const payload = { event: socketEvent, ...(data as object) };
+      this.logger.log(`[emitToSocket] Emitting to room=${roomId}, event=${socketEvent}, data=${JSON.stringify(data).slice(0, 100)}`);
+      if (roomId) {
+        this.io.emitTo(socketEvent, roomId, payload);
+        this.logger.log(`[emitToSocket] Called emitTo for room ${roomId}`);
+      } else {
+        this.io.emit(socketEvent, payload);
+        this.logger.log(`[emitToSocket] Called emit (broadcast)`);
+      }
     } catch (err) {
-      console.error(
+      this.logger.error(
         `Socket emit failed: roomId=${roomId}, data=${JSON.stringify(
           data,
         ).slice(0, 100)}`,
@@ -105,22 +180,26 @@ export abstract class VisionsProcessor extends WorkerHost {
   }
 
   @OnWorkerEvent("completed")
-  protected async onCompleted(job: Job) {
+  protected async onCompleted(job: Job<FastifyMultipartDataWithFiltersReq>) {
     await this.bullMQLogger.log(job);
-  }
-
-  @OnWorkerEvent("error")
-  protected async onError(job: Job) {
-    await this.bullMQLogger.log(job);
+    this.jobTracking.remove(job.name);
   }
 
   @OnWorkerEvent("active")
-  protected async onActive(job: Job) {
+  protected async onActive(job: Job<FastifyMultipartDataWithFiltersReq>) {
     await this.bullMQLogger.log(job);
+    this.jobTracking.setActive(job.name);
   }
 
   @OnWorkerEvent("failed")
-  protected async onFailed(job: Job) {
-    await this.bullMQLogger.error(job);
+  protected async onFailed(job: Job<FastifyMultipartDataWithFiltersReq>) {
+    // Check if this is a canceled job (UnrecoverableError with "canceled" message)
+    const failedReason = (job as any).failedReason || "";
+    if (failedReason.includes("canceled")) {
+      await this.bullMQLogger.log(job, "canceled");
+    } else {
+      await this.bullMQLogger.error(job);
+    }
+    this.jobTracking.remove(job.name);
   }
 }

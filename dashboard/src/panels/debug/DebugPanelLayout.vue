@@ -1,0 +1,3 @@
+<template>
+  <div class="bg-elevated border border-divider panel-glow"><slot></slot></div>
+</template>

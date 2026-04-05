@@ -1,0 +1,38 @@
+:root[data-theme='cyberpunk'] {
+  /* Brand Colors */
+  --color-brand: #00ffff;
+  --color-brand-muted: #ff00ff;
+
+  /* Status Colors */
+  --color-success: #39ff14;
+  --color-warning: #ffff00;
+  --color-error: #ff0033;
+  --color-info: #0088ff;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #ff1493;
+  --color-orange: #ff6600;
+  --color-teal: #00ced1;
+
+  /* Background Colors */
+  --color-bg-primary: #000510;
+  --color-bg-secondary: #0a0a1a;
+  --color-bg-tertiary: #141428;
+  --color-bg-elevated: #0a0a1a;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #1e1e3d;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e0f0ff;
+  --color-fg-secondary: #8090b0;
+  --color-fg-muted: #506080;
+  --color-fg-inverse: #000000;
+}

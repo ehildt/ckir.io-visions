@@ -1,0 +1,38 @@
+:root[data-theme='diablo'] {
+  /* Brand Colors */
+  --color-brand: #dc143c;
+  --color-brand-muted: #8b0000;
+
+  /* Status Colors */
+  --color-success: #32cd32;
+  --color-warning: #ff8c00;
+  --color-error: #ff0000;
+  --color-info: #4169e1;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #ff69b4;
+  --color-orange: #ff4500;
+  --color-teal: #008080;
+
+  /* Background Colors */
+  --color-bg-primary: #0a0000;
+  --color-bg-secondary: #1a0505;
+  --color-bg-tertiary: #280a0a;
+  --color-bg-elevated: #1a0505;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #4a1a1a;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e8c9c9;
+  --color-fg-secondary: #a07070;
+  --color-fg-muted: #604040;
+  --color-fg-inverse: #000000;
+}

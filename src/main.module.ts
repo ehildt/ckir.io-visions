@@ -16,6 +16,7 @@ import { BULLMQ_QUEUE } from "./constants/bullmq.constants.js";
 import { ClassicController } from "./controllers/classic.controller.js";
 import { HealthController } from "./controllers/health.controller.js";
 import { JsonRpcController } from "./controllers/json-rpc.controller.js";
+import { SocketEventModule } from "./modules/socket-event.module.js";
 import { VisionsCompareProcessor } from "./processors/visions-compare.processor.js";
 import { VisionsDescribeProcessor } from "./processors/visions-describe.processor.js";
 import { VisionsOCRProcessor } from "./processors/visions-ocr.processor.js";
@@ -23,12 +24,21 @@ import { AnalyzeImageService } from "./services/analyze-image.service.js";
 import { HealthService } from "./services/health.service.js";
 import { JsonRpcService } from "./services/json-rpc.service.js";
 import { OllamaModelsService } from "./services/ollama-models.service.js";
+import { SocketService } from "./services/socket.service.js";
 
 @Module({
   controllers: [ClassicController, JsonRpcController, HealthController],
-  providers: [Logger, AnalyzeImageService, HealthService, JsonRpcService, OllamaModelsService],
+  providers: [
+    Logger,
+    AnalyzeImageService,
+    HealthService,
+    JsonRpcService,
+    OllamaModelsService,
+    SocketService,
+  ],
   imports: [
     HttpModule,
+    SocketEventModule,
     TerminusModule.forRoot({
       errorLogStyle: "pretty",
     }),

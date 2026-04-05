@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 
 import { hashPayload } from "@ehildt/ckir-helpers/hash-payload";
+import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger";
 import { MultipartFile } from "@fastify/multipart";
 import { getQueueToken } from "@nestjs/bullmq";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -10,6 +11,7 @@ import { Mock, vi } from "vitest";
 import { BULLMQ_JOB, BULLMQ_QUEUE } from "../constants/bullmq.constants.js";
 
 import { AnalyzeImageService } from "./analyze-image.service.js";
+import { JobTrackingService } from "./job-tracking.service.js";
 
 vi.mock("@ehildt/ckir-helpers/hash-payload", () => ({
   hashPayload: vi.fn(),
@@ -20,6 +22,12 @@ describe("AnalyzeImageService", () => {
   let describeQueue: Queue & { add: Mock };
   let compareQueue: Queue & { add: Mock };
   let ocrQueue: Queue & { add: Mock };
+  let jobTrackingServiceMock: {
+    add: ReturnType<typeof vi.fn>;
+    isCanceled: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
+    get: ReturnType<typeof vi.fn>;
+  };
 
   const mockFileStream = () =>
     Object.assign(new Readable({ read() {} }), {
@@ -33,15 +41,30 @@ describe("AnalyzeImageService", () => {
         AnalyzeImageService,
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_DESCRIBE),
-          useValue: { add: vi.fn() },
+          useValue: { add: vi.fn(), remove: vi.fn() },
         },
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_COMPARE),
-          useValue: { add: vi.fn() },
+          useValue: { add: vi.fn(), remove: vi.fn() },
         },
         {
           provide: getQueueToken(BULLMQ_QUEUE.IMAGE_OCR),
-          useValue: { add: vi.fn() },
+          useValue: { add: vi.fn(), remove: vi.fn() },
+        },
+        {
+          provide: JobTrackingService,
+          useValue: {
+            add: vi.fn(),
+            isCanceled: vi.fn().mockReturnValue(false),
+            cancel: vi.fn(),
+            get: vi.fn(),
+          },
+        },
+        {
+          provide: BullMQLoggerService,
+          useValue: {
+            log: vi.fn(),
+          },
         },
       ],
     }).compile();
@@ -50,6 +73,7 @@ describe("AnalyzeImageService", () => {
     describeQueue = module.get(getQueueToken(BULLMQ_QUEUE.IMAGE_DESCRIBE));
     compareQueue = module.get(getQueueToken(BULLMQ_QUEUE.IMAGE_COMPARE));
     ocrQueue = module.get(getQueueToken(BULLMQ_QUEUE.IMAGE_OCR));
+    jobTrackingServiceMock = module.get(JobTrackingService);
   });
 
   describe("toFilePayloads", () => {
@@ -175,6 +199,21 @@ describe("AnalyzeImageService", () => {
       expect(describeQueue.add).not.toHaveBeenCalled();
       expect(compareQueue.add).not.toHaveBeenCalled();
       expect(ocrQueue.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("cancel", () => {
+    it("should track cancel before job is queued", async () => {
+      const requestId = "test-request-123";
+
+      const result = await service.cancel(requestId);
+
+      expect(result).toBe(true);
+      expect(jobTrackingServiceMock.cancel).toHaveBeenCalledWith(requestId);
+    });
+
+    it("should use job tracking service correctly", () => {
+      expect(jobTrackingServiceMock).toBeDefined();
     });
   });
 });

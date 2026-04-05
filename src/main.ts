@@ -9,6 +9,7 @@ import {
   VALIDATION_PIPE,
 } from "@ehildt/ckir-helpers/bootstrap";
 import { SocketIOModule } from "@ehildt/nestjs-socket.io";
+import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import compress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
@@ -41,6 +42,8 @@ void (async () => {
   );
 
   await SocketIOModule.attach(APP);
+  APP.get(SocketIOService);
+
   const appConfigService = APP.get(AppConfigService);
   await APP.register(fastifyMultipart as any, { attachFieldsToBody: true });
   await APP.register(compress as any, {
@@ -49,27 +52,27 @@ void (async () => {
     global: true, // default behavior – compress all
   });
 
-  // Serve static webapp files
+  // Serve static dashboard files
   await APP.register(fastifyStatic as any, {
-    root: join(__dirname, "..", "webapp", "dist"),
-    prefix: "/webapp/",
+    root: join(__dirname, "..", "dashboard", "dist"),
+    prefix: "/dashboard/",
     wildcard: false,
   });
 
   // Get underlying Fastify instance
   const fastifyInstance = APP.getHttpAdapter().getInstance();
 
-  // SPA fallback - serve index.html for any /webapp/* routes not found
-  fastifyInstance.get("/webapp/*", async (_request: any, reply: any) => {
+  // SPA fallback - serve index.html for any /dashboard/* routes not found
+  fastifyInstance.get("/dashboard/*", async (_request: any, reply: any) => {
     return reply.sendFile(
       "index.html",
-      join(__dirname, "..", "webapp", "dist"),
+      join(__dirname, "..", "dashboard", "dist"),
     );
   });
 
-  // Redirect root to webapp
+  // Redirect root to dashboard
   fastifyInstance.get("/", async (_request: any, reply: any) => {
-    return reply.redirect("/webapp/");
+    return reply.redirect("/dashboard/");
   });
 
   APP.enableCors(appConfigService.config.cors);

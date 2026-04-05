@@ -1,0 +1,94 @@
+@import './themes/souls.css';
+@import './themes/diablo.css';
+@import './themes/berserk.css';
+@import './themes/cyberpunk.css';
+@import './themes/stellar.css';
+@import './themes/ghostwire.css';
+@import './themes/deathspace.css';
+@import './themes/nioh.css';
+
+@theme {
+  /* Fonts */
+  --font-mono:
+    'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Brand Colors */
+  --color-brand: #3399ff;
+  --color-brand-muted: #9944ff;
+
+  /* Status Colors */
+  --color-success: #00cc7f;
+  --color-warning: #ff9933;
+  --color-error: #ff4466;
+  --color-info: #00cccc;
+
+  /* Accent Colors */
+  --color-gold: #ffcc00;
+  --color-pink: #ff66aa;
+  --color-orange: #ff6633;
+  --color-teal: #33cccc;
+
+  /* Background Colors */
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-tertiary: #1a1a2e;
+  --color-bg-elevated: #0f0f17;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e8e8e8;
+  --color-fg-secondary: #a0a0b0;
+  --color-fg-muted: #606070;
+  --color-fg-inverse: #000000;
+
+  /* Border Colors */
+  --color-divider: #2a2a3a;
+  --color-border-focus: #00fff5;
+}
+
+:root {
+  /* Fallback colors (used when no theme is selected) - Souls theme defaults */
+
+  /* Brand Colors */
+  --color-brand: #ff8c00;
+  --color-brand-muted: #4a3728;
+
+  /* Status Colors */
+  --color-success: #228b22;
+  --color-warning: #daa520;
+  --color-error: #8b0000;
+  --color-info: #4682b4;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #9932cc;
+  --color-orange: #ff8c00;
+  --color-teal: #5f9ea0;
+
+  /* Background Colors */
+  --color-bg-primary: #0d0c0a;
+  --color-bg-secondary: #1a1814;
+  --color-bg-tertiary: #252018;
+  --color-bg-elevated: #1a1814;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #3d3228;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #c9b99a;
+  --color-fg-secondary: #8b7355;
+  --color-fg-muted: #5c4d3c;
+  --color-fg-inverse: #000000;
+}

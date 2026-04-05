@@ -1,0 +1,38 @@
+:root[data-theme='ghostwire'] {
+  /* Brand Colors */
+  --color-brand: #00ffbf;
+  --color-brand-muted: #ff4081;
+
+  /* Status Colors */
+  --color-success: #00e676;
+  --color-warning: #ffab00;
+  --color-error: #ff1744;
+  --color-info: #00b0ff;
+
+  /* Accent Colors */
+  --color-gold: #ffd740;
+  --color-pink: #f50057;
+  --color-orange: #ff6d00;
+  --color-teal: #1de9b6;
+
+  /* Background Colors */
+  --color-bg-primary: #050a0c;
+  --color-bg-secondary: #0a1518;
+  --color-bg-tertiary: #0f2024;
+  --color-bg-elevated: #0a1518;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #1a3a40;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e0f7fa;
+  --color-fg-secondary: #80a8a8;
+  --color-fg-muted: #406060;
+  --color-fg-inverse: #000000;
+}

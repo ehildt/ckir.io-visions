@@ -1,0 +1,44 @@
+:root[data-theme='souls'] {
+  /* Brand Colors */
+  --color-brand: #ff8c00;
+  --color-brand-muted: #4a3728;
+
+  /* Status Colors */
+  --color-success: #228b22;
+  --color-warning: #daa520;
+  --color-error: #8b0000;
+  --color-info: #4682b4;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #9932cc;
+  --color-orange: #ff8c00;
+  --color-teal: #5f9ea0;
+
+  /* Background Colors */
+  --color-bg-primary: #0d0c0a;
+  --color-bg-secondary: #1a1814;
+  --color-bg-tertiary: #252018;
+  --color-bg-elevated: #1a1814;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #3d3228;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #c9b99a;
+  --color-fg-secondary: #8b7355;
+  --color-fg-muted: #5c4d3c;
+  --color-fg-inverse: #000000;
+}

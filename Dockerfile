@@ -15,13 +15,13 @@ ENTRYPOINT ["pnpm", "run", "start:dev"]
 FROM base AS builder
 COPY package.json tsconfig*.json shims.d.ts ./
 COPY src/ ./src/
-COPY webapp/ ./webapp/
+COPY dashboard/ ./dashboard/
 
 # Install root dependencies
 RUN pnpm install
 
-# Build the webapp
-RUN rm -rf webapp/node_modules && cd webapp && pnpm install && pnpm run build
+# Build the dashboard
+RUN rm -rf dashboard/node_modules && cd dashboard && pnpm install && pnpm run build
 
 # Target: temporary (entrypoint for prepare-dev)
 FROM builder AS builddev
@@ -43,7 +43,7 @@ ENV                                         \
 COPY --chown=node:node --from=builddev /app/dist ./dist
 COPY --chown=node:node --from=builddev /app/package*.json ./
 COPY --chown=node:node --from=builddev /app/node_modules ./node_modules
-COPY --chown=node:node --from=builddev /app/webapp/dist ./webapp/dist
+COPY --chown=node:node --from=builddev /app/dashboard/dist ./dashboard/dist
 
 EXPOSE 3000
 USER node
@@ -61,7 +61,7 @@ ENV                                         \
 COPY --chown=node:node --from=buildprod /app/dist ./dist
 COPY --chown=node:node --from=buildprod /app/package*.json ./
 COPY --chown=node:node --from=buildprod /app/node_modules ./node_modules
-COPY --chown=node:node --from=buildprod /app/webapp/dist ./webapp/dist
+COPY --chown=node:node --from=buildprod /app/dashboard/dist ./dashboard/dist
 
 EXPOSE 3000
 USER node

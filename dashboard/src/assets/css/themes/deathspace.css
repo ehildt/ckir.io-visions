@@ -1,0 +1,38 @@
+:root[data-theme='deathspace'] {
+  /* Brand Colors */
+  --color-brand: #b967ff;
+  --color-brand-muted: #7b68ee;
+
+  /* Status Colors */
+  --color-success: #00ff9f;
+  --color-warning: #ffaa00;
+  --color-error: #ff0055;
+  --color-info: #0099ff;
+
+  /* Accent Colors */
+  --color-gold: #ffdd00;
+  --color-pink: #ff66cc;
+  --color-orange: #ff7700;
+  --color-teal: #00ffff;
+
+  /* Background Colors */
+  --color-bg-primary: #020008;
+  --color-bg-secondary: #080818;
+  --color-bg-tertiary: #101028;
+  --color-bg-elevated: #080818;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #202040;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e8e8ff;
+  --color-fg-secondary: #9080c0;
+  --color-fg-muted: #504060;
+  --color-fg-inverse: #000000;
+}

@@ -3,10 +3,12 @@ import {
   ApiBody,
   ApiConsumes,
   ApiHeader,
+  ApiOperation,
   ApiQuery,
   ApiResponse,
 } from "@nestjs/swagger";
 
+import { CancelJobDto, CancelJobResponseDto } from "../dtos/cancel-job.dto.js";
 import { ClassicControllerResponse } from "../dtos/classic/classic-response.dto.js";
 import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 
@@ -186,4 +188,28 @@ export const ApiVision = () =>
     ApiQueryEvent(),
     ApiQueryStream(),
     ApiQueryNumCtx(),
+  );
+
+export const ApiCancelJob = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: "Cancel a pending or active vision job",
+      description: [
+        "**Job cancellation**",
+        "",
+        "Cancels a vision job identified by its requestId.",
+        "If the job is pending, it is removed from the queue.",
+        "If the job is active, it will stop processing and emit a canceled status.",
+        "If the job is already completed or failed, the cancel has no effect.",
+      ].join("\n"),
+    }),
+    ApiBody({
+      type: CancelJobDto,
+      description: "The cancel request containing the requestId to cancel",
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: "Job cancel status",
+      type: CancelJobResponseDto,
+    }),
   );

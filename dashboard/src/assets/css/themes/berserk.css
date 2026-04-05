@@ -1,0 +1,38 @@
+:root[data-theme='berserk'] {
+  /* Brand Colors */
+  --color-brand: #8b0000;
+  --color-brand-muted: #2f2f2f;
+
+  /* Status Colors */
+  --color-success: #556b2f;
+  --color-warning: #d4af37;
+  --color-error: #dc143c;
+  --color-info: #a9a9a9;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #c71585;
+  --color-orange: #b22222;
+  --color-teal: #2f4f4f;
+
+  /* Background Colors */
+  --color-bg-primary: #050505;
+  --color-bg-secondary: #0f0f0f;
+  --color-bg-tertiary: #1a1a1a;
+  --color-bg-elevated: #0f0f0f;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #2d2d2d;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #e8e0d5;
+  --color-fg-secondary: #8b8680;
+  --color-fg-muted: #5c5855;
+  --color-fg-inverse: #000000;
+}

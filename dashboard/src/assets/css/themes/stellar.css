@@ -1,0 +1,38 @@
+:root[data-theme='stellar'] {
+  /* Brand Colors */
+  --color-brand: #ff1493;
+  --color-brand-muted: #da70d6;
+
+  /* Status Colors */
+  --color-success: #00fa9a;
+  --color-warning: #ffd700;
+  --color-error: #dc143c;
+  --color-info: #1e90ff;
+
+  /* Accent Colors */
+  --color-gold: #ffec8b;
+  --color-pink: #ff69b4;
+  --color-orange: #ff8c00;
+  --color-teal: #40e0d0;
+
+  /* Background Colors */
+  --color-bg-primary: #0a0a14;
+  --color-bg-secondary: #121220;
+  --color-bg-tertiary: #1c1c2e;
+  --color-bg-elevated: #121220;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #2a2a40;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #f0e8ff;
+  --color-fg-secondary: #9080a0;
+  --color-fg-muted: #605070;
+  --color-fg-inverse: #000000;
+}

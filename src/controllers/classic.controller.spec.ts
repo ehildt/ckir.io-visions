@@ -5,6 +5,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import { AnalyzeImageService } from "../services/analyze-image.service.js";
+import { OllamaModelsService } from "../services/ollama-models.service.js";
 
 import { ClassicController } from "./classic.controller.js";
 
@@ -51,6 +52,14 @@ describe("ClassicController", () => {
             config: {
               event: "vision",
             },
+          },
+        },
+        {
+          provide: OllamaModelsService,
+          useValue: {
+            getModels: vi
+              .fn()
+              .mockResolvedValue(["llama3.2-vision", "minicpm"]),
           },
         },
       ],

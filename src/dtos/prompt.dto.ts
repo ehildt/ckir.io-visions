@@ -1,12 +1,16 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsOptional, IsString } from "class-validator";
 
 export class Prompt {
   @ApiProperty({ example: "user" })
+  @IsOptional()
   @IsString()
-  role!: string;
+  role?: string;
 
-  @ApiProperty({ example: "Describe this image in exhaustive visual detail." })
+  @ApiPropertyOptional({
+    example: "Describe this image in exhaustive visual detail.",
+  })
+  @IsOptional()
   @IsString()
-  content!: string;
+  content?: string;
 }

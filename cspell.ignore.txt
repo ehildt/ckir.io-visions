@@ -45,6 +45,9 @@ dbaeumer
 dbfilename
 dccs
 DCCS
+deathspace
+deepspace
+Deepspace
 depbadge
 Depbadge
 depcheck
@@ -70,6 +73,7 @@ fieldtypes
 fontawesome
 FSIO
 genpose
+ghostwire
 gitconfiglocal
 github
 gitlab
@@ -129,6 +133,7 @@ nestjs
 nginx
 ngrok
 NGROK
+nioh
 NKEY
 nodenext
 nomic
@@ -165,6 +170,7 @@ reqs
 requirepass
 rimraf
 safelisted
+scanline
 Securityscorecard
 sendfile
 Servicestack

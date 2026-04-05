@@ -1,0 +1,1 @@
+**@CKIR.IO/CHATS** is a headless microservice that uses NGINX to serve a dashboard application. The dashboard provides the UI and UX layer for interacting with the existing microservices in the CKIR ecosystem.

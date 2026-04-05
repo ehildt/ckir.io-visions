@@ -2,10 +2,12 @@ import { BullMQLoggerService } from "@ehildt/nestjs-bullmq-logger";
 import { OllamaService } from "@ehildt/nestjs-ollama";
 import { SocketIOService } from "@ehildt/nestjs-socket.io";
 import { Test, TestingModule } from "@nestjs/testing";
+import { Job } from "bullmq";
 
 import { OllamaConfigService } from "../configs/ollama-config.service.js";
 import { SocketIOConfigService } from "../configs/socket-io-config.service.js";
 import { FastifyMultipartDataWithFiltersReq } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
+import { JobTrackingService } from "../services/job-tracking.service.js";
 
 import { SystemPromptKey, VisionsProcessor } from "./visions.processor.js";
 
@@ -46,11 +48,20 @@ class TestVisionsProcessor extends VisionsProcessor {
   }
 
   async testHandleChat(
+    job: Job<FastifyMultipartDataWithFiltersReq>,
     request: Parameters<typeof this.ollamaService.chat>[0],
     stream: boolean,
     onChunk: (response: { message: { content: string } }) => Promise<void>,
+    token: string = "test-token",
   ) {
-    return this.handleVision(request, stream, onChunk);
+    return this.handleVision(
+      job,
+      request,
+      stream,
+      onChunk,
+      "test-request-id",
+      token,
+    );
   }
 }
 
@@ -58,9 +69,10 @@ describe("VisionsProcessor", () => {
   let processor: TestVisionsProcessor;
   let ollamaService: OllamaService;
   let socketIOService: SocketIOService;
+  let testModule: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testModule = await Test.createTestingModule({
       providers: [
         TestVisionsProcessor,
         {
@@ -106,12 +118,23 @@ describe("VisionsProcessor", () => {
             error: vi.fn(),
           },
         },
+        {
+          provide: JobTrackingService,
+          useValue: {
+            isCanceled: vi.fn().mockReturnValue(false),
+            setActive: vi.fn(),
+            remove: vi.fn(),
+            cancel: vi.fn(),
+            get: vi.fn(),
+            add: vi.fn(),
+          },
+        },
       ],
     }).compile();
 
-    processor = module.get<TestVisionsProcessor>(TestVisionsProcessor);
-    ollamaService = module.get<OllamaService>(OllamaService);
-    socketIOService = module.get<SocketIOService>(SocketIOService);
+    processor = testModule.get<TestVisionsProcessor>(TestVisionsProcessor);
+    ollamaService = testModule.get<OllamaService>(OllamaService);
+    socketIOService = testModule.get<SocketIOService>(SocketIOService);
   });
 
   describe("validateInput", () => {
@@ -253,11 +276,10 @@ describe("VisionsProcessor", () => {
 
       await processor.testEmitToSocket("room-1", "vision", data);
 
-      expect(socketIOService.emitTo).toHaveBeenCalledWith(
-        "vision",
-        "room-1",
-        data,
-      );
+      expect(socketIOService.emitTo).toHaveBeenCalledWith("vision", "room-1", {
+        event: "vision",
+        ...data,
+      });
     });
 
     it("emits globally when roomId is undefined", async () => {
@@ -265,7 +287,10 @@ describe("VisionsProcessor", () => {
 
       await processor.testEmitToSocket(undefined, "vision", data);
 
-      expect(socketIOService.emit).toHaveBeenCalledWith("vision", data);
+      expect(socketIOService.emit).toHaveBeenCalledWith("vision", {
+        event: "vision",
+        ...data,
+      });
     });
 
     it("handles errors gracefully", async () => {
@@ -280,11 +305,14 @@ describe("VisionsProcessor", () => {
   });
 
   describe("handleChat", () => {
+    const createMockJob = (): Job<FastifyMultipartDataWithFiltersReq> =>
+      ({ name: "test-request-id" } as Job<FastifyMultipartDataWithFiltersReq>);
+
     it("calls ollamaService.chat with stream=false and invokes onChunk", async () => {
       const request = { messages: [], model: "test" };
       const onChunk = vi.fn().mockResolvedValue(undefined);
 
-      await processor.testHandleChat(request, false, onChunk);
+      await processor.testHandleChat(createMockJob(), request, false, onChunk);
 
       expect(ollamaService.chat).toHaveBeenCalledWith(request);
       expect(onChunk).toHaveBeenCalledWith({
@@ -292,13 +320,63 @@ describe("VisionsProcessor", () => {
       });
     });
 
-    it("calls ollamaService.chat with stream=true and callback", async () => {
+    it("calls ollamaService.chat with stream=true and a callback", async () => {
       const request = { messages: [], model: "test", stream: true };
       const onChunk = vi.fn().mockResolvedValue(undefined);
 
-      await processor.testHandleChat(request, true, onChunk);
+      await processor.testHandleChat(createMockJob(), request, true, onChunk);
 
-      expect(ollamaService.chat).toHaveBeenCalledWith(request, onChunk);
+      expect(ollamaService.chat).toHaveBeenCalledWith(
+        request,
+        expect.any(Function),
+      );
+    });
+
+    it("does not call onChunk if job is canceled", async () => {
+      const request = { messages: [], model: "test" };
+      const onChunk = vi.fn().mockResolvedValue(undefined);
+
+      // Mock the job tracking to say the job is canceled
+      const jobTrackingService = testModule.get(JobTrackingService);
+      (jobTrackingService.isCanceled as any).mockReturnValue(true);
+
+      // Should throw UnrecoverableError when canceled
+      await expect(
+        processor.testHandleChat(createMockJob(), request, false, onChunk),
+      ).rejects.toThrow("Job canceled");
+
+      // When canceled, chat should NOT be called for non-streaming
+      expect(ollamaService.chat).not.toHaveBeenCalled();
+      expect(onChunk).not.toHaveBeenCalled();
+    });
+
+    it("stops processing chunks when job is canceled in streaming mode", async () => {
+      const request = { messages: [], model: "test", stream: true };
+      const onChunk = vi.fn().mockResolvedValue(undefined);
+
+      // Mock ollama to simulate streaming by calling the callback
+      const mockResponse = { message: { content: "test chunk" } };
+      (ollamaService.chat as any).mockImplementation(
+        async (_req: unknown, callback: (resp: unknown) => Promise<void>) => {
+          await callback(mockResponse);
+        },
+      );
+
+      // Mock the job tracking to say the job is canceled
+      const jobTrackingService = testModule.get(JobTrackingService);
+      (jobTrackingService.isCanceled as any).mockReturnValue(true);
+
+      // Should throw UnrecoverableError to prevent retries
+      await expect(
+        processor.testHandleChat(createMockJob(), request, true, onChunk),
+      ).rejects.toThrow("Job canceled during streaming");
+
+      // When canceled in streaming, chat is called but onChunk should not be called
+      expect(ollamaService.chat).toHaveBeenCalledWith(
+        request,
+        expect.any(Function),
+      );
+      expect(onChunk).not.toHaveBeenCalled();
     });
   });
 });

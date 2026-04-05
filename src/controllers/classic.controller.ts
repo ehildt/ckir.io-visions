@@ -1,11 +1,13 @@
 import { MultipartFile, MultipartValue } from "@fastify/multipart";
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Headers,
   HttpCode,
   HttpStatus,
+  Logger,
   ParseBoolPipe,
   ParseIntPipe,
   Post,
@@ -29,7 +31,8 @@ import {
   MultiPartFiles,
   MultiPartValue,
 } from "../decorators/visions.decorator.js";
-import { ApiVision } from "../decorators/visions.openapi.js";
+import { ApiCancelJob, ApiVision } from "../decorators/visions.openapi.js";
+import { CancelJobDto, CancelJobResponseDto } from "../dtos/cancel-job.dto.js";
 import { ClassicControllerResponse } from "../dtos/classic/classic-response.dto.js";
 import { VisionTask } from "../dtos/classic/get-fastify-multipart-data-req.dto.js";
 import { Prompt } from "../dtos/prompt.dto.js";
@@ -44,6 +47,7 @@ export class ClassicController {
     private readonly analyzeImageService: AnalyzeImageService,
     private readonly ollamaModelsService: OllamaModelsService,
     private readonly socketIOConfigService: SocketIOConfigService,
+    private readonly logger: Logger,
   ) {}
 
   @Post()
@@ -93,6 +97,20 @@ export class ClassicController {
         roomId,
         requestId,
       },
+    };
+  }
+
+  @Post("cancel")
+  @ApiCancelJob()
+  async cancelJob(@Body() body: CancelJobDto): Promise<CancelJobResponseDto> {
+    const canceled = await this.analyzeImageService.cancel(body.requestId);
+
+    return {
+      success: canceled,
+      message: canceled
+        ? "Job canceled successfully"
+        : "Job not found or already completed",
+      requestId: body.requestId,
     };
   }
 

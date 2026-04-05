@@ -1,0 +1,38 @@
+:root[data-theme='nioh'] {
+  /* Brand Colors */
+  --color-brand: #e60012;
+  --color-brand-muted: #8b0000;
+
+  /* Status Colors */
+  --color-success: #228b22;
+  --color-warning: #ffcc00;
+  --color-error: #ff0000;
+  --color-info: #ffffff;
+
+  /* Accent Colors */
+  --color-gold: #ffd700;
+  --color-pink: #ff69b4;
+  --color-orange: #ff6600;
+  --color-teal: #008080;
+
+  /* Background Colors */
+  --color-bg-primary: #080808;
+  --color-bg-secondary: #121212;
+  --color-bg-tertiary: #1c1c1c;
+  --color-bg-elevated: #121212;
+
+  /* Alias for bg-primary, bg-secondary, etc. */
+  --color-primary: var(--color-bg-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-tertiary: var(--color-bg-tertiary);
+  --color-elevated: var(--color-bg-elevated);
+
+  /* Border */
+  --color-divider: #333333;
+
+  /* Foreground/Text Colors */
+  --color-fg-primary: #f5f5f5;
+  --color-fg-secondary: #b0b0b0;
+  --color-fg-muted: #707070;
+  --color-fg-inverse: #000000;
+}

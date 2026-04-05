@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "resolveJsonModule": true,
-    "baseUrl": "./",
     "outDir": "./dist",
     "target": "esnext",
     "module": "nodenext",
@@ -11,7 +10,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "6.0",
     "types": ["vitest/globals"]
   },
   "files": ["shims.d.ts"],
