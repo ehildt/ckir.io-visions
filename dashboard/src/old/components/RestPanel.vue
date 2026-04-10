@@ -1,44 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
+import type { SocketProvider } from '../../types/socket-provider.model';
 
 const props = defineProps<{
-  socketProvider: {
-    getSocket: (event?: string, room?: string) => any;
-    joinRoom?: (roomId: string, eventName: string) => void;
-    leaveRoom?: (roomId: string, eventName: string) => void;
-    listenToEvent?: (eventName: string) => void;
-    stopListening?: () => void;
-    trackRequest: (
-      endpoint: string,
-      method: string,
-      promise: Promise<Response>,
-      details?: {
-        headers?: Record<string, string>;
-        body?: string;
-        formData?: FormData;
-        requestId?: string;
-        roomId?: string;
-        event?: string;
-        numCtx?: string;
-        stream?: boolean;
-        model?: string;
-      },
-    ) => Promise<Response>;
-    addMessage: (event: string, data: unknown) => void;
-    addPendingMessage: (
-      event: string,
-      roomId: string,
-      requestId: string,
-      task?: string,
-      stream?: boolean,
-    ) => void;
-    updatePendingMessage: (requestId: string, data: unknown) => void;
-    connectedEvents: { value: Set<string> };
-    connectedRooms: { value: Map<string, Set<string>> };
-    getConnectedEventsAndRooms: () => string[];
-    closeEvent: (eventName: string) => void;
-    closeRoom: (eventName: string, roomId: string) => void;
-  };
+  socketProvider: SocketProvider;
   models: string[];
   modelsLoading: boolean;
   currentRoom: string;
