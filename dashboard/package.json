@@ -30,6 +30,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@paralleldrive/cuid2": "^3.3.0",
     "@primeuix/themes": "^2.0.3",
     "@tanstack/vue-query": "^5.96.2",
     "@vueuse/components": "^14.2.1",

@@ -9,7 +9,15 @@ import ResultViewer from './components/ResultViewer.vue';
 
 import '../assets/css/style.css';
 
-type ThemeName = 'souls' | 'diablo' | 'berserk' | 'cyberpunk' | 'stellar' | 'ghostwire' | 'deathspace' | 'nioh';
+type ThemeName =
+  | 'souls'
+  | 'diablo'
+  | 'berserk'
+  | 'cyberpunk'
+  | 'stellar'
+  | 'ghostwire'
+  | 'deathspace'
+  | 'nioh';
 
 const activeTab = ref<'rest' | 'mcp' | 'debug'>('rest');
 const messages = ref<Array<{ time: string; event: string; data: unknown }>>([]);
@@ -29,7 +37,19 @@ const darkThemes2 = ['ghostwire', 'deathspace', 'nioh'];
 
 onMounted(() => {
   const saved = localStorage.getItem('theme') as ThemeName;
-  if (saved && ['souls', 'diablo', 'berserk', 'cyberpunk', 'stellar', 'ghostwire', 'deathspace', 'nioh'].includes(saved)) {
+  if (
+    saved &&
+    [
+      'souls',
+      'diablo',
+      'berserk',
+      'cyberpunk',
+      'stellar',
+      'ghostwire',
+      'deathspace',
+      'nioh',
+    ].includes(saved)
+  ) {
     currentTheme.value = saved;
   }
   applyTheme(currentTheme.value);
@@ -167,7 +187,13 @@ watch(activeTab, (newTab) => {
   }, 3000);
 });
 
-function addPendingMessage(event: string, roomId: string, requestId: string, task?: string, stream?: boolean) {
+function addPendingMessage(
+  event: string,
+  roomId: string,
+  requestId: string,
+  task?: string,
+  stream?: boolean,
+) {
   console.log(
     '[addPendingMessage] event:',
     event,
@@ -350,21 +376,7 @@ function initSocket() {
   socket.on('connect', () => {
     connectionState.value = 'connected';
     socketError.value = null;
-    console.log(
-      `[App] Socket connected, rejoining room=${currentRoom.value}, reapplying event=${currentEvent.value}`,
-    );
-
-    // Re-join room if we have one
-    if (currentRoom.value) {
-      socket!.emit('join', currentRoom.value);
-      console.log(`[App] Re-joined room: ${currentRoom.value}`);
-    }
-
-    // Re-apply event listener if we have one
-    if (currentEvent.value) {
-      applyEventListener(currentEvent.value);
-      console.log(`[App] Re-applied listener for event: ${currentEvent.value}`);
-    }
+    console.log('[App] Socket connected');
 
     if (lastConnectionEvent.value !== 'connected') {
       lastConnectionEvent.value = 'connected';
@@ -463,7 +475,7 @@ function listenToEvent(eventName: string) {
   applyEventListener(eventName);
 }
 
-const eventListeners = new Map<string, ((...args: any[]) => void)>();
+const eventListeners = new Map<string, (...args: any[]) => void>();
 
 function applyEventListener(eventName: string) {
   // If already listening to this event, don't add another listener
@@ -485,7 +497,6 @@ function applyEventListener(eventName: string) {
 
   eventListeners.set(eventName, listener);
   socket!.on(eventName, listener);
-  currentEvent.value = eventName;
   connectedEvents.value.add(eventName);
   console.log(`[App] Now listening to: ${eventName}`);
 
@@ -501,16 +512,15 @@ function applyEventListener(eventName: string) {
 
 function stopListening() {
   console.log(`[App] stopListening called`);
-  if (!socket?.connected || !currentEvent.value) return;
+  if (!socket?.connected || connectedEvents.value.size === 0) return;
 
-  const eventName = currentEvent.value;
+  const eventName = Array.from(connectedEvents.value)[0];
   const listener = eventListeners.get(eventName);
   if (listener) {
     socket!.off(eventName, listener);
     eventListeners.delete(eventName);
   }
   connectedEvents.value.delete(eventName);
-  currentEvent.value = '';
 
   addSocketDebugEntry({
     endpoint: `socket.io:${eventName}`,
@@ -531,18 +541,11 @@ function closeEvent(eventName: string) {
       eventListeners.delete(eventName);
     }
 
-    if (currentEvent.value === eventName) {
-      currentEvent.value = '';
-    }
-
     // Leave all rooms for this event
     const rooms = connectedRooms.value.get(eventName);
     if (rooms) {
       rooms.forEach((roomId) => {
         socket!.emit('leave', roomId);
-        if (currentRoom.value === roomId) {
-          currentRoom.value = '';
-        }
       });
       connectedRooms.value.delete(eventName);
     }
@@ -568,10 +571,6 @@ function closeRoom(eventName: string, roomId: string) {
     socket!.emit('leave', roomId);
     rooms.delete(roomId);
 
-    if (currentRoom.value === roomId) {
-      currentRoom.value = '';
-    }
-
     if (rooms.size === 0) {
       connectedRooms.value.delete(eventName);
     }
@@ -592,7 +591,6 @@ function closeRoom(eventName: string, roomId: string) {
 function joinRoom(roomId: string, eventName: string) {
   if (socket?.connected) {
     socket.emit('join', roomId);
-    currentRoom.value = roomId;
 
     // Track room under its event
     if (!connectedRooms.value.has(eventName)) {
@@ -618,7 +616,6 @@ function joinRoom(roomId: string, eventName: string) {
 function leaveRoom(roomId: string, eventName: string) {
   if (socket?.connected) {
     socket.emit('leave', roomId);
-    currentRoom.value = '';
 
     // Remove room from event tracking
     const rooms = connectedRooms.value.get(eventName);
@@ -811,8 +808,6 @@ const provideSocket = {
 
 const models = ref<string[]>([]);
 const modelsLoading = ref(false);
-const currentRoom = ref('');
-const currentEvent = ref('');
 
 async function fetchModels() {
   modelsLoading.value = true;
@@ -831,7 +826,19 @@ async function fetchModels() {
 
 onMounted(() => {
   const saved = localStorage.getItem('theme') as ThemeName;
-  if (saved && ['souls', 'diablo', 'berserk', 'cyberpunk', 'stellar', 'ghostwire', 'deathspace', 'nioh'].includes(saved)) {
+  if (
+    saved &&
+    [
+      'souls',
+      'diablo',
+      'berserk',
+      'cyberpunk',
+      'stellar',
+      'ghostwire',
+      'deathspace',
+      'nioh',
+    ].includes(saved)
+  ) {
     currentTheme.value = saved;
   }
   applyTheme(currentTheme.value);
@@ -847,9 +854,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen bg-primary text-fg-primary font-sans pb-12 bg-grid"
-  >
+  <div class="min-h-screen bg-primary text-fg-primary font-sans pb-12 bg-grid">
     <header
       class="fixed top-0 left-0 right-0 border-b border-divider bg-secondary z-40"
     >
@@ -1004,8 +1009,6 @@ onMounted(() => {
             :socket-provider="provideSocket"
             :models="models"
             :models-loading="modelsLoading"
-            :current-room="currentRoom"
-            :current-event="currentEvent"
             :connection-state="connectionState"
             @refresh-models="fetchModels"
             @model-selected="handleModelSelected"
@@ -1015,8 +1018,6 @@ onMounted(() => {
             :socket-provider="provideSocket"
             :models="models"
             :models-loading="modelsLoading"
-            :current-room="currentRoom"
-            :current-event="currentEvent"
             :connection-state="connectionState"
             @refresh-models="fetchModels"
             @model-selected="handleModelSelected"
@@ -1057,9 +1058,7 @@ onMounted(() => {
           >
             <div class="flex items-center gap-2 font-mono">
               <span class="text-brand">&gt;</span>
-              <span
-                class="text-xs text-brand uppercase tracking-wider"
-              >
+              <span class="text-xs text-brand uppercase tracking-wider">
                 Request Details
               </span>
             </div>
@@ -1117,9 +1116,7 @@ onMounted(() => {
                   >
                     {{ selectedDebugResult.method }}
                   </span>
-                  <span
-                    class="text-sm font-mono text-fg-secondary break-all"
-                  >
+                  <span class="text-sm font-mono text-fg-secondary break-all">
                     {{ selectedDebugResult.endpoint }}
                   </span>
                 </div>
@@ -1146,35 +1143,101 @@ onMounted(() => {
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <div v-if="selectedDebugResult.requestId" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Request ID</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.requestId }}</span>
+              <div
+                v-if="selectedDebugResult.requestId"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Request ID</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.requestId }}</span
+                >
               </div>
-              <div v-if="selectedDebugResult.roomId" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-info/30 via-info/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Room ID</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.roomId }}</span>
+              <div
+                v-if="selectedDebugResult.roomId"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-info/30 via-info/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Room ID</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.roomId }}</span
+                >
               </div>
-              <div v-if="selectedDebugResult.event" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-warning/30 via-warning/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Event</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.event }}</span>
+              <div
+                v-if="selectedDebugResult.event"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-warning/30 via-warning/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Event</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.event }}</span
+                >
               </div>
-              <div v-if="selectedDebugResult.numCtx" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-success/30 via-success/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Num Ctx</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.numCtx }}</span>
+              <div
+                v-if="selectedDebugResult.numCtx"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-success/30 via-success/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Num Ctx</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.numCtx }}</span
+                >
               </div>
-              <div v-if="selectedDebugResult.stream !== undefined" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Stream</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.stream }}</span>
+              <div
+                v-if="selectedDebugResult.stream !== undefined"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Stream</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.stream }}</span
+                >
               </div>
-              <div v-if="selectedDebugResult.model" class="flex items-center bg-secondary rounded-none overflow-hidden relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"></div>
-                <span class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative">Model</span>
-                <span class="text-[10px] font-mono px-2 py-1 text-fg-primary relative">{{ selectedDebugResult.model }}</span>
+              <div
+                v-if="selectedDebugResult.model"
+                class="flex items-center bg-secondary rounded-none overflow-hidden relative"
+              >
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-brand/30 via-brand/10 to-transparent"
+                ></div>
+                <span
+                  class="text-[10px] font-mono font-bold uppercase px-2 py-1 text-fg-secondary relative"
+                  >Model</span
+                >
+                <span
+                  class="text-[10px] font-mono px-2 py-1 text-fg-primary relative"
+                  >{{ selectedDebugResult.model }}</span
+                >
               </div>
             </div>
 
@@ -1261,9 +1324,7 @@ onMounted(() => {
                 />
               </svg>
             </div>
-            <p class="text-sm text-fg-muted font-mono">
-              Select a debug entry
-            </p>
+            <p class="text-sm text-fg-muted font-mono">Select a debug entry</p>
             <p class="text-xs text-fg-muted/70 mt-1 font-mono">
               Click on a log entry to see details
             </p>
@@ -1280,21 +1341,15 @@ onMounted(() => {
           class="flex items-center justify-between text-xs text-fg-muted font-mono"
         >
           <div class="flex items-center gap-3">
-            <span class="text-brand"
-              >ckir.io/visions</span
-            >
+            <span class="text-brand">ckir.io/visions</span>
             <span class="text-border">::</span>
             <span>v1.2.0</span>
           </div>
           <div class="flex items-center gap-4">
             <span class="text-fg-muted">endpoints:</span>
-            <span class="text-brand"
-              >/api/v1/vision</span
-            >
+            <span class="text-brand">/api/v1/vision</span>
             <span class="text-border">,</span>
-            <span class="text-brand-muted"
-              >/api/v1/mcp</span
-            >
+            <span class="text-brand-muted">/api/v1/mcp</span>
           </div>
         </div>
       </div>

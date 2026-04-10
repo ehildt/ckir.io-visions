@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { toRef } from 'vue';
+
+import { useEventLog } from '../../composables/use-event-log';
 
 const props = defineProps<{
   messages: Array<{ time: string; event: string; data: unknown }>;
@@ -11,108 +13,22 @@ const emit = defineEmits<{
   (e: 'abort', requestId: string): void;
 }>();
 
-const copiedId = ref<number | null>(null);
-
-function getEventColor(event: string): string {
-  if (event.includes('error') || event.includes('Error')) {
-    return 'text-error';
-  }
-  if (event.includes('connect')) {
-    return 'text-success';
-  }
-  if (event.includes('abort')) {
-    return 'text-error';
-  }
-  return 'text-warning';
-}
-
-function formatJson(data: unknown): string {
-  if (data && typeof data === 'object') {
-    const d = data as Record<string, unknown>;
-    if (
-      'message' in d &&
-      d.message &&
-      typeof d.message === 'object' &&
-      'content' in (d.message as any)
-    ) {
-      return (d.message as any).content;
-    }
-    const { pending, ...rest } = d;
-    return JSON.stringify(rest, null, 2);
-  }
-  return JSON.stringify(data, null, 2);
-}
-
-function getRoom(data: unknown): string | undefined {
-  if (data && typeof data === 'object' && 'roomId' in data) {
-    return (data as { roomId?: string }).roomId;
-  }
-  return undefined;
-}
-
-function getEvent(data: unknown): string | undefined {
-  if (data && typeof data === 'object' && 'event' in data) {
-    return (data as { event?: string }).event;
-  }
-  return undefined;
-}
-
-function getRequestId(data: unknown): string | undefined {
-  if (data && typeof data === 'object' && 'requestId' in data) {
-    return (data as { requestId?: string }).requestId;
-  }
-  return undefined;
-}
-
-function getTask(data: unknown): string | undefined {
-  if (data && typeof data === 'object' && 'task' in data) {
-    return (data as { task?: string }).task;
-  }
-  return undefined;
-}
-
-function getStream(data: unknown): boolean | undefined {
-  if (data && typeof data === 'object' && 'stream' in data) {
-    return (data as { stream?: boolean }).stream;
-  }
-  return undefined;
-}
-
-function isPending(data: unknown): boolean {
-  return !!(
-    data &&
-    typeof data === 'object' &&
-    'pending' in (data as any) &&
-    (data as any).pending === true
-  );
-}
-
-function isAborted(data: unknown): boolean {
-  return !!(
-    data &&
-    typeof data === 'object' &&
-    'aborted' in (data as any) &&
-    (data as any).aborted === true
-  );
-}
-
-function isAborting(data: unknown): boolean {
-  const reqId = getRequestId(data);
-  return !!reqId && reqId === props.abortingId;
-}
-
-function isComplete(data: unknown): boolean {
-  return !isPending(data) && !isAborted(data) && !isAborting(data);
-}
-
-function copyToClipboard(text: string, index: number) {
-  navigator.clipboard.writeText(text).then(() => {
-    copiedId.value = index;
-    setTimeout(() => {
-      copiedId.value = null;
-    }, 1500);
-  });
-}
+const abortingIdRef = toRef(props, 'abortingId');
+const {
+  copiedId,
+  getEventColor,
+  formatJson,
+  getRoom,
+  getEvent,
+  getRequestId,
+  getTask,
+  getStream,
+  isPending,
+  isAborted,
+  isAborting,
+  isComplete,
+  copyToClipboard,
+} = useEventLog(abortingIdRef);
 
 function handleAbort(requestId: string) {
   console.log('[DEBUG] handleAbort called with requestId:', requestId);
@@ -129,8 +45,7 @@ function handleAbort(requestId: string) {
     >
       <div class="flex items-center gap-2 font-mono">
         <span class="text-brand">&gt;</span>
-        <span
-          class="text-xs text-brand uppercase tracking-wider"
+        <span class="text-xs text-brand uppercase tracking-wider"
           >Event Log</span
         >
       </div>
@@ -155,23 +70,15 @@ function handleAbort(requestId: string) {
       v-if="!messages.length"
       class="flex flex-col items-center justify-center flex-1 px-4"
     >
-      <p class="text-sm text-fg-muted font-mono">
-        _ waiting for events
-      </p>
+      <p class="text-sm text-fg-muted font-mono">_ waiting for events</p>
     </div>
 
     <div v-else class="overflow-y-auto p-4 space-y-2 flex-1">
-      <div
-        v-for="(msg, i) in messages"
-        :key="i"
-        class="border border-divider"
-      >
+      <div v-for="(msg, i) in messages" :key="i" class="border border-divider">
         <div
           class="px-3 py-2 bg-secondary border-b border-divider flex items-center gap-2 font-mono"
         >
-          <span class="text-xs text-fg-muted"
-            >[{{ msg.time }}]</span
-          >
+          <span class="text-xs text-fg-muted">[{{ msg.time }}]</span>
           <span
             class="text-xs font-bold px-2 py-0.5 border"
             :class="getEventColor(getEvent(msg.data) ?? msg.event)"
@@ -206,9 +113,7 @@ function handleAbort(requestId: string) {
             v-else-if="isAborting(msg.data)"
             class="text-xs font-bold px-2 py-0.5 border border-error text-error flex items-center gap-1.5"
           >
-            <span
-              class="w-8 h-1.5 relative overflow-hidden bg-tertiary"
-            >
+            <span class="w-8 h-1.5 relative overflow-hidden bg-tertiary">
               <span
                 class="absolute top-0 left-0 h-full w-1/2 bg-error animate-battery-slide"
               ></span>
@@ -219,9 +124,7 @@ function handleAbort(requestId: string) {
             v-else-if="isPending(msg.data)"
             class="text-xs font-bold px-2 py-0.5 border border-brand text-brand flex items-center gap-1.5"
           >
-            <span
-              class="w-8 h-1.5 relative overflow-hidden bg-tertiary"
-            >
+            <span class="w-8 h-1.5 relative overflow-hidden bg-tertiary">
               <span
                 class="absolute top-0 left-0 h-full w-1/2 bg-warning animate-battery-slide"
               ></span>

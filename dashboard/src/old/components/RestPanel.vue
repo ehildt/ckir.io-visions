@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
+
+import RefreshButton from '../../components/buttons/RefreshButton.vue';
+import DropDown from '../../components/drop-down/DropDown.vue';
+import FileUpload from '../../components/file-upload/FileUpload.vue';
+import SocketConnectionPanel from '../../components/SocketConnectionPanel.vue';
+import { useLocalStorage } from '../../composables/use-local-storage';
+import { useRequestId } from '../../composables/use-request-id';
+import { useSocketConnect } from '../../composables/use-socket-connect';
 import type { SocketProvider } from '../../types/socket-provider.model';
 
 const props = defineProps<{
   socketProvider: SocketProvider;
   models: string[];
   modelsLoading: boolean;
-  currentRoom: string;
-  currentEvent: string;
   connectionState: 'connected' | 'disconnected' | 'error';
 }>();
 
@@ -16,115 +22,61 @@ const emit = defineEmits<{
   (e: 'model-selected'): void;
 }>();
 
-const task = ref('describe');
-const model = ref('');
-const requestId = ref(`req-${Math.random().toString(36).substring(2, 11)}`);
-const roomId = ref('');
+const storage = useLocalStorage(
+  ['event', 'roomId', 'task', 'model', 'numCtx', 'prompt'],
+  {
+    event: 'vision',
+    roomId: '',
+    task: 'describe',
+    model: '',
+    numCtx: '',
+    prompt: '[{"role": "user", "content": "Describe this image"}]',
+  },
+  'rest-fields',
+);
+
+const event = storage.event as import('vue').Ref<string>;
+const roomId = storage.roomId as import('vue').Ref<string>;
+const task = storage.task as import('vue').Ref<string>;
+const model = storage.model as import('vue').Ref<string>;
+const numCtx = storage.numCtx as import('vue').Ref<string>;
+const prompt = storage.prompt as import('vue').Ref<string>;
 const stream = ref(false);
-const event = ref('vision');
-const numCtx = ref('');
-const prompt = ref('[{"role": "user", "content": "Describe this image"}]');
+
+console.log('what we get in the line 35 - 41', {
+  event,
+  roomId,
+  task,
+  model,
+  numCtx,
+  prompt,
+  stream,
+});
+
+const { requestId, refresh: refreshRequestId } = useRequestId();
 const files = ref<File[]>([]);
-const fileInputRef = ref<HTMLInputElement | null>(null);
 const loading = ref(false);
 const error = ref('');
-const connectButtonBlinking = ref(false);
-
-function triggerConnectButtonBlink() {
-  connectButtonBlinking.value = true;
-  setTimeout(() => {
-    connectButtonBlinking.value = false;
-  }, 1500);
-}
-
-function refreshRequestId() {
-  requestId.value = `req-${Math.random().toString(36).substring(2, 11)}`;
-}
-
-function clearFiles() {
-  files.value = [];
-  if (fileInputRef.value) {
-    fileInputRef.value.value = '';
-    fileInputRef.value.files = null;
-  }
-}
+const {
+  connectButtonBlinking,
+  triggerConnectButtonBlink,
+  connect,
+  isEventConnected,
+  isRoomConnected,
+} = useSocketConnect(props.socketProvider);
 
 onMounted(() => {
-  // Load persisted field values
-  const saved = localStorage.getItem('rest-fields');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      if (parsed.event) event.value = parsed.event;
-      if (parsed.task) task.value = parsed.task;
-      if (parsed.model) model.value = parsed.model;
-      if (parsed.roomId) roomId.value = parsed.roomId;
-      if (parsed.stream !== undefined) stream.value = parsed.stream;
-      if (parsed.numCtx) numCtx.value = parsed.numCtx;
-      if (parsed.prompt) prompt.value = parsed.prompt;
-    } catch {}
+  if (event.value) {
+    props.socketProvider.listenToEvent?.(event.value);
+  }
+  if (roomId.value && event.value) {
+    props.socketProvider.joinRoom?.(roomId.value, event.value);
   }
 });
 
 watch(model, () => {
   emit('model-selected');
 });
-
-watch([task, model, roomId, stream, event, numCtx, prompt], () => {
-  localStorage.setItem(
-    'rest-fields',
-    JSON.stringify({
-      task: task.value,
-      model: model.value,
-      roomId: roomId.value,
-      stream: stream.value,
-      event: event.value,
-      numCtx: numCtx.value,
-      prompt: prompt.value,
-    }),
-  );
-});
-
-function handleFileChange(e: Event) {
-  const input = e.target as HTMLInputElement;
-  files.value = Array.from(input.files || []);
-}
-
-function removeFile(index: number) {
-  files.value.splice(index, 1);
-}
-
-async function connect() {
-  const eventName = event.value.trim();
-  const room = roomId.value.trim();
-  if (!eventName) return;
-
-  // Ensure socket is connected first
-  const socket = props.socketProvider.getSocket();
-  if (!socket?.connected) {
-    console.warn('Socket not connected, waiting...');
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  // Connect to event if not already connected
-  if (!isEventConnected(eventName)) {
-    props.socketProvider.listenToEvent?.(eventName);
-  }
-
-  // Connect to room if room is provided and not already connected
-  if (room && !isRoomConnected(eventName, room)) {
-    props.socketProvider.joinRoom?.(room, eventName);
-  }
-}
-
-function isEventConnected(eventName: string): boolean {
-  return props.socketProvider.connectedEvents.value.has(eventName);
-}
-
-function isRoomConnected(eventName: string, roomName: string): boolean {
-  const rooms = props.socketProvider.connectedRooms.value.get(eventName);
-  return rooms ? rooms.has(roomName) : false;
-}
 
 async function submit() {
   error.value = '';
@@ -139,7 +91,11 @@ async function submit() {
   // Check if connected to the event and room
   const eventName = event.value.trim() || 'vision';
   const room = roomId.value.trim();
-  if (!isEventConnected(eventName) || (room && !isRoomConnected(eventName, room))) {
+  console.log('submit function line 86', { eventName, room });
+  if (
+    !isEventConnected(eventName) ||
+    (room && !isRoomConnected(eventName, room))
+  ) {
     triggerConnectButtonBlink();
     loading.value = false;
     return;
@@ -247,24 +203,19 @@ async function submit() {
 
 <template>
   <!-- Socket.io Panel -->
-  <div
-    class="bg-elevated border border-divider panel-glow mb-3"
-  >
-    <div
-      class="px-4 py-3 bg-secondary border-b border-divider"
-    >
+  <div class="bg-elevated border border-divider panel-glow mb-3">
+    <div class="px-4 py-3 bg-secondary border-b border-divider">
       <div class="flex items-center justify-between font-mono">
         <div class="flex items-center gap-2">
-          <span class="text-brand text-sm font-bold"
-            >&gt;</span
-          >
+          <span class="text-brand text-sm font-bold">&gt;</span>
           <span class="text-brand text-sm">Socket.io</span>
           <span class="text-fg-muted text-sm">/socket.io</span>
         </div>
         <span
           :class="{
             'text-success': connectionState === 'connected',
-            'text-error': connectionState === 'disconnected' || connectionState === 'error',
+            'text-error':
+              connectionState === 'disconnected' || connectionState === 'error',
           }"
           class="text-xs font-mono"
         >
@@ -273,153 +224,56 @@ async function submit() {
       </div>
     </div>
 
-    <div class="p-4 space-y-3">
-      <div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
-        <div class="space-y-1.5">
-          <label
-            class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-          >
-            Event
-          </label>
-          <input
-            v-model="event"
-            placeholder="vision"
-            class="w-full px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary placeholder-text-fg-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-mono"
-          />
-        </div>
-        <div class="space-y-1.5">
-          <label
-            class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-          >
-            Room
-          </label>
-          <input
-            v-model="roomId"
-            placeholder="optional"
-            class="w-full px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary placeholder-text-fg-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-mono"
-          />
-        </div>
-        <button
-          :class="[
-            'px-4 py-2 h-[38px] bg-brand hover:bg-transparent hover:text-brand text-black font-bold text-sm rounded-none transition-all duration-200 font-mono border border-brand whitespace-nowrap',
-            connectButtonBlinking ? 'animate-pulse ring-2 ring-warning' : ''
-          ]"
-          @click="connect"
-        >
-          Connect
-        </button>
-      </div>
-
-      <!-- Subscribed Events and Rooms -->
-      <div v-if="socketProvider.getConnectedEventsAndRooms().length > 0" class="space-y-2">
-        <label class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider">
-          Subscribed
-        </label>
-        <div class="flex flex-wrap gap-2 text-xs">
-          <template v-for="(item, idx) in socketProvider.getConnectedEventsAndRooms()" :key="idx">
-            <div class="flex items-center gap-1">
-              <template v-if="item.includes('::')">
-                <span 
-                  class="px-2 py-1 bg-brand text-black font-mono rounded-none cursor-pointer hover:opacity-80 transition-opacity"
-                  title="Click to close event and all its rooms"
-                  @click="socketProvider.closeEvent(item.split('::')[0])"
-                >
-                  {{ item.split('::')[0] }}
-                </span>
-                <template v-for="(room, rIdx) in item.split('::').slice(1)" :key="rIdx">
-                  <span class="text-border">::</span>
-                  <span 
-                    class="px-2 py-1 bg-tertiary border border-divider text-fg-secondary font-mono rounded-none cursor-pointer hover:text-error transition-colors"
-                    title="Click to close room"
-                    @click="socketProvider.closeRoom(item.split('::')[0], room)"
-                  >
-                    {{ room }}
-                  </span>
-                </template>
-              </template>
-              <template v-else>
-                <span 
-                  class="px-2 py-1 bg-brand text-black font-mono rounded-none cursor-pointer hover:opacity-80 transition-opacity"
-                  title="Click to close event"
-                  @click="socketProvider.closeEvent(item)"
-                >
-                  {{ item }}
-                </span>
-              </template>
-            </div>
-          </template>
-        </div>
-      </div>
-    </div>
+    <SocketConnectionPanel
+      :connection-state="connectionState"
+      :socket-provider="socketProvider"
+      :connect-button-blinking="connectButtonBlinking"
+      :event="event"
+      :room-id="roomId"
+      @connect="({ event: e, room: r }) => connect(e, r)"
+      @update:event="event = $event"
+      @update:room-id="roomId = $event"
+      @close-event="socketProvider.closeEvent"
+      @close-room="socketProvider.closeRoom"
+    />
   </div>
 
-  <div
-    class="bg-elevated border border-divider panel-glow"
-  >
-    <div
-      class="px-4 py-3 bg-secondary border-b border-divider"
-    >
+  <div class="bg-elevated border border-divider panel-glow">
+    <div class="px-4 py-3 bg-secondary border-b border-divider">
       <div class="flex items-center gap-2 font-mono">
-        <span class="text-brand text-sm font-bold"
-          >&gt;</span
-        >
+        <span class="text-brand text-sm font-bold">&gt;</span>
         <span class="text-brand text-sm">POST</span>
-        <span class="text-fg-muted text-sm"
-          >/api/v1/vision</span
-        >
+        <span class="text-fg-muted text-sm">/api/v1/vision</span>
       </div>
     </div>
 
     <div class="p-4 space-y-3">
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label
-            class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-          >
-            Model
-          </label>
-          <div class="flex gap-2">
-            <select
-              v-model="model"
-              :disabled="modelsLoading || !models.length"
-              class="flex-1 px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary focus:outline-none focus:border-brand focus:ring-0 transition-all font-mono appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <option value="" disabled>
-                {{
-                  modelsLoading
-                    ? 'Loading...'
-                    : models.length
-                      ? 'Select...'
-                      : 'No models'
-                }}
-              </option>
-              <option v-for="m in models" :key="m" :value="m">{{ m }}</option>
-            </select>
-            <button
-              :disabled="modelsLoading"
-              class="px-2 py-2 bg-tertiary border border-divider rounded-none text-sm text-fg-secondary hover:text-fg-primary disabled:opacity-50 transition-all font-mono"
-              title="Refresh"
-              @click="emit('refresh-models')"
-            >
-              ↻
-            </button>
-          </div>
-        </div>
-        <div class="space-y-1.5">
-          <label
-            class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-          >
-            Task
-          </label>
-          <select
-            v-model="task"
-            class="w-full px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-mono appearance-none cursor-pointer"
-          >
-            <option value="describe">describe</option>
-            <option value="compare">compare</option>
-            <option value="ocr">ocr</option>
-          </select>
-        </div>
+        <DropDown
+          label="Model"
+          :selected="model"
+          :options="models"
+          :placeholder="
+            modelsLoading
+              ? 'Loading...'
+              : models.length
+                ? 'Select...'
+                : 'No models'
+          "
+          :disabled="modelsLoading || !models.length"
+          @update:selected="(value: string) => (model = value)"
+        >
+          <RefreshButton
+            :disabled="modelsLoading"
+            @click="emit('refresh-models')"
+          />
+        </DropDown>
+        <DropDown
+          label="Task"
+          :selected="task"
+          :options="['describe', 'compare', 'ocr']"
+          @update:selected="(value: string) => (task = value)"
+        />
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -429,77 +283,23 @@ async function submit() {
           >
             Request ID
           </label>
-          <div class="flex gap-2">
+          <div class="flex gap-2 items-center">
             <input
               v-model="requestId"
               class="flex-1 px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary focus:outline-none focus:border-brand focus:ring-0 transition-all font-mono"
             />
-            <button
-              class="px-2 py-2 bg-tertiary border border-divider rounded-none text-sm text-fg-secondary hover:text-fg-primary transition-all font-mono"
-              title="Refresh"
-              @click="refreshRequestId"
-            >
-              ↻
-            </button>
+            <RefreshButton @click="refreshRequestId" />
           </div>
         </div>
-        <div class="space-y-1.5">
-          <label
-            class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-          >
-            Stream
-          </label>
-          <select
-            v-model="stream"
-            class="w-full px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-mono appearance-none cursor-pointer"
-          >
-            <option :value="false">false</option>
-            <option :value="true">true</option>
-          </select>
-        </div>
+        <DropDown
+          label="Stream"
+          :selected="String(stream)"
+          :options="['false', 'true']"
+          @update:selected="(value: string) => (stream = value === 'true')"
+        />
       </div>
 
-      <div class="space-y-1.5">
-        <label
-          class="text-xs font-medium text-fg-secondary font-mono uppercase tracking-wider"
-        >
-          Images
-        </label>
-        <div v-if="!files.length" class="relative">
-          <input
-            ref="fileInputRef"
-            type="file"
-            multiple
-            accept="image/*"
-            class="w-full px-3 py-2 bg-secondary border border-divider rounded-none text-sm text-fg-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all font-mono file:mr-4 file:py-1 file:px-3 file:rounded-none file:border-0 file:text-xs file:font-medium file:bg-brand file:text-black file:cursor-pointer"
-            @change="handleFileChange"
-          />
-        </div>
-
-        <div v-if="files.length" class="flex flex-wrap gap-2">
-          <div
-            v-for="(file, i) in files"
-            :key="i"
-            class="flex items-center gap-2 px-2 py-1 bg-tertiary border border-divider rounded text-xs font-mono"
-          >
-            <span class="text-fg-secondary">{{
-              file.name
-            }}</span>
-            <button
-              class="px-1.5 py-0.5 text-error hover:bg-error hover:text-fg-primary rounded transition-colors"
-              @click="removeFile(i)"
-            >
-              ×
-            </button>
-          </div>
-          <button
-            class="px-2 py-1 text-xs text-fg-muted hover:text-error transition-colors font-mono"
-            @click="clearFiles"
-          >
-            Clear all
-          </button>
-        </div>
-      </div>
+      <FileUpload @change="(newFiles: File[]) => (files = newFiles)" />
 
       <div class="space-y-1.5">
         <label
