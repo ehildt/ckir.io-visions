@@ -18,6 +18,7 @@ ignores:
   - '@types/supertest'
   - rimraf
   - supertest
+  - '@vue/eslint-config-typescript'
   # Required by postcss.config.mjs and style.css
   - '@tailwindcss/postcss'
   - postcss

@@ -18,3 +18,4 @@ ignores:
   - "@types/supertest"
   - rimraf
   - supertest
+  - "@vue/eslint-config-typescript"
