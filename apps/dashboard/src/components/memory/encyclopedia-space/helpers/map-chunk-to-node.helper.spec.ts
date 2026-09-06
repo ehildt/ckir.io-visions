@@ -40,10 +40,7 @@ describe('mapChunkToNode', () => {
       sizeBytes: 245760,
       originalHash: 'abc123',
     });
-    expect(node.meta).toContainEqual({
-      label: 'type',
-      value: 'application/pdf',
-    });
+    expect(node.meta).toContainEqual({ label: 'type', value: 'pdf' });
     expect(node.meta).toContainEqual({ label: 'size', value: '240 KB' });
   });
 

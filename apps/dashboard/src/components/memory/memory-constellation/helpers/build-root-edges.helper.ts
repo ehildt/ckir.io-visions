@@ -19,9 +19,12 @@ export function buildRootEdges(
   topics: readonly ConstellationTopic[],
   clusters: readonly ConstellationCluster[],
   collapsedKeys: ReadonlySet<string>,
+  mainNodesEnabled = false,
 ): ConstellationEdge[] {
   if (clusters.length === 0) {
-    return topics.map((topic) => mapTopicToRootEdge(topic, collapsedKeys));
+    return topics.map((topic) =>
+      mapTopicToRootEdge(topic, collapsedKeys, mainNodesEnabled),
+    );
   }
   const memberKeys = new Set(
     clusters.flatMap((cluster) => cluster.memberTopicKeys),
@@ -30,6 +33,8 @@ export function buildRootEdges(
     ...clusters.map(mapClusterToRootEdge),
     ...topics
       .filter((topic) => !memberKeys.has(topic.key))
-      .map((topic) => mapTopicToRootEdge(topic, collapsedKeys)),
+      .map((topic) =>
+        mapTopicToRootEdge(topic, collapsedKeys, mainNodesEnabled),
+      ),
   ];
 }

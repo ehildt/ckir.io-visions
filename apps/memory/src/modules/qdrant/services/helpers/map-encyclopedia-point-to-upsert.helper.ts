@@ -1,10 +1,26 @@
+import {
+  DENSE_VECTOR,
+  SPARSE_VECTOR,
+} from '../../constants/qdrant.constants.js';
+import { buildSparseVector } from '../../helpers/build-sparse-vector.helper.js';
+import type { CollectionVectorLayout } from '../../models/collection-vector-layout.model.js';
 import type { EncyclopediaChunkPoint } from '../../models/encyclopedia-chunk.model.js';
 
 /** Build one Qdrant upsert point from a encyclopedia chunk point. */
-export function mapEncyclopediaPointToUpsert(point: EncyclopediaChunkPoint) {
+export function mapEncyclopediaPointToUpsert(
+  point: EncyclopediaChunkPoint,
+  layout: CollectionVectorLayout,
+) {
   return {
     id: point.id,
-    vector: point.vector,
+    vector: layout.named
+      ? {
+          [DENSE_VECTOR]: point.vector,
+          ...(layout.sparse && point.content.trim()
+            ? { [SPARSE_VECTOR]: buildSparseVector(point.content) }
+            : {}),
+        }
+      : point.vector,
     payload: {
       content: point.content,
       url: point.url,

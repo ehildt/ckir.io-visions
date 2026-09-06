@@ -362,6 +362,35 @@ model MemoryCluster {
   @@map("memory_cluster")
 }
 
+model MemoryMainNode {
+  /** Deterministic id — sha256 of lane|collection|scopeKey|groupKey. */
+  id          String   @id @db.VarChar(64)
+  /** 'partition' | 'encyclopedia' */
+  lane        String   @db.VarChar(16)
+  /** Model-namespaced Qdrant collection name the points live in. */
+  collection  String   @db.VarChar(128)
+  /** Space key: partition key / 'global' (encyclopedia). */
+  scopeKey    String   @db.VarChar(255)
+  /** The blob key this main node represents — the dashboard's topic-grouping key (subject/tag/title/domain). */
+  groupKey    String   @db.VarChar(255)
+  /** Hash of sorted member id + content-hash pairs — the drift signal (re-summarize on change). */
+  fingerprint String   @db.VarChar(64)
+  /** The group's human label (the tier's title: hub subject, document title, …). */
+  title       String   @db.VarChar(200)
+  /** LLM-written summary of the attached leafs. */
+  summary     String   @db.VarChar(2000)
+  /** Number of leaf points (denormalized for the dashboard). */
+  memberCount Int
+  /** The leaf point ids (authoritative membership list). */
+  memberIds   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([lane, collection, scopeKey, groupKey])
+  @@index([lane, collection, scopeKey])
+  @@map("memory_main_node")
+}
+
 /**
  * Canonical macro-taxonomy of the memory constellation: one row per
  * user-visible label tier — `cluster` (plural family, e.g. `games`),

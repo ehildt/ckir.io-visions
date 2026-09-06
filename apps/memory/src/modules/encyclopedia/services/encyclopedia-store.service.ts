@@ -8,7 +8,10 @@ import { EncyclopediaRepository } from '../../qdrant/services/encyclopedia.repos
 import { MemoryEnqueueService } from '../../qdrant/services/memory-enqueue.service.js';
 import { MemoryOverridesService } from '../../qdrant/services/memory-overrides.service.js';
 import { ENCYCLOPEDIA_CONFIG } from '../constants/encyclopedia.constants.js';
-import { chunkTextBySentences } from '../helpers/chunk-text.helper.js';
+import {
+  chunkTextBySections,
+  chunkTextBySentences,
+} from '../helpers/chunk-text.helper.js';
 import type { EncyclopediaConfig } from '../models/encyclopedia-config.model.js';
 
 import { mapContentToChunk } from './helpers/map-content-to-chunk.helper.js';
@@ -110,13 +113,7 @@ export class EncyclopediaStoreService {
       // Blank content chunks to nothing — the sentence splitter throws on a
       // truly empty string, so guard first to keep one bad upload from
       // failing the whole batch.
-      const chunks = doc.content.trim()
-        ? chunkTextBySentences(
-            doc.content,
-            this.config.chunkChars,
-            this.config.chunkOverlapSentences,
-          )
-        : [];
+      const chunks = doc.content.trim() ? this.chunkDocument(doc.content) : [];
       if (chunks.length === 0) {
         ephemeralDocs.push(doc);
         rejectedDocs.push({ title: doc.title, url, reason: 'empty' });
@@ -284,6 +281,27 @@ export class EncyclopediaStoreService {
     await this.memoryEnqueue.enqueueEncyclopediaClassify({
       model: classifyModel,
     });
+  }
+
+  /**
+   * Chunk one document's content per the configured strategy: heading-aware
+   * sections when ENCYCLOPEDIA_CHUNK_BY_HEADINGS, else plain sentence
+   * packing.
+   */
+  private chunkDocument(content: string): string[] {
+    if (!this.config.chunkByHeadings) {
+      return chunkTextBySentences(
+        content,
+        this.config.chunkChars,
+        this.config.chunkOverlapSentences,
+      );
+    }
+    return chunkTextBySections(
+      content,
+      this.config.chunkChars,
+      this.config.chunkOverlapSentences,
+      this.config.maxHeadingDepth,
+    );
   }
 }
 

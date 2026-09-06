@@ -1,5 +1,6 @@
 import type {
   ConstellationFriction,
+  ConstellationMainNodeSummary,
   ConstellationNode,
   ConstellationPosition,
   ConstellationTopic,
@@ -7,11 +8,14 @@ import type {
 } from '../MemoryConstellation.types';
 import { buildHubMeta } from './build-hub-meta.helper';
 import { computeRelaxedCentroid } from './compute-relaxed-centroid.helper';
+import { truncateText } from './truncate-text.helper';
 
 /**
- * Append a collapsed topic's synthetic category dot at its relaxed centroid.
- * When the member lookup is provided, the dot carries the leaf rollup
- * (records, sources, health, freshness) in its tooltip + metadata column.
+ * Append a topic's synthetic main dot at its relaxed centroid — the
+ * title-tier node between the hub tier and the leafs. When a server main
+ * node exists for the blob, the dot carries the LLM-written summary of its
+ * attached leafs; otherwise it falls back to the deterministic leaf rollup
+ * (records, sources, health, freshness — needs the member lookup).
  */
 export function appendTopicNode(
   topic: ConstellationTopic,
@@ -19,6 +23,7 @@ export function appendTopicNode(
   acc: VisibleAccumulator,
   nodeById?: ReadonlyMap<string, ConstellationNode>,
   frictions: readonly ConstellationFriction[] = [],
+  mainNodeByKey?: ReadonlyMap<string, ConstellationMainNodeSummary>,
 ): void {
   const centroid = computeRelaxedCentroid(topic, relaxedPositions);
   const members = nodeById
@@ -27,13 +32,15 @@ export function appendTopicNode(
         .filter((node): node is ConstellationNode => node !== undefined)
     : [];
   const rollup = nodeById ? buildHubMeta(members, frictions) : undefined;
-  const summary = rollup?.summary ?? `${topic.memberIds.length} records`;
+  const semantic = mainNodeByKey?.get(topic.key)?.summary.trim();
+  const rollupLine = rollup?.summary ?? `${topic.memberIds.length} records`;
+  const content = semantic || rollupLine;
   const categoryNode: ConstellationNode = {
     id: `topic:${topic.key}`,
     label: topic.label,
     topicKey: topic.key,
-    text: `${summary} — click to toggle`,
-    summary,
+    text: content,
+    summary: semantic ? truncateText(semantic, 200) : rollupLine,
     keys: [topic.key],
     meta: rollup?.meta,
     isTopic: true,

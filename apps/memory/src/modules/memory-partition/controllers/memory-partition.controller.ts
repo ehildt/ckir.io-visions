@@ -12,6 +12,7 @@ import {
 
 import { MemoryCognitionService } from '../../memory-cognition/services/memory-cognition.service.js';
 import { MemoryClusterRepository } from '../../persistence/services/memory-cluster.repository.js';
+import { MemoryMainNodeRepository } from '../../persistence/services/memory-main-node.repository.js';
 import {
   ApeDeleteMemory,
   ApeDeleteMemoryText,
@@ -19,6 +20,7 @@ import {
   ApeGetMemoryFrictions,
   ApeGetMemoryLinks,
   ApeGetMemoryList,
+  ApeGetMemoryMainNodes,
   ApePostMemoryLinksRecompute,
   ApePostMemorySearchBridges,
   ApePostMemorySearchSynopses,
@@ -39,6 +41,7 @@ import { MemoryLinkDto } from '../dtos/memory-link.dto.js';
 import { MemoryLinksQueryDto } from '../dtos/memory-links-query.dto.js';
 import { MemoryLinksRecomputeResponseDto } from '../dtos/memory-links-recompute-response.dto.js';
 import { MemoryListQueryDto } from '../dtos/memory-list-query.dto.js';
+import { MemoryMainNodeDto } from '../dtos/memory-main-node.dto.js';
 import { MemoryPruneQueryDto } from '../dtos/memory-prune-query.dto.js';
 import { MemoryPruneResponseDto } from '../dtos/memory-prune-response.dto.js';
 import { MemorySearchBridgesDto } from '../dtos/memory-search-bridges.dto.js';
@@ -64,6 +67,7 @@ export class MemoryPartitionController {
     private readonly memoryCognitionService: MemoryCognitionService,
     private readonly vectorizeService: VectorizeService,
     private readonly clusters: MemoryClusterRepository,
+    private readonly mainNodes: MemoryMainNodeRepository,
   ) {}
 
   @Get()
@@ -128,6 +132,20 @@ export class MemoryPartitionController {
     const partition = query.memoryPartition?.trim();
     if (!partition) return [];
     return this.clusters.listByScope(
+      'partition',
+      this.memoryRepository.collection,
+      partition,
+    );
+  }
+
+  @Get('main-nodes')
+  @ApeGetMemoryMainNodes()
+  async listMemoryMainNodes(
+    @Query() query: MemoryClustersQueryDto,
+  ): Promise<MemoryMainNodeDto[]> {
+    const partition = query.memoryPartition?.trim();
+    if (!partition) return [];
+    return this.mainNodes.listByScope(
       'partition',
       this.memoryRepository.collection,
       partition,

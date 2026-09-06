@@ -42,6 +42,8 @@ export interface MemoryOverridesPatch {
   clusterMinMembers?: number | null;
   /** Master switch for the Raptor synopsis layer. */
   raptorEnabled?: boolean | null;
+  /** Master switch for heat tracking on semantic-search hits. */
+  heatTrackingEnabled?: boolean | null;
   /** Raptor recursion depth cap (1–3). */
   raptorMaxDepth?: number | null;
   /** Auto-trigger cluster detection after a lane's graph-mutating job. */

@@ -1,18 +1,31 @@
 import type { OrbitCenter, RelaxedLayout } from '../MemoryConstellation.types';
+import { computeRelaxedCentroid } from './compute-relaxed-centroid.helper';
 
 /** Phase step between leaves so they don't all align on the same radius. */
 const PHASE_STEP = 0.7;
 
 /**
- * Map every non-hub member to its topic hub position + a phase offset —
- * the per-frame orbit transform's inputs. Hubs, category dots, cluster
- * hubs, and the root are excluded (they stay still while leaves circle).
+ * Map every orbiting leaf to its topic's main-dot position + a phase
+ * offset — the per-frame orbit transform's inputs. Under the main-node
+ * regime the main dot is the synthetic title dot at the blob centroid, so
+ * every member orbits it; otherwise the first member IS the main dot (it
+ * stays still while the other leaves circle it). Hubs and synthetic dots
+ * are excluded.
  */
 export function buildOrbitCenters(
   relaxedLayout: RelaxedLayout,
+  mainNodesEnabled = false,
 ): Map<string, OrbitCenter> {
   const orbitCenters = new Map<string, OrbitCenter>();
   for (const topic of relaxedLayout.topics) {
+    if (mainNodesEnabled && topic.memberIds.length > 1) {
+      const center = computeRelaxedCentroid(topic, relaxedLayout.positions);
+      if (!center) continue;
+      topic.memberIds.forEach((memberId, index) => {
+        orbitCenters.set(memberId, { center, phase: index * PHASE_STEP });
+      });
+      continue;
+    }
     const hubId = topic.memberIds[0];
     const center = relaxedLayout.positions.get(hubId);
     if (!center) continue;

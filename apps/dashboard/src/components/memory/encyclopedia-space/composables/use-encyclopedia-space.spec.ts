@@ -7,6 +7,7 @@ const api = {
   fetchEncyclopediaLinks: vi.fn(),
   fetchEncyclopediaFrictions: vi.fn(),
   fetchEncyclopediaClusters: vi.fn(),
+  fetchEncyclopediaMainNodes: vi.fn(),
 };
 
 vi.mock('@/api/memory.api', () => ({
@@ -18,12 +19,15 @@ vi.mock('@/api/memory.api', () => ({
     api.fetchEncyclopediaFrictions(...args),
   fetchEncyclopediaClusters: (...args: unknown[]) =>
     api.fetchEncyclopediaClusters(...args),
+  fetchEncyclopediaMainNodes: (...args: unknown[]) =>
+    api.fetchEncyclopediaMainNodes(...args),
 }));
 
 describe('useEncyclopediaSpace', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.fetchEncyclopediaClusters.mockResolvedValue([]);
+    api.fetchEncyclopediaMainNodes.mockResolvedValue([]);
   });
 
   it('maps fetched chunks to nodes grouped by domain', async () => {

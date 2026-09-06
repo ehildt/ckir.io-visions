@@ -1,8 +1,17 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
 
-import { QDRANT_CONFIG } from '../constants/qdrant.constants.js';
+import {
+  DENSE_VECTOR,
+  QDRANT_CONFIG,
+  SPARSE_VECTOR,
+} from '../constants/qdrant.constants.js';
 import { buildCollectionName } from '../helpers/collection-name.helper.js';
+import type { CollectionVectorLayout } from '../models/collection-vector-layout.model.js';
+import {
+  LEGACY_VECTOR_LAYOUT,
+  MODERN_VECTOR_LAYOUT,
+} from '../models/collection-vector-layout.model.js';
 import type { QdrantConfig } from '../models/qdrant-config.model.js';
 
 import { EmbeddingService } from './embedding.service.js';
@@ -32,6 +41,8 @@ import { EmbeddingService } from './embedding.service.js';
 export class QdrantClientService implements OnModuleInit {
   private readonly logger = new Logger(QdrantClientService.name);
   private client: QdrantClient | null = null;
+  /** Live collection vector schemas (named+sparse hybrid vs legacy unnamed). */
+  private readonly vectorLayouts = new Map<string, CollectionVectorLayout>();
 
   constructor(
     @Inject(QDRANT_CONFIG) private readonly config: QdrantConfig,
@@ -133,9 +144,48 @@ export class QdrantClientService implements OnModuleInit {
   }
 
   /**
+   * The live collection's vector schema (cached) — the repositories shape
+   * their query/upsert payloads from it. A legacy collection (single unnamed
+   * dense vector) logs one loud warning and runs in legacy dense mode until
+   * it is dropped/recreated; a missing collection reports the modern layout
+   * (it is created hybrid).
+   */
+  async vectorLayout(collection: string): Promise<CollectionVectorLayout> {
+    const cached = this.vectorLayouts.get(collection);
+    if (cached) return cached;
+    const { exists } = await this.getClient().collectionExists(collection);
+    if (!exists) {
+      this.vectorLayouts.set(collection, MODERN_VECTOR_LAYOUT);
+      return MODERN_VECTOR_LAYOUT;
+    }
+    const info = await this.getClient().getCollection(collection);
+    const vectors = info.config.params.vectors;
+    // Legacy era: the vectors params are a bare `{ size, distance }` object;
+    // the hybrid era's named schema is a params map keyed by vector name.
+    const legacy =
+      vectors !== null && typeof vectors === 'object' && 'size' in vectors;
+    const layout = legacy
+      ? LEGACY_VECTOR_LAYOUT
+      : {
+          named: true,
+          sparse:
+            info.config.params.sparse_vectors?.[SPARSE_VECTOR] !== undefined,
+        };
+    if (!layout.sparse) {
+      this.logger.warn(
+        `Qdrant collection "${collection}" predates hybrid search (unnamed dense vectors) — ` +
+          'running in legacy dense-only mode. Drop the collection (it recreates itself on boot) to enable hybrid retrieval.',
+      );
+    }
+    this.vectorLayouts.set(collection, layout);
+    return layout;
+  }
+
+  /**
    * Create the collection if missing (Cosine distance; vectors auto-normalize
    * on upload). The size comes from the model's real dims when known, else the
-   * configured fallback.
+   * configured fallback. Hybrid-era schema: named `dense` vector plus a
+   * `sparse` vector (client TF + server-side IDF) for hybrid retrieval.
    */
   async ensureCollection(modelDims?: number): Promise<void> {
     const client = this.getClient();
@@ -143,10 +193,11 @@ export class QdrantClientService implements OnModuleInit {
     if (exists) return;
     const size = modelDims ?? this.config.vectorSize;
     await client.createCollection(this.collection, {
-      vectors: { size, distance: 'Cosine' },
+      vectors: { [DENSE_VECTOR]: { size, distance: 'Cosine' } },
+      sparse_vectors: { [SPARSE_VECTOR]: { modifier: 'idf' } },
     });
     this.logger.log(
-      `Created Qdrant collection "${this.collection}" (${size} dims, Cosine)`,
+      `Created Qdrant collection "${this.collection}" (${size} dims, Cosine, hybrid)`,
     );
   }
 
@@ -319,6 +370,7 @@ export class QdrantClientService implements OnModuleInit {
   /**
    * Create the encyclopedia collection if missing (Cosine, same model dims as the
    * episodic collection). Chunk-granularity points: one point per passage.
+   * Hybrid-era schema: named `dense` + `sparse` (TF + server-side IDF).
    */
   async ensureEncyclopediaCollection(modelDims?: number): Promise<void> {
     const client = this.getClient();
@@ -328,10 +380,11 @@ export class QdrantClientService implements OnModuleInit {
     if (exists) return;
     const size = modelDims ?? this.config.vectorSize;
     await client.createCollection(this.encyclopediaCollection, {
-      vectors: { size, distance: 'Cosine' },
+      vectors: { [DENSE_VECTOR]: { size, distance: 'Cosine' } },
+      sparse_vectors: { [SPARSE_VECTOR]: { modifier: 'idf' } },
     });
     this.logger.log(
-      `Created Qdrant collection "${this.encyclopediaCollection}" (${size} dims, Cosine)`,
+      `Created Qdrant collection "${this.encyclopediaCollection}" (${size} dims, Cosine, hybrid)`,
     );
   }
 

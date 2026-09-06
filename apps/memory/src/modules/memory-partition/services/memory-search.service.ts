@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { TextToLines } from '@triplef/helpers/text-to-lines';
 
 import {
@@ -21,6 +21,13 @@ interface SearchInput extends MemoryScopeFilters {
   limit?: number;
   /** Blend recency into the ranking (episode probe). */
   recency?: boolean;
+  /**
+   * Track retrieval heat for this search's hits (default true). Background
+   * bookkeeping probes (extract/write/profile prior-fact probes, consolidate
+   * and relink sweeps) pass false — maintenance retrievals are not user
+   * engagement and must not heat up records.
+   */
+  trackHeat?: boolean;
 }
 
 /** Search result with the hits' cluster summaries attached (graph-augmented recall). */
@@ -43,6 +50,8 @@ interface MemorySearchWithClusters {
  */
 @Injectable()
 export class MemorySearchService {
+  private readonly logger = new Logger(MemorySearchService.name);
+
   constructor(
     private readonly embeddingService: EmbeddingService,
     private readonly memoryRepository: MemoryRepository,
@@ -65,11 +74,14 @@ export class MemorySearchService {
       if (vectors.length !== variants.length) return [];
 
       const merged = new Map<string, MemoryPoint>();
-      for (const vector of vectors) {
+      for (const [index, vector] of vectors.entries()) {
         const results = await this.memoryRepository.searchMemory({
           memoryPartition: input.memoryPartition,
           sessionId: input.sessionId,
           vector,
+          // The variant's raw text drives the hybrid lexical leg (no task
+          // prompt prefix — sparse tokens hash the user-visible text).
+          text: variants[index],
           limit: input.limit,
           role: input.role,
           conversationId: input.conversationId,
@@ -87,9 +99,11 @@ export class MemorySearchService {
         }
       }
 
-      return [...merged.values()]
+      const hits = [...merged.values()]
         .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
         .slice(0, input.limit ?? 5);
+      this.trackRetrieval(hits, input.trackHeat);
+      return hits;
     } catch {
       return [];
     }
@@ -98,7 +112,7 @@ export class MemorySearchService {
   async searchByVector(
     input: SearchInput & { vector: number[] },
   ): Promise<MemoryPoint[]> {
-    return this.searchRepository({
+    const hits = await this.searchRepository({
       memoryPartition: input.memoryPartition,
       sessionId: input.sessionId,
       vector: input.vector,
@@ -110,6 +124,8 @@ export class MemorySearchService {
       category: input.category,
       contains: input.contains,
     });
+    this.trackRetrieval(hits, input.trackHeat);
+    return hits;
   }
 
   /**
@@ -169,12 +185,20 @@ export class MemorySearchService {
       if (vectors.length !== 1) return [];
       const lane = input.memoryPartition ? 'partition' : 'encyclopedia';
       const scopeKey = input.memoryPartition ?? 'global';
-      return this.synopses.searchSynopses(
+      const hits = await this.synopses.searchSynopses(
         lane,
         scopeKey,
         vectors[0],
         input.limit ?? 2,
       );
+      if (this.overrides.getHeatTrackingEnabled() && hits.length > 0) {
+        void this.synopses.incrementHeat(lane, hits).catch((error) => {
+          this.logger.warn(
+            `Synopsis heat write failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        });
+      }
+      return hits;
     } catch {
       return [];
     }
@@ -205,11 +229,13 @@ export class MemorySearchService {
     try {
       const vectors = await this.embeddingService.embed([input.text], 'query');
       if (vectors.length !== 1) return [];
-      return this.memoryRepository.searchBridges({
+      const hits = await this.memoryRepository.searchBridges({
         memoryPartition: input.memoryPartition,
         vector: vectors[0],
         limit: input.limit ?? 5,
       });
+      this.trackRetrieval(hits);
+      return hits;
     } catch {
       return [];
     }
@@ -229,14 +255,35 @@ export class MemorySearchService {
     try {
       const vectors = await this.embeddingService.embed([input.text], 'query');
       if (vectors.length !== 1) return [];
-      return this.memoryRepository.searchConvictions({
+      const hits = await this.memoryRepository.searchConvictions({
         memoryCognition: input.memoryCognition,
         vector: vectors[0],
         limit: input.limit ?? 5,
       });
+      this.trackRetrieval(hits);
+      return hits;
     } catch {
       return [];
     }
+  }
+
+  /**
+   * Heat tracking (fire-and-forget): stamp a search's hits with
+   * `heat_amount +1` / `heat_timestamp = now` — skipped for bookkeeping
+   * probes (`trackHeat === false`). Never awaited, never breaks recall — a
+   * failed heat write logs a warning and nothing else.
+   */
+  private trackRetrieval(
+    hits: readonly MemoryPoint[],
+    trackHeat?: boolean,
+  ): void {
+    if (trackHeat === false) return;
+    if (!this.overrides.getHeatTrackingEnabled() || hits.length === 0) return;
+    void this.memoryRepository.incrementHeat(hits).catch((error) => {
+      this.logger.warn(
+        `Heat write failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
   }
 
   private searchRepository(

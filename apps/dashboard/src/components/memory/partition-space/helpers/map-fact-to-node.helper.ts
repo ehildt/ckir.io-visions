@@ -29,6 +29,7 @@ export function mapFactToNode(
     label: isBridge ? BRIDGE_TAG : topicKey,
     topicKey,
     clusterKey: fact.clusterId?.trim() || fact.category?.trim() || undefined,
+    category: fact.category?.trim() || undefined,
     communityKey: fact.community?.trim() || undefined,
     text: fact.text,
     summary: fact.text,
@@ -45,6 +46,19 @@ export function mapFactToNode(
       ...(fact.createdAt
         ? [{ label: 'created', value: fact.createdAt.slice(0, 10) }]
         : []),
+      ...(fact.heatAmount
+        ? [
+            { label: 'accessed', value: `×${fact.heatAmount}` },
+            ...(fact.heatTimestamp
+              ? [
+                  {
+                    label: 'last access',
+                    value: fact.heatTimestamp.slice(0, 10),
+                  },
+                ]
+              : []),
+          ]
+        : []),
     ],
     isBridge,
     evidenceTexts: isBridge
@@ -54,5 +68,7 @@ export function mapFactToNode(
     isReflected: fact.isReflected,
     isFriction: fact.isFriction,
     superseded: fact.superseded,
+    heatAmount: fact.heatAmount,
+    heatTimestamp: fact.heatTimestamp,
   };
 }

@@ -16,6 +16,10 @@ import {
 } from '../../../../persistence/services/memory-cluster.repository.js';
 import { MemoryLinkRepository } from '../../../../persistence/services/memory-link.repository.js';
 import {
+  MemoryMainNodeRepository,
+  type MemoryMainNodeRow,
+} from '../../../../persistence/services/memory-main-node.repository.js';
+import {
   clampClusterMinMembers,
   CLUSTER_MEMBER_TEXT_LIMIT,
   CLUSTER_SUMMARY_LIMIT,
@@ -40,6 +44,21 @@ import {
   cosineSimilarity,
   detectClusters,
 } from '../../../helpers/detect-clusters.helper.js';
+import { groupMainNodeLeaves } from '../../../helpers/group-main-node-leaves.helper.js';
+
+/**
+ * One scrolled scope point: the cluster-detection input plus the fields the
+ * main-node grouping keys off (partition: subject; encyclopedia: topic,
+ * document title, source domain, uploaded-document flag).
+ */
+type ScopePoint = ClusterPoint & {
+  community?: string;
+  subject?: string;
+  topic?: string;
+  title?: string;
+  domain?: string;
+  originalHash?: string;
+};
 
 /**
  * Cluster-detection + summarization job handler (vectorize queue): the
@@ -75,6 +94,7 @@ export class MemoryClusterJobService {
     private readonly encyclopediaRepository: EncyclopediaRepository,
     private readonly links: MemoryLinkRepository,
     private readonly clusters: MemoryClusterRepository,
+    private readonly mainNodes: MemoryMainNodeRepository,
     private readonly synopses: SynopsisRepository,
     private readonly embeddingService: EmbeddingService,
     private readonly overrides: MemoryOverridesService,
@@ -91,7 +111,10 @@ export class MemoryClusterJobService {
       collection,
       data.scopeKey,
     );
-    const points = await this.scrollPoints(data.lane, data.scopeKey);
+    const points: ScopePoint[] = await this.scrollPoints(
+      data.lane,
+      data.scopeKey,
+    );
     if (points.length === 0) {
       this.logger.debug(
         `memory-cluster ${data.lane}/${data.scopeKey}: no points`,
@@ -108,7 +131,7 @@ export class MemoryClusterJobService {
 
     if (data.dryRun) {
       this.logger.log(
-        `memory-cluster ${data.lane}/${data.scopeKey} [dryRun]: ${detection.clusters.length} clusters from ${points.length} points`,
+        `memory-cluster ${data.lane}/${data.scopeKey} [dryRun]: ${detection.clusters.length} clusters, ${groupMainNodeLeaves(scopeSeed, data.lane, points).length} main nodes from ${points.length} points`,
       );
       return;
     }
@@ -194,9 +217,16 @@ export class MemoryClusterJobService {
     );
     await this.setClusterIds(data.lane, detection.assignments);
     await this.syncSynopsisLifecycle(data.lane, data.scopeKey, rows);
+    const mainNodeCount = await this.syncMainNodes({
+      lane: data.lane,
+      collection,
+      scopeKey: data.scopeKey,
+      model: data.model,
+      points,
+    });
 
     this.logger.log(
-      `memory-cluster ${data.lane}/${data.scopeKey}: ${rows.length} clusters (${summarized} summarized) from ${points.length} points`,
+      `memory-cluster ${data.lane}/${data.scopeKey}: ${rows.length} clusters (${summarized} summarized) + ${mainNodeCount.rows} main nodes (${mainNodeCount.summarized} summarized) from ${points.length} points`,
     );
   }
 
@@ -342,6 +372,88 @@ export class MemoryClusterJobService {
   }
 
   /**
+   * The title-tier pass: refresh the scope's main nodes — one row per topic
+   * blob (the constellation's leaf grouping), carrying an LLM summary of the
+   * attached leafs. Same drift-aware contract as the clusters: a group whose
+   * fingerprint (member ids + their current texts) is unchanged keeps its
+   * stored summary; only changed groups hit the LLM, and the scope's rows
+   * are replaced atomically so stale groups never linger. Single-leaf blobs
+   * get no row: they render directly, and their summary would echo the one
+   * chunk.
+   */
+  private async syncMainNodes(params: {
+    lane: MemoryClusterLane;
+    collection: string;
+    scopeKey: string;
+    model: string;
+    points: ScopePoint[];
+  }): Promise<{ rows: number; summarized: number }> {
+    const groups = groupMainNodeLeaves(
+      `${params.lane}|${params.collection}|${params.scopeKey}`,
+      params.lane,
+      params.points,
+    );
+    const pointById = new Map(params.points.map((point) => [point.id, point]));
+    const existing = await this.mainNodes.listByScope(
+      params.lane,
+      params.collection,
+      params.scopeKey,
+    );
+    const existingByFingerprint = new Map(
+      existing.map((node) => [`${node.groupKey}|${node.fingerprint}`, node]),
+    );
+    const rows: MemoryMainNodeRow[] = [];
+    let summarized = 0;
+    for (const group of groups) {
+      const prior = existingByFingerprint.get(
+        `${group.key}|${group.fingerprint}`,
+      );
+      if (prior) {
+        rows.push({
+          id: group.id,
+          lane: params.lane,
+          collection: params.collection,
+          scopeKey: params.scopeKey,
+          groupKey: group.key,
+          fingerprint: group.fingerprint,
+          title: prior.title,
+          summary: prior.summary,
+          memberCount: group.memberCount,
+          memberIds: group.memberIds,
+        });
+        continue;
+      }
+      const members = group.memberIds
+        .map((id) => pointById.get(id))
+        .filter(
+          (point): point is ScopePoint =>
+            point !== undefined && point.text.trim().length > 0,
+        );
+      const verdict = await this.summarize(params.model, members);
+      rows.push({
+        id: group.id,
+        lane: params.lane,
+        collection: params.collection,
+        scopeKey: params.scopeKey,
+        groupKey: group.key,
+        fingerprint: group.fingerprint,
+        title: group.title,
+        summary: verdict?.summary ?? '',
+        memberCount: group.memberCount,
+        memberIds: group.memberIds,
+      });
+      summarized++;
+    }
+    await this.mainNodes.replaceScope(
+      params.lane,
+      params.collection,
+      params.scopeKey,
+      rows,
+    );
+    return { rows: rows.length, summarized };
+  }
+
+  /**
    * Embed + upsert one level's synopses, reusing stored vectors for
    * fingerprint-stable clusters (identical cluster id ⇒ identical text ⇒
    * identical vector — the drift-aware contract). Returns row id → vector.
@@ -472,7 +584,7 @@ export class MemoryClusterJobService {
   private async scrollPoints(
     lane: MemoryClusterLane,
     scopeKey: string,
-  ): Promise<ClusterPoint[]> {
+  ): Promise<ScopePoint[]> {
     if (lane === 'partition') {
       return this.memoryRepository.scrollScopePoints(
         scopeKey,

@@ -17,8 +17,15 @@ import {
   BRIDGE_TAG,
   CONVICTION_TAG,
 } from '../constants/conviction.constant.js';
-import { QDRANT_CONFIG } from '../constants/qdrant.constants.js';
+import {
+  DENSE_VECTOR,
+  QDRANT_CONFIG,
+  SPARSE_VECTOR,
+} from '../constants/qdrant.constants.js';
+import { buildFusionQuery } from '../helpers/build-fusion-query.helper.js';
 import { buildMemoryMust } from '../helpers/build-memory-filters.helper.js';
+import { buildSparseVector } from '../helpers/build-sparse-vector.helper.js';
+import { readDenseVector } from '../helpers/read-dense-vector.helper.js';
 import type {
   ListMemoryInput,
   MemoryPoint,
@@ -27,6 +34,7 @@ import type {
 } from '../models/memory.model.js';
 import type { QdrantConfig } from '../models/qdrant-config.model.js';
 
+import { groupHeatIncrements } from './helpers/group-heat-increments.helper.js';
 import { mapFacetHit } from './helpers/map-facet-hit.helper.js';
 import { mapMemoryPointToUpsert } from './helpers/map-memory-point-to-upsert.helper.js';
 import { mapQueryPointToMemoryPoint } from './helpers/map-query-point-to-memory-point.helper.js';
@@ -98,11 +106,12 @@ export class MemoryRepository {
     // vectorize pipeline is fire-and-forget and the harness must proceed.
     if (!(await this.clientService.hasCollection())) return;
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const createdAt = new Date().toISOString();
     await client.upsert(this.collection, {
       wait: true,
       points: input.points.map((point) =>
-        mapMemoryPointToUpsert(point, input, createdAt),
+        mapMemoryPointToUpsert(point, input, createdAt, layout),
       ),
     });
 
@@ -135,6 +144,7 @@ export class MemoryRepository {
   async searchMemory(input: SearchMemoryInput): Promise<MemoryPoint[]> {
     if (!(await this.clientService.hasCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const limit = Math.min(input.limit ?? 5, 5);
     const filter = {
       must: buildMemoryMust(input),
@@ -147,57 +157,94 @@ export class MemoryRepository {
       ],
     };
 
-    const result = input.recency
-      ? await client.query(this.collection, {
-          prefetch: {
-            query: input.vector,
-            limit: Math.max(limit * RECENCY_PREFETCH_MULTIPLIER, 20),
-            // The episode lane's own noise floor — far lower than the
-            // fact-lane `scoreThreshold`. Meta-questions ("what were we
-            // doing recently?") embed weakly against any single episode, so
-            // a hard vector gate here would discard every candidate before
-            // the recency formula could rank them.
-            score_threshold: this.overrides.getEpisodeScoreThreshold(),
-            filter,
-          },
-          query: {
-            formula: {
-              sum: [
-                '$score',
-                {
-                  mult: [
-                    this.overrides.getEpisodeRecencyWeight(),
-                    {
-                      exp_decay: {
-                        x: { datetime_key: 'created_at' },
-                        target: { datetime: new Date().toISOString() },
-                        scale: this.overrides.getEpisodeRecencyScaleSeconds(),
-                        midpoint: this.overrides.getEpisodeRecencyMidpoint(),
-                      },
+    // Episode probe (recency blend): dense-only — the recency exp_decay is a
+    // cosine-scale formula and would be meaningless over RRF rank scores.
+    if (input.recency) {
+      const result = await client.query(this.collection, {
+        prefetch: {
+          query: input.vector,
+          ...(layout.named ? { using: DENSE_VECTOR } : {}),
+          limit: Math.max(limit * RECENCY_PREFETCH_MULTIPLIER, 20),
+          // The episode lane's own noise floor — far lower than the
+          // fact-lane `scoreThreshold`. Meta-questions ("what were we
+          // doing recently?") embed weakly against any single episode, so
+          // a hard vector gate here would discard every candidate before
+          // the recency formula could rank them.
+          score_threshold: this.overrides.getEpisodeScoreThreshold(),
+          filter,
+        },
+        query: {
+          formula: {
+            sum: [
+              '$score',
+              {
+                mult: [
+                  this.overrides.getEpisodeRecencyWeight(),
+                  {
+                    exp_decay: {
+                      x: { datetime_key: 'created_at' },
+                      target: { datetime: new Date().toISOString() },
+                      scale: this.overrides.getEpisodeRecencyScaleSeconds(),
+                      midpoint: this.overrides.getEpisodeRecencyMidpoint(),
                     },
-                  ],
-                },
-              ],
-            },
+                  },
+                ],
+              },
+            ],
           },
-          limit,
-          with_payload: true,
-        })
-      : await client.query(this.collection, {
-          prefetch: {
+        },
+        limit,
+        with_payload: true,
+      });
+      return result.points.map((point) => this.toMemoryPoint(point));
+    }
+
+    // Fact recall: when query text is present and the collection has the
+    // sparse vector, dense + lexical legs are RRF/DBSF-fused first (exact
+    // terms the dense leg misses), then the curated-tier boost formula
+    // rescales the fused score. No text (raw vector search) → dense only.
+    const sparse = input.text ? buildSparseVector(input.text) : undefined;
+    const hybrid =
+      layout.sparse &&
+      this.config.hybridEnabled &&
+      sparse !== undefined &&
+      sparse.indices.length > 0;
+    const result = await client.query(this.collection, {
+      prefetch: hybrid
+        ? {
+            prefetch: [
+              {
+                query: input.vector,
+                using: DENSE_VECTOR,
+                limit: Math.max(limit * RECENCY_PREFETCH_MULTIPLIER, 20),
+                score_threshold: this.config.scoreThreshold,
+                filter,
+              },
+              {
+                query: sparse,
+                using: SPARSE_VECTOR,
+                limit: this.config.hybridSparseLimit,
+                filter,
+              },
+            ],
+            query: buildFusionQuery(this.config),
+            limit: Math.max(limit * RECENCY_PREFETCH_MULTIPLIER, 20),
+          }
+        : {
             query: input.vector,
+            ...(layout.named ? { using: DENSE_VECTOR } : {}),
             limit: Math.max(limit * RECENCY_PREFETCH_MULTIPLIER, 20),
             score_threshold: this.config.scoreThreshold,
             filter,
           },
-          query: {
-            formula: {
-              sum: ['$score', ...this.curatedBoostTerms()],
-            },
-          },
-          limit,
-          with_payload: true,
-        });
+      query: {
+        formula: {
+          sum: ['$score', ...this.curatedBoostTerms()],
+        },
+      },
+      limit,
+      with_payload: true,
+    });
     return result.points.map((point) => this.toMemoryPoint(point));
   }
 
@@ -212,8 +259,10 @@ export class MemoryRepository {
   }): Promise<MemoryPoint[]> {
     if (!(await this.clientService.hasCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const result = await client.query(this.collection, {
       query: input.vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit: Math.min(input.limit ?? 5, 5),
       score_threshold: this.config.scoreThreshold,
       with_payload: true,
@@ -240,8 +289,10 @@ export class MemoryRepository {
   }): Promise<MemoryPoint[]> {
     if (!(await this.clientService.hasCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const result = await client.query(this.collection, {
       query: input.vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit: Math.min(input.limit ?? 5, 5),
       score_threshold: this.config.scoreThreshold,
       with_payload: true,
@@ -564,12 +615,12 @@ export class MemoryRepository {
         with_vector: true,
       });
       for (const point of scroll.points) {
-        const vector = point.vector;
-        if (!Array.isArray(vector) || typeof vector[0] !== 'number') continue;
+        const vector = readDenseVector(point.vector);
+        if (vector.length === 0) continue;
         const payload = point.payload ?? {};
         points.push({
           id: String(point.id),
-          vector: vector as number[],
+          vector,
           text: (payload.text as string) ?? '',
           role: (payload.role as MemoryPoint['role']) ?? 'user',
           tags: (payload.tags as string[]) ?? [],
@@ -605,6 +656,7 @@ export class MemoryRepository {
   > {
     if (!(await this.clientService.hasCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const filter: { must: Array<Record<string, unknown>> } = {
       must: [{ key: 'memory_partition', match: { value: memoryPartition } }],
     };
@@ -613,6 +665,7 @@ export class MemoryRepository {
     }
     const result = await client.query(this.collection, {
       query: vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit,
       score_threshold: scoreThreshold,
       with_payload: ['category', 'tags'],
@@ -664,7 +717,7 @@ export class MemoryRepository {
       const payload = point.payload ?? {};
       return {
         id: String(point.id),
-        vector: (point.vector as number[]) ?? [],
+        vector: readDenseVector(point.vector),
         text: (payload.text as string) ?? '',
         role: (payload.role as MemoryPoint['role']) ?? 'user',
         createdAt: (payload.created_at as string) ?? '',
@@ -702,8 +755,10 @@ export class MemoryRepository {
   > {
     if (!(await this.clientService.hasCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const result = await client.query(this.collection, {
       query: input.vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit: input.limit,
       score_threshold: input.scoreThreshold,
       with_payload: true,
@@ -775,7 +830,7 @@ export class MemoryRepository {
       const payload = point.payload ?? {};
       return {
         id: String(point.id),
-        vector: (point.vector as number[]) ?? [],
+        vector: readDenseVector(point.vector),
         text: (payload.text as string) ?? '',
         role: (payload.role as MemoryPoint['role']) ?? 'user',
         createdAt: (payload.created_at as string) ?? '',
@@ -893,8 +948,32 @@ export class MemoryRepository {
   }
 
   /**
+   * Increment the retrieval heat of search hits: `heat_amount` +1 and
+   * `heat_timestamp` = now, written as one batched setPayload per distinct
+   * current count (approximate under concurrency — last-writer-wins is
+   * acceptable for an access-frequency metric). Not awaited by the read
+   * path; `wait: false` keeps it off the recall hot path.
+   */
+  async incrementHeat(
+    hits: ReadonlyArray<{ id: string; heatAmount?: number }>,
+  ): Promise<void> {
+    if (hits.length === 0) return;
+    if (!(await this.clientService.hasCollection())) return;
+    const timestamp = new Date().toISOString();
+    const client = this.clientService.getClient();
+    for (const group of groupHeatIncrements(hits)) {
+      await client.setPayload(this.collection, {
+        payload: { heat_amount: group.nextAmount, heat_timestamp: timestamp },
+        points: group.ids,
+        wait: false,
+      });
+    }
+  }
+
+  /**
    * Scroll every non-superseded point of one partition with vectors — the
-   * cluster-detection input (id + vector + text + category + tags).
+   * cluster-detection + main-node-grouping input (id + vector + text +
+   * category + community + subject + tags).
    * Paginated; `limit` is a hard cap (the scope's constellation node limit).
    */
   async scrollScopePoints(
@@ -906,6 +985,8 @@ export class MemoryRepository {
       vector: number[];
       text: string;
       category?: string;
+      community?: string;
+      subject?: string;
       tags: string[];
     }>
   > {
@@ -921,6 +1002,7 @@ export class MemoryRepository {
       text: string;
       category?: string;
       community?: string;
+      subject?: string;
       tags: string[];
     }> = [];
     let offset: string | number | null = null;
@@ -933,15 +1015,16 @@ export class MemoryRepository {
         with_vector: true,
       });
       for (const point of scroll.points) {
-        const vector = point.vector;
-        if (!Array.isArray(vector) || typeof vector[0] !== 'number') continue;
+        const vector = readDenseVector(point.vector);
+        if (vector.length === 0) continue;
         const payload = point.payload ?? {};
         points.push({
           id: String(point.id),
-          vector: vector as number[],
+          vector,
           text: (payload.text as string) ?? '',
           category: payload.category as string | undefined,
           community: payload.community as string | undefined,
+          subject: payload.subject as string | undefined,
           tags: (payload.tags as string[]) ?? [],
         });
         if (points.length >= limit) return points;
@@ -1188,11 +1271,13 @@ export class MemoryRepository {
     seen: Set<string>,
     edges: MemoryLinkRow[],
   ): Promise<void> {
+    const layout = await this.clientService.vectorLayout(this.collection);
     for (const point of points) {
       const vector = point.vector;
       if (!Array.isArray(vector) || typeof vector[0] !== 'number') continue;
       const result = await client.query(this.collection, {
         query: vector as number[],
+        ...(layout.named ? { using: DENSE_VECTOR } : {}),
         limit: this.config.linkNeighbors + 1,
         score_threshold: this.config.linkScoreThreshold,
         with_payload: false,
@@ -1296,9 +1381,9 @@ export class MemoryRepository {
         with_vector: true,
       });
       for (const point of scroll.points) {
-        const vector = point.vector;
-        if (Array.isArray(vector) && typeof vector[0] === 'number') {
-          points.push({ id: String(point.id), vector: vector as number[] });
+        const vector = readDenseVector(point.vector);
+        if (vector.length > 0) {
+          points.push({ id: String(point.id), vector });
         }
       }
       offset = (scroll.next_page_offset as string | number | null) ?? null;
@@ -1361,6 +1446,8 @@ export class MemoryRepository {
       supersededBy: payload.superseded_by as string | undefined,
       evidenceIds: payload.evidence_ids as string[] | undefined,
       clusterId: payload.cluster_id as string | undefined,
+      heatAmount: payload.heat_amount as number | undefined,
+      heatTimestamp: payload.heat_timestamp as string | undefined,
     };
   }
 }

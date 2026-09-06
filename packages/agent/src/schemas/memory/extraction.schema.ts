@@ -52,15 +52,19 @@ export const ExtractedFactSchema = z.object({
    * One broad lowercase PLURAL family label for THIS fact (e.g. `stocks`,
    * `pets`, `games`) — the constellation's CLUSTER tier. Inherits the
    * turn-side category when omitted. Never
-   * a specific entity, product, company, or game title.
+   * a specific entity, product, company, or game title. Persona/roleplay or
+   * fictional content classifies by its real-world medium (a TV persona's
+   * biography belongs under `shows`), never by in-universe domains (`family`,
+   * `education`, `business` describe reality, not an invented life).
    */
   category: z.string().optional(),
   /**
    * One lowercase PLURAL sub-family label narrowing THIS fact's category
-   * (e.g. `survival-games` under `games`) — the constellation's COMMUNITY
-   * tier, one level below the cluster. Inherits the turn-side community when
-   * omitted; omit when no sub-family applies. Never a specific entity,
-   * product, or title.
+   * (e.g. `survival-games` under `games`, `tv-shows` under `shows`) — the
+   * constellation's COMMUNITY tier, one level below the cluster. Inherits the
+   * turn-side community when omitted; omit when no sub-family applies. Never
+   * a specific entity, product, or title — a show/work title like
+   * `breaking-bad` is a tag or hub, never a community.
    */
   community: z.string().optional(),
   /** What kind of durable thing this is (see FACT_KINDS). */
@@ -92,17 +96,21 @@ export const ExtractionSchema = z.object({
    * the narrow tags into one topic family, powers the relink job's
    * per-category passes, and backstops facts that omit their own `category`. Never a
    * specific entity, product, company, or game title: `amd` belongs under
-   * `stocks`; `stellar blade` belongs under `games`. Optional: a turn with
+   * `stocks`; `stellar blade` belongs under `games`. Persona/roleplay or
+   * fictional content classifies by its real-world medium (e.g. `shows`
+   * for a TV persona), never by in-universe domains (`family`, `education`,
+   * `business` describe reality, not an invented life). Optional: a turn with
    * nothing durable may omit it.
    */
   category: z.string().optional(),
   /**
    * One lowercase PLURAL sub-family label narrowing the turn-side category
-   * (e.g. `survival-games` under `games`) — the constellation's COMMUNITY
-   * tier: a genre, project family, or domain branch one level below the
-   * cluster. Backstops facts that omit their own `community`. Optional:
-   * omit it when no sub-family applies. Never a specific entity, product,
-   * or title.
+   * (e.g. `survival-games` under `games`, `tv-shows` under `shows`) — the
+   * constellation's COMMUNITY tier: a genre, project family, or domain branch
+   * one level below the cluster. Backstops facts that omit their own
+   * `community`. Optional: omit it when no sub-family applies. Never a
+   * specific entity, product, or title — a show/work title like
+   * `breaking-bad` is a tag or hub, never a community.
    */
   community: z.string().optional(),
 });

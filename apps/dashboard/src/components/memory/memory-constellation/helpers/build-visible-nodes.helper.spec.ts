@@ -56,4 +56,41 @@ describe('buildVisibleNodes', () => {
     expect(acc.visibleNodes.map((n) => n.id)).toEqual(['a']);
     expect(acc.visibleNodes[0].isTopic).toBeUndefined();
   });
+
+  it('keeps the synthetic main dot beside the expanded members under the main-node regime', () => {
+    const nodes = [makeNode('a', 'x'), makeNode('b', 'x')];
+    const acc = buildVisibleNodes(
+      [{ key: 'x', label: 'x', color: '#000', memberIds: ['a', 'b'] }],
+      new Map([
+        ['a', { x: 0, y: 0, z: 0 }],
+        ['b', { x: 10, y: 0, z: 0 }],
+      ]),
+      new Map(nodes.map((n) => [n.id, n])),
+      new Set(),
+      [],
+      new Map(),
+    );
+
+    // Main dot first (title tier), then the leafs.
+    expect(acc.visibleNodes.map((n) => n.id)).toEqual(['topic:x', 'a', 'b']);
+    expect(acc.visibleNodes[0].isTopic).toBe(true);
+    expect(acc.positions.get('topic:x')).toEqual({ x: 5, y: 0, z: 0 });
+  });
+
+  it('collapses to the main dot alone under the main-node regime', () => {
+    const nodes = [makeNode('a', 'x'), makeNode('b', 'x')];
+    const acc = buildVisibleNodes(
+      [{ key: 'x', label: 'x', color: '#000', memberIds: ['a', 'b'] }],
+      new Map([
+        ['a', { x: 0, y: 0, z: 0 }],
+        ['b', { x: 10, y: 0, z: 0 }],
+      ]),
+      new Map(nodes.map((n) => [n.id, n])),
+      new Set(['x']),
+      [],
+      new Map(),
+    );
+
+    expect(acc.visibleNodes.map((n) => n.id)).toEqual(['topic:x']);
+  });
 });

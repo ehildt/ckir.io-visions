@@ -8,6 +8,20 @@ const CONVICTIONS_CLUSTER = 'convictions';
 /** Tooltip capture length for a profile field's value. */
 const SUMMARY_CHARS = 140;
 
+/** Heat tooltip rows for a record the store tracked (`accessed ×N` + last date). */
+function heatMetaRows(
+  heatAmount: number | undefined,
+  heatTimestamp: string | undefined,
+): Array<{ label: string; value: string }> {
+  if (!heatAmount) return [];
+  return [
+    { label: 'accessed', value: `×${heatAmount}` },
+    ...(heatTimestamp
+      ? [{ label: 'last access', value: heatTimestamp.slice(0, 10) }]
+      : []),
+  ];
+}
+
 /** Parse the stored profile into a plain object, or null when malformed. */
 function parseProfile(raw: string): Record<string, unknown> | null {
   try {
@@ -119,6 +133,8 @@ export function buildCognitionNodes(
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    heatAmount?: number;
+    heatTimestamp?: string;
   }>,
   convictions: ReadonlyArray<{
     id: string;
@@ -128,6 +144,8 @@ export function buildCognitionNodes(
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    heatAmount?: number;
+    heatTimestamp?: string;
   }> = [],
 ): ConstellationNode[] {
   const nodes: ConstellationNode[] = [];
@@ -153,11 +171,16 @@ export function buildCognitionNodes(
       text: insight.text,
       summary: insight.text,
       keys: path ? [path, topicKey] : [INSIGHTS_CLUSTER],
-      meta: path ? [{ label: 'path', value: path }] : [],
+      meta: [
+        ...(path ? [{ label: 'path', value: path }] : []),
+        ...heatMetaRows(insight.heatAmount, insight.heatTimestamp),
+      ],
       isConsolidated: insight.isConsolidated,
       isReflected: insight.isReflected,
       isFriction: insight.isFriction,
       superseded: insight.superseded,
+      heatAmount: insight.heatAmount,
+      heatTimestamp: insight.heatTimestamp,
     });
   });
 
@@ -170,19 +193,23 @@ export function buildCognitionNodes(
       text: conviction.text,
       summary: conviction.text,
       keys: [CONVICTIONS_CLUSTER],
-      meta:
-        evidenceCount > 0
+      meta: [
+        ...(evidenceCount > 0
           ? [
               {
                 label: 'evidence',
                 value: `${evidenceCount} fact${evidenceCount === 1 ? '' : 's'}`,
               },
             ]
-          : [],
+          : []),
+        ...heatMetaRows(conviction.heatAmount, conviction.heatTimestamp),
+      ],
       isConviction: true,
       isReflected: conviction.isReflected,
       isFriction: conviction.isFriction,
       superseded: conviction.superseded,
+      heatAmount: conviction.heatAmount,
+      heatTimestamp: conviction.heatTimestamp,
     });
   });
 

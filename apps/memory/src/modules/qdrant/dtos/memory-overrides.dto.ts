@@ -298,6 +298,15 @@ export class MemoryOverridesDto {
 
   @ApiPropertyOptional({
     description:
+      'Master switch for heat tracking — semantic-search hits get their heat_amount incremented and heat_timestamp stamped.',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  heatTrackingEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    description:
       'Raptor recursion depth cap — highest synopsis level per scope (1–3).',
     example: 3,
     minimum: RAPTOR_MAX_DEPTH_MIN,

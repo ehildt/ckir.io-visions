@@ -35,7 +35,7 @@ export interface MemoryTaxonomyNodeRecord {
 }
 
 /** Input for adopting or minting a taxonomy node. */
-export interface MemoryTaxonomyNodeInput {
+interface MemoryTaxonomyNodeInput {
   lane: MemoryTaxonomyLane;
   scopeKey: string;
   kind: MemoryTaxonomyKind;

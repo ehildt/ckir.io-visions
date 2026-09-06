@@ -149,4 +149,18 @@ export class MemoryItemDto {
     example: ['9f1c…', 'a3b2…'],
   })
   evidenceIds?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Retrieval count — how often a semantic search surfaced this record (heat tracking).',
+    example: 12,
+  })
+  heatAmount?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'ISO timestamp of the last retrieval that surfaced this record.',
+    example: '2026-01-12T18:30:00.000Z',
+  })
+  heatTimestamp?: string;
 }

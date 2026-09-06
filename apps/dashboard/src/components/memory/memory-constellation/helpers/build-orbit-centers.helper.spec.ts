@@ -48,4 +48,14 @@ describe('buildOrbitCenters', () => {
 
     expect(centers.get('b')?.phase).not.toBe(centers.get('c')?.phase);
   });
+
+  it('orbits every member around the blob centroid under the main-node regime', () => {
+    const centers = buildOrbitCenters(layout(), true);
+
+    // The centroid of a/b/c — and the former hub member orbits too now.
+    expect(centers.get('a')?.center).toEqual({ x: 10, y: 0, z: 0 });
+    expect(centers.get('b')?.center).toEqual({ x: 10, y: 0, z: 0 });
+    expect(centers.get('c')?.center).toEqual({ x: 10, y: 0, z: 0 });
+    expect(centers.has('d')).toBe(false);
+  });
 });

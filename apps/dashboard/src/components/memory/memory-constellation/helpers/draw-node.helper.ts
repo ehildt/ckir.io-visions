@@ -3,12 +3,17 @@ import { computeNodeRadius } from './compute-node-radius.helper';
 import { drawIcon } from './draw-icon.helper';
 import { heatColor } from './heat-color.helper';
 import { lightenColor } from './lighten-color.helper';
+import { mixColor } from './mix-color.helper';
 import { withAlpha } from './with-alpha.helper';
 
 /** Neutral gray for the multi-leaf ring indicator. */
 const RING_COLOR = '#94a3b8';
 /** Black pulse ring for memory-rot (superseded) and friction dots. */
 const PULSE_COLOR = '#000000';
+/** The heat ramp's hot end — halos warm toward it as retrieval heat rises. */
+const HEAT_WARM_COLOR = '#f0643c';
+/** Core alpha of the friction-peer halo (the hovered dot's contested peers). */
+const FRICTION_HALO_ALPHA = 0.4;
 /** Gap (px) between the dot edge and the first ring. */
 export const RING_GAP = 3;
 /** Gap (px) between the two rings. */
@@ -47,6 +52,17 @@ export interface DrawNodeParams {
   isSuperseded: boolean;
   /** Curated taxonomy icon name — macro-node dots render it in place of the opaque fill. */
   icon?: string;
+  /**
+   * Normalized retrieval heat (0..1) — warms the halo from the cluster color
+   * toward the heat ramp's hot end and brightens it; hot leaves grow a halo.
+   */
+  heatIntensity?: number;
+  /**
+   * This dot shares an open friction with the hovered dot — pulse a black
+   * halo marking it as a contested peer (the connection reveal that
+   * replaced the always-on dashed friction edges).
+   */
+  isFrictionPeer?: boolean;
 }
 
 /** Draw one node dot (topic-colored, sized by depth + link count). */
@@ -71,6 +87,8 @@ export function drawNode(
     isFriction,
     isSuperseded,
     icon,
+    heatIntensity = 0,
+    isFrictionPeer = false,
   } = params;
   const p = projected[index];
   const heat = heatColor(Math.sqrt(linkCount / maxLinkCount));
@@ -95,20 +113,18 @@ export function drawNode(
     return;
   }
 
-  // Hub glow: a soft radial halo that fades out from the dot edge — the
-  // group's main dot radiates without a hard edge.
-  if (isHub || isTopic) {
-    const pulse = 1 + 0.2 * Math.sin(time * 1.5);
-    const haloR = r * 2.5 * pulse;
-    const gradient = ctx.createRadialGradient(p.x, p.y, r, p.x, p.y, haloR);
-    gradient.addColorStop(0, withAlpha(color, 0.2));
-    gradient.addColorStop(1, withAlpha(color, 0));
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, haloR, 0, Math.PI * 2);
-    ctx.fillStyle = gradient;
-    ctx.globalAlpha = opacity;
-    ctx.fill();
-    ctx.globalAlpha = 1;
+  // Hub glow: the group's main dot radiates without a hard edge. Warmth is
+  // the access-heat channel: cold dots keep their cluster color, hot dots
+  // warm toward the heat ramp's hot end; hot leaf dots grow a halo.
+  if (isHub || isTopic || heatIntensity > 0) {
+    drawHalo(ctx, p, r, color, heatIntensity, time, opacity);
+  }
+
+  // Friction-peer highlight: while a dot is hovered, the dots it contests
+  // with pulse a black halo — revealing the conflict pair without the
+  // always-on dashed edge.
+  if (isFrictionPeer) {
+    paintGlow(ctx, p, r, PULSE_COLOR, FRICTION_HALO_ALPHA, time, opacity);
   }
 
   ctx.beginPath();
@@ -167,5 +183,62 @@ export function drawNode(
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * The halo glow: a soft radial field fading out from the dot edge. Cold dots
+ * keep their cluster color; retrieval heat warms the halo toward the heat
+ * ramp's hot end and brightens it.
+ */
+function drawHalo(
+  ctx: CanvasRenderingContext2D,
+  point: ProjectedPoint,
+  radius: number,
+  color: string,
+  heatIntensity: number,
+  time: number,
+  opacity: number,
+): void {
+  const haloColor =
+    heatIntensity > 0 ? mixColor(color, HEAT_WARM_COLOR, heatIntensity) : color;
+  paintGlow(
+    ctx,
+    point,
+    radius,
+    haloColor,
+    0.2 + 0.25 * heatIntensity,
+    time,
+    opacity,
+  );
+}
+
+/** Pulse and paint one soft radial glow field around a dot. */
+function paintGlow(
+  ctx: CanvasRenderingContext2D,
+  point: ProjectedPoint,
+  radius: number,
+  color: string,
+  alpha: number,
+  time: number,
+  opacity: number,
+): void {
+  const pulse = 1 + 0.2 * Math.sin(time * 1.5);
+  const haloRadius = radius * 2.5 * pulse;
+  const gradient = ctx.createRadialGradient(
+    point.x,
+    point.y,
+    radius,
+    point.x,
+    point.y,
+    haloRadius,
+  );
+  gradient.addColorStop(0, withAlpha(color, alpha));
+  gradient.addColorStop(1, withAlpha(color, 0));
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, haloRadius, 0, Math.PI * 2);
+  ctx.fillStyle = gradient;
+  ctx.globalAlpha = opacity;
+  ctx.fill();
   ctx.globalAlpha = 1;
 }

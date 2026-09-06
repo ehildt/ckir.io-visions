@@ -1,7 +1,7 @@
 {
   "name": "@triplef/helpers",
   "description": "A shared utility library providing helper functions for the CKIR project.",
-  "version": "1.5.4",
+  "version": "1.5.6",
   "packageManager": "pnpm@11.25.0",
   "license": "MIT",
   "type": "module",

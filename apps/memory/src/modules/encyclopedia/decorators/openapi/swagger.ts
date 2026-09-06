@@ -6,6 +6,7 @@ import { MemoryClusterResponseDto } from '../../../memory-partition/dtos/memory-
 import { MemoryFrictionDto } from '../../../memory-partition/dtos/memory-friction.dto.js';
 import { MemoryLinkDto } from '../../../memory-partition/dtos/memory-link.dto.js';
 import { MemoryLinksRecomputeResponseDto } from '../../../memory-partition/dtos/memory-links-recompute-response.dto.js';
+import { MemoryMainNodeDto } from '../../../memory-partition/dtos/memory-main-node.dto.js';
 import { MemoryReflectResponseDto } from '../../../memory-partition/dtos/memory-reflect-response.dto.js';
 import { EncyclopediaChunkDto } from '../../dtos/encyclopedia-chunk.dto.js';
 
@@ -47,6 +48,15 @@ export const ApeGetEncyclopediaClusters = () =>
     ApiOperation({
       summary:
         'Detected clusters of the encyclopedia (clusters of related chunks with LLM-written title + summary)',
+    }),
+  );
+
+export const ApeGetEncyclopediaMainNodes = () =>
+  applyDecorators(
+    ApiResponse({ status: 200, type: [MemoryMainNodeDto] }),
+    ApiOperation({
+      summary:
+        'Title-tier main nodes of the encyclopedia (one per topic/document blob, each carrying the LLM summary of its attached chunks)',
     }),
   );
 

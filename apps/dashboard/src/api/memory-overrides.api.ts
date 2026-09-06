@@ -51,6 +51,8 @@ export interface MemoryOverridesConfig {
   clusterMinMembers: number;
   /** Effective Raptor master switch (synopsis layer on/off). */
   raptorEnabled: boolean;
+  /** Effective heat-tracking master switch (search-hit heat writes on/off). */
+  heatTrackingEnabled: boolean;
   /** Effective Raptor recursion depth cap (1–3). */
   raptorMaxDepth: number;
   /** Effective master switch for the gap-filling research job. */
@@ -107,6 +109,7 @@ export async function updateMemoryOverrides(patch: {
   convictionMaxPerCluster?: number | null;
   clusterMinMembers?: number | null;
   raptorEnabled?: boolean | null;
+  heatTrackingEnabled?: boolean | null;
   raptorMaxDepth?: number | null;
   researchEnabled?: boolean | null;
   researchSearchEnabled?: boolean | null;
