@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { buildMissingToolsPrompt } from '@triplef/agent/prompts';
 import { type VariantName } from '@triplef/agent/schemas';
-import type { InputMessage } from '@triplef/ai-sdk';
-import type { ToolResult } from '@triplef/ai-sdk';
+import type {
+  GenerateWithToolsResult,
+  InputMessage,
+  ToolResult,
+} from '@triplef/ai-sdk';
 import { AiSdkService } from '@triplef/ai-sdk';
+import { ToolChoiceViolationError } from 'ai';
 
 import { OllamaConfigService } from '../../ollama/configs/ollama-config.service.js';
 import { buildProviderOptions } from '../../ollama/helpers/provider-options.helper.js';
@@ -114,8 +118,12 @@ export class ExecuteActionService {
     // 3. Build the tool set: external tools + variant request tools + the
     // always-on knowledge-base probe pair (model-decided, never
     // classifier-picked — offered on every memory-enabled wave).
+    const classifierPickedToolNames = this.resolveAllToolNames(
+      intent,
+      requestedVariants,
+    );
     const allToolNames = [
-      ...this.resolveAllToolNames(intent, requestedVariants),
+      ...classifierPickedToolNames,
       ...this.toolSelectionService.getAlwaysOnToolNames(),
     ];
     // Browser intents chain several browser_* calls within one execute step;
@@ -174,18 +182,14 @@ export class ExecuteActionService {
         'history selected',
       );
 
-      const result = await this.aiSdkService.generateWithTools({
-        model: ctx.model,
-        messages: executeMessages,
-        providerOptions: buildProviderOptions({
-          keepAlive: this.ollamaConfigService.config.keepAlive,
-          numCtx: ctx.request.options?.num_ctx,
-          think: ctx.request.think,
-        }),
-        tools: chosenTools as any,
-        abortSignal,
+      const result = await this.runToolModelCall(
+        ctx,
+        chosenTools,
+        executeMessages,
         maxSteps,
-      });
+        classifierPickedToolNames.length > 0,
+        abortSignal,
+      );
 
       toolResults = result.toolResults;
       inputTokens = result.usage?.inputTokens ?? 0;
@@ -265,6 +269,53 @@ export class ExecuteActionService {
       inputTokens: inputTokens || undefined,
       outputTokens: outputTokens || undefined,
     };
+  }
+
+  /**
+   * Run the execute wave's tool model call. A tool call is enforced only when
+   * the classifier picked mandatory tools; when just the always-on
+   * encyclopedia pair is offered (smalltalk, jokes, refusals), the model may
+   * decline with plain text. A declined required call is tolerated as "no
+   * tool calls" so the turn falls through to the missing-tools retry and the
+   * respond step instead of surfacing the raw SDK error to the user.
+   */
+  private async runToolModelCall(
+    ctx: HarnessContext,
+    chosenTools: Record<string, unknown>,
+    executeMessages: InputMessage[],
+    maxSteps: number | undefined,
+    hasMandatoryTools: boolean,
+    abortSignal?: AbortSignal,
+  ): Promise<GenerateWithToolsResult> {
+    try {
+      return await this.aiSdkService.generateWithTools({
+        model: ctx.model,
+        messages: executeMessages,
+        providerOptions: buildProviderOptions({
+          keepAlive: this.ollamaConfigService.config.keepAlive,
+          numCtx: ctx.request.options?.num_ctx,
+          think: ctx.request.think,
+        }),
+        tools: chosenTools as any,
+        abortSignal,
+        maxSteps,
+        ...(hasMandatoryTools ? {} : { toolChoice: 'auto' as const }),
+      });
+    } catch (err) {
+      if (ToolChoiceViolationError.isInstance(err)) {
+        this.logger.warn(
+          {
+            requestId: ctx.requestId,
+            step: 'execute',
+            model: ctx.model,
+            err,
+          },
+          'model declined a required tool call — continuing without tool results',
+        );
+        return { text: '', toolResults: [], usage: undefined };
+      }
+      throw err;
+    }
   }
 
   /**

@@ -23,11 +23,18 @@ describe('buildClusterNode', () => {
       isCluster: true,
     });
     expect(node.summary).toBe('2 topics · 3 records');
+    // No plurality category known — no empty category tag, and never the key
+    // (a hash once the server cluster job keyed the hub by cluster id).
     expect(node.meta).toEqual([
-      { label: 'category', value: 'games' },
       { label: 'topics', value: '2' },
       { label: 'records', value: '3' },
     ]);
+  });
+
+  it('prints the plurality category label as the category tag', () => {
+    const node = buildClusterNode({ ...cluster, categoryLabel: 'games' });
+
+    expect(node.meta?.[0]).toEqual({ label: 'category', value: 'games' });
   });
 
   it('uses singular words for a single-member cluster', () => {

@@ -16,6 +16,7 @@ import type {
 const props = withDefaults(defineProps<MemoryConstellationProps>(), {
   showLabels: true,
   showSuggested: true,
+  showHeat: true,
   rotationEnabled: true,
   resetSignal: 0,
   interLinkMinScore: DEFAULT_INTER_LINK_MIN_SCORE,
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<MemoryConstellationProps>(), {
   toggleAllSignal: 0,
   frictions: () => [],
   clusters: () => [],
+  mainNodes: undefined,
   labelMeta: undefined,
 });
 const emit = defineEmits<MemoryConstellationEmits>();
@@ -35,6 +37,7 @@ const { hoveredNode, tooltipStyle } = useMemoryConstellation(
   toRef(props, 'links'),
   toRef(props, 'frictions'),
   toRef(props, 'clusters'),
+  toRef(props, 'mainNodes'),
   toRef(props, 'labelMeta'),
   canvasRef,
   tooltipRef,
@@ -43,6 +46,7 @@ const { hoveredNode, tooltipStyle } = useMemoryConstellation(
   {
     showLabels: toRef(props, 'showLabels'),
     showSuggested: toRef(props, 'showSuggested'),
+    showHeat: toRef(props, 'showHeat'),
     rotationEnabled: toRef(props, 'rotationEnabled'),
     resetSignal: toRef(props, 'resetSignal'),
     isAllExpanded: toRef(props, 'isAllExpanded'),

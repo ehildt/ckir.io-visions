@@ -18,6 +18,7 @@ const {
   links,
   frictions,
   clusters,
+  mainNodes,
   labelMeta,
   isLoading,
   isUnavailable,
@@ -40,6 +41,8 @@ const {
   toggleStrictMode,
   showSuggested,
   toggleSuggested,
+  showHeat,
+  toggleHeat,
 } = useConstellationControls();
 
 const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
@@ -60,12 +63,14 @@ const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
     :links="visibleLinks"
     :frictions="visibleFrictions"
     :clusters="clusters"
+    :main-nodes="mainNodes"
     :label-meta="labelMeta"
     :is-loading="isLoading"
     :is-unavailable="isUnavailable"
     :unavailable-text="$t('common.memoryEncyclopediaUnavailable')"
     :show-labels="showLabels"
     :show-suggested="showSuggested"
+    :show-heat="showHeat"
     :rotation-enabled="rotationEnabled"
     :reset-signal="resetSignal"
     :is-all-expanded="isAllExpanded"
@@ -82,12 +87,14 @@ const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
         :is-all-expanded="isAllExpanded"
         :strict-mode="strictMode"
         :show-suggested="showSuggested"
+        :show-heat="showHeat"
         @refresh="refresh"
         @toggle-labels="toggleLabels"
         @toggle-rotation="toggleRotation"
         @toggle-all-topics="toggleAllTopics"
         @toggle-strict-mode="toggleStrictMode"
         @toggle-suggested="toggleSuggested"
+        @toggle-heat="toggleHeat"
         @reset-view="resetView"
       />
     </template>

@@ -85,7 +85,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
-    "@triplef/helpers": "^1.5.4",
+    "@triplef/helpers": "^1.5.6",
     "@nestjs/common": "^11.2.3",
     "joi": "^18.2.8"
   }

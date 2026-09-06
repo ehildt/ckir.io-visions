@@ -17,6 +17,8 @@ export function useConstellationControls() {
   const strictMode = ref(false);
   /** Weak (suggested/topical) edges on — the electricity arcs (default on). */
   const showSuggested = ref(true);
+  /** Halo warmth from retrieval heat on — the access-heat overlay (default on). */
+  const showHeat = ref(true);
 
   function toggleLabels() {
     showLabels.value = !showLabels.value;
@@ -51,6 +53,11 @@ export function useConstellationControls() {
     showSuggested.value = !showSuggested.value;
   }
 
+  /** Show/hide the halo warmth — the access-heat overlay. */
+  function toggleHeat() {
+    showHeat.value = !showHeat.value;
+  }
+
   return {
     showLabels,
     rotationEnabled,
@@ -59,6 +66,7 @@ export function useConstellationControls() {
     toggleAllSignal,
     strictMode,
     showSuggested,
+    showHeat,
     toggleLabels,
     toggleRotation,
     resetView,
@@ -66,5 +74,6 @@ export function useConstellationControls() {
     setAllExpanded,
     toggleStrictMode,
     toggleSuggested,
+    toggleHeat,
   };
 }

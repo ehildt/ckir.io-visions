@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 
 import type { ConstellationNode } from '../../memory-constellation/MemoryConstellation.types';
+import { metadataTags } from '../composables/helpers/metadata-tags.helper';
 import NodeMetadataColumn from './NodeMetadataColumn.vue';
 
 const NODE: ConstellationNode = {
@@ -19,53 +20,62 @@ const meta = {
   title: 'Settings/MemorySection/NodeMetadataColumn',
   component: NodeMetadataColumn,
   tags: ['autodocs'],
-  args: { node: NODE },
+  args: { node: NODE, tags: metadataTags(NODE) },
 } satisfies Meta<typeof NodeMetadataColumn>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A selected dot's details. */
+/** A selected dot's details: header, text, meta as tag chips. */
 export const Selected: Story = {};
 
 /** Nothing selected yet. */
 export const Empty: Story = {
-  args: { node: null },
+  args: { node: null, tags: [] },
 };
 
 /**
  * An uploaded document: the download action offers the stored original and
- * the (long) extracted text scrolls inside its own box.
+ * the (long) extracted text scrolls inside its own box. The `title` and
+ * `url` meta rows duplicate the header and the download action, so the tag
+ * grid filters them out.
  */
+const UPLOADED: ConstellationNode = {
+  id: 'd',
+  label: 'quarterly-report.pdf',
+  topicKey: 'quarterly-report.pdf',
+  text: Array.from(
+    { length: 40 },
+    (_, index) =>
+      `Section ${index + 1} — revenue and outlook details for the quarter.`,
+  ).join('\n'),
+  keys: ['quarterly-report.pdf'],
+  downloadUrl: '/api/v1/storage/s/c/document-hash',
+  meta: [
+    { label: 'title', value: 'quarterly-report.pdf' },
+    { label: 'url', value: '/api/v1/storage/s/c/document-hash' },
+    { label: 'type', value: 'pdf' },
+    { label: 'size', value: '240 KB' },
+    { label: 'chunk', value: '1/3' },
+    { label: 'accessed', value: '×12' },
+  ],
+};
+
 export const UploadedDocument: Story = {
   args: {
-    node: {
-      id: 'd',
-      label: 'quarterly-report.pdf',
-      topicKey: 'quarterly-report.pdf',
-      text: Array.from(
-        { length: 40 },
-        (_, index) =>
-          `Section ${index + 1} — revenue and outlook details for the quarter.`,
-      ).join('\n'),
-      keys: ['quarterly-report.pdf'],
-      downloadUrl: '/api/v1/storage/s/c/document-hash',
-      meta: [
-        { label: 'type', value: 'application/pdf' },
-        { label: 'size', value: '240 KB' },
-        { label: 'chunk', value: '1/3' },
-      ],
-    },
+    node: UPLOADED,
+    tags: metadataTags(UPLOADED),
   },
 };
 
 /**
  * A contested dot: the selected node is party to an open friction, so a
- * warning section lists each conflict's reason between the text and the meta.
+ * warning section lists each conflict's reason between the text and the tags.
  */
 export const Contested: Story = {
   args: {
     node: NODE,
+    tags: metadataTags(NODE),
     frictions: [
       {
         source: 'a',
@@ -95,5 +105,6 @@ export const Bridge: Story = {
         'I am rewriting the payments service',
       ],
     },
+    tags: [],
   },
 };

@@ -10,6 +10,7 @@ import { MemoryDeleteResponseDto } from '../../../memory-partition/dtos/memory-d
 import { MemoryFrictionDto } from '../../../memory-partition/dtos/memory-friction.dto.js';
 import { MemoryLinkDto } from '../../../memory-partition/dtos/memory-link.dto.js';
 import { MemoryLinksRecomputeResponseDto } from '../../../memory-partition/dtos/memory-links-recompute-response.dto.js';
+import { MemoryMainNodeDto } from '../../../memory-partition/dtos/memory-main-node.dto.js';
 import { MemoryPruneResponseDto } from '../../../memory-partition/dtos/memory-prune-response.dto.js';
 import { MemoryReflectResponseDto } from '../../../memory-partition/dtos/memory-reflect-response.dto.js';
 import { MemoryRelinkResponseDto } from '../../../memory-partition/dtos/memory-relink-response.dto.js';
@@ -77,6 +78,15 @@ export const ApeGetMemoryClusters = () =>
     ApiOperation({
       summary:
         'Detected clusters of one partition (clusters of related facts with LLM-written title + summary)',
+    }),
+  );
+
+export const ApeGetMemoryMainNodes = () =>
+  applyDecorators(
+    ApiResponse({ status: 200, type: [MemoryMainNodeDto] }),
+    ApiOperation({
+      summary:
+        'Title-tier main nodes of one partition (one per topic blob, each carrying the LLM summary of its attached leafs)',
     }),
   );
 

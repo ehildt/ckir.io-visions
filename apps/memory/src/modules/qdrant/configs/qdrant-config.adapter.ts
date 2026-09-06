@@ -92,6 +92,7 @@ export function QdrantConfigAdapter(env = process.env): QdrantConfig {
     ) as number,
     clusterAutoEnabled: getBooleanEnv(env.MEMORY_CLUSTER_AUTO, false)!,
     raptorEnabled: getBooleanEnv(env.MEMORY_RAPTOR_ENABLED, true)!,
+    heatTrackingEnabled: getBooleanEnv(env.MEMORY_HEAT_TRACKING_ENABLED, true)!,
     raptorMaxDepth: getNumberEnv(
       env.MEMORY_RAPTOR_MAX_DEPTH,
       RAPTOR_MAX_DEPTH_DEFAULT,
@@ -154,5 +155,22 @@ export function QdrantConfigAdapter(env = process.env): QdrantConfig {
       5000,
     ) as number,
     linkReadMax: getNumberEnv(env.MEMORY_LINK_READ_MAX, 50000) as number,
+    hybridEnabled: getBooleanEnv(env.MEMORY_HYBRID_ENABLED, true)!,
+    hybridFusion:
+      env.MEMORY_HYBRID_FUSION === 'dbsf'
+        ? ('dbsf' as const)
+        : ('rrf' as const),
+    hybridDenseWeight: getNumberEnv(
+      env.MEMORY_HYBRID_DENSE_WEIGHT,
+      1,
+    ) as number,
+    hybridSparseWeight: getNumberEnv(
+      env.MEMORY_HYBRID_SPARSE_WEIGHT,
+      1,
+    ) as number,
+    hybridSparseLimit: getNumberEnv(
+      env.MEMORY_HYBRID_SPARSE_LIMIT,
+      50,
+    ) as number,
   };
 }

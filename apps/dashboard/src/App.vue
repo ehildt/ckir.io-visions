@@ -153,7 +153,15 @@ onUnmounted(() => {
 
     <main class="app-main-content">
       <div class="app-main-content__grid">
-        <router-view />
+        <!-- The chat is the primary tab: keep its mounted tree alive across
+             switches (scroll position, subscriptions, computed state) so a
+             return visit never pays the remount + full-list re-render
+             burst. Other tabs mount/unmount as before. -->
+        <router-view v-slot="{ Component }">
+          <KeepAlive :include="['Chat']">
+            <component :is="Component" />
+          </KeepAlive>
+        </router-view>
       </div>
     </main>
 

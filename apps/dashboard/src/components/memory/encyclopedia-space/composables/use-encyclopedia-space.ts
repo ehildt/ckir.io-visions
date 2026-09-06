@@ -6,6 +6,7 @@ import {
   fetchEncyclopediaClusters,
   fetchEncyclopediaFrictions,
   fetchEncyclopediaLinks,
+  fetchEncyclopediaMainNodes,
 } from '@/api/memory.api';
 import type { MemoryTaxonomyNodeRecord } from '@/api/memory-taxonomy.api';
 import { fetchMemoryTaxonomy } from '@/api/memory-taxonomy.api';
@@ -17,6 +18,7 @@ import type {
   ConstellationClusterSummary,
   ConstellationFriction,
   ConstellationLink,
+  ConstellationMainNodeSummary,
   ConstellationNode,
 } from '../../memory-constellation/MemoryConstellation.types';
 import { buildEncyclopediaNodes } from '../helpers/build-encyclopedia-nodes.helper';
@@ -32,6 +34,7 @@ export function useEncyclopediaSpace() {
   const links = ref<ConstellationLink[]>([]);
   const frictions = ref<ConstellationFriction[]>([]);
   const clusters = ref<ConstellationClusterSummary[]>([]);
+  const mainNodes = ref<ConstellationMainNodeSummary[]>([]);
   const taxonomy = ref<MemoryTaxonomyNodeRecord[]>([]);
   /** Raw chunk records (kept for the label-meta graph-cluster aliasing). */
   const chunks = ref<
@@ -54,12 +57,14 @@ export function useEncyclopediaSpace() {
       linksResult,
       frictionsResult,
       clustersResult,
+      mainNodesResult,
       taxonomyResult,
     ] = await Promise.allSettled([
       fetchEncyclopediaChunks(),
       fetchEncyclopediaLinks(),
       fetchEncyclopediaFrictions(),
       fetchEncyclopediaClusters(),
+      fetchEncyclopediaMainNodes(),
       fetchMemoryTaxonomy('encyclopedia', 'global'),
     ]);
     if (chunksResult.status === 'fulfilled') {
@@ -87,6 +92,17 @@ export function useEncyclopediaSpace() {
             memberIds: cluster.memberIds,
           }))
         : [];
+    // A main-node fetch failure degrades to rollup-only hub dots — the
+    // constellation itself is unaffected.
+    mainNodes.value =
+      mainNodesResult.status === 'fulfilled'
+        ? mainNodesResult.value.map((node) => ({
+            key: node.groupKey,
+            title: node.title,
+            summary: node.summary,
+            memberIds: node.memberIds,
+          }))
+        : [];
     taxonomy.value =
       taxonomyResult.status === 'fulfilled' ? taxonomyResult.value : [];
     isLoading.value = false;
@@ -99,6 +115,7 @@ export function useEncyclopediaSpace() {
     links,
     frictions,
     clusters,
+    mainNodes,
     labelMeta,
     isLoading,
     isUnavailable,

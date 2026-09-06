@@ -5,6 +5,7 @@ import type {
   ConstellationNode,
 } from '../../memory-constellation/MemoryConstellation.types';
 import { mapNodeToFrictions } from './helpers/map-node-to-frictions.helper';
+import { metadataTags } from './helpers/metadata-tags.helper';
 
 /**
  * The metadata column's state: the currently selected node plus the
@@ -22,6 +23,11 @@ export function useSpaceSelection(
   /** The selected dot's open frictions (the contested warning rows). */
   const selectedFrictions = computed(() =>
     mapNodeToFrictions(selectedNode.value, frictions.value ?? []),
+  );
+
+  /** The selected dot's deduplicated meta rows, rendered as tag chips. */
+  const selectedTags = computed(() =>
+    selectedNode.value ? metadataTags(selectedNode.value) : [],
   );
 
   function selectNode(node: ConstellationNode) {
@@ -60,6 +66,7 @@ export function useSpaceSelection(
   return {
     selectedNode,
     selectedFrictions,
+    selectedTags,
     metadataCollapsed,
     selectNode,
     toggleMetadata,

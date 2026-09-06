@@ -100,6 +100,8 @@ export class MemoryProfileJobService {
           memoryPartition: data.memoryPartition,
           text: data.userRequest,
           limit: MemoryProfileJobService.FACT_PROBE_LIMIT,
+          // Insight-formation probe — not user engagement.
+          trackHeat: false,
         })
       : [];
 

@@ -71,6 +71,8 @@ export class ExtractStepService implements VectorizeStepHandler {
         memoryPartition: ctx.memoryPartition,
         text: sourceText,
         limit: 6,
+        // Bookkeeping probe feeding the extraction prompt — not user engagement.
+        trackHeat: false,
       }),
     );
 

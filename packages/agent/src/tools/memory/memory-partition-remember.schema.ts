@@ -12,7 +12,7 @@ export const memoryPartitionRememberSchema = z.object({
     .max(40)
     .optional()
     .describe(
-      'One broad lowercase PLURAL category the fact belongs to, e.g. "stocks", "games", "pets", "work" — the CLUSTER tier: a family noun, never a specific entity/product/company/game name ("amd" → "stocks"; "stellar blade" → "games"). Always include it.',
+      'One broad lowercase PLURAL category the fact belongs to, e.g. "stocks", "games", "pets", "work" — the CLUSTER tier: a family noun, never a specific entity/product/company/game name ("amd" → "stocks"; "stellar blade" → "games"). Persona/roleplay or fictional content classifies by its real-world medium (a TV persona’s biography → "shows"), never by in-universe domains ("family", "education", "business" describe reality, not an invented life). Always include it.',
     ),
   community: z
     .string()
@@ -20,7 +20,7 @@ export const memoryPartitionRememberSchema = z.object({
     .max(60)
     .optional()
     .describe(
-      'One lowercase PLURAL sub-family narrowing the category, e.g. "survival games" under "games" — the COMMUNITY tier, one level below the cluster (a genre, project family, or domain branch). Omit it when no sub-family applies; never a specific entity, product, or title.',
+      'One lowercase PLURAL sub-family narrowing the category, e.g. "survival games" under "games", "tv shows" under "shows" — the COMMUNITY tier, one level below the cluster (a genre, project family, or domain branch). Omit it when no sub-family applies; never a specific entity, product, or title — a show/work title like "breaking-bad" is a tag or hub, never a community.',
     ),
   subject: z
     .string()

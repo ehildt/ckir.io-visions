@@ -9,20 +9,24 @@ import { computeRelaxedCentroid } from './compute-relaxed-centroid.helper';
 const FOG_PADDING = 60;
 
 /**
- * One fog field per topic, centered on the topic's main dot (the category
- * dot for a collapsed topic, else the first member) and sized to cover the
- * furthest relaxed member — so the dimension follows the dots.
+ * One fog field per topic, centered on the topic's main dot (the synthetic
+ * title dot at the blob centroid — collapsed topics and main-node blobs —
+ * else the first member) and sized to cover the furthest relaxed member —
+ * so the dimension follows the dots.
  */
 export function buildTopicFog(
   topics: readonly ConstellationTopic[],
   relaxedPositions: ReadonlyMap<string, ConstellationPosition>,
   collapsedKeys: ReadonlySet<string>,
+  mainNodesEnabled = false,
 ): TopicFog[] {
   const fog: TopicFog[] = [];
   for (const topic of topics) {
-    const center = collapsedKeys.has(topic.key)
-      ? computeRelaxedCentroid(topic, relaxedPositions)
-      : relaxedPositions.get(topic.memberIds[0]);
+    const multiMember = topic.memberIds.length > 1;
+    const center =
+      multiMember && (mainNodesEnabled || collapsedKeys.has(topic.key))
+        ? computeRelaxedCentroid(topic, relaxedPositions)
+        : relaxedPositions.get(topic.memberIds[0]);
     if (!center) continue;
     let radius = 0;
     for (const memberId of topic.memberIds) {

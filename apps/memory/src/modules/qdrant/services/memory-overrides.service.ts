@@ -332,6 +332,14 @@ export class MemoryOverridesService implements OnApplicationBootstrap {
     return this.overrides.raptorEnabled ?? this.config.raptorEnabled;
   }
 
+  /** Effective heat-tracking master switch — search-hit heat writes on/off (default true). */
+  getHeatTrackingEnabled(): boolean {
+    this.scheduleLazyRestore();
+    return (
+      this.overrides.heatTrackingEnabled ?? this.config.heatTrackingEnabled
+    );
+  }
+
   /** Effective Raptor recursion depth cap (1–3 — the highest synopsis level). */
   getRaptorMaxDepth(): number {
     this.scheduleLazyRestore();
@@ -458,6 +466,7 @@ export class MemoryOverridesService implements OnApplicationBootstrap {
       clusterModel: this.getClusterModel(),
       clusterMinMembers: this.getClusterMinMembers(),
       raptorEnabled: this.getRaptorEnabled(),
+      heatTrackingEnabled: this.getHeatTrackingEnabled(),
       raptorMaxDepth: this.getRaptorMaxDepth(),
       clusterAutoEnabled: this.getClusterAutoEnabled(),
       researchEnabled: this.getResearchEnabled(),

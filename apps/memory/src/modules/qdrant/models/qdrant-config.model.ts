@@ -135,6 +135,13 @@ export interface QdrantConfig {
    */
   raptorEnabled: boolean;
   /**
+   * Master switch for heat tracking: semantic-search hits get their
+   * `heat_amount` incremented and `heat_timestamp` stamped
+   * (MEMORY_HEAT_TRACKING_ENABLED, default true). Env baseline for the
+   * `heatTrackingEnabled` system variable.
+   */
+  heatTrackingEnabled: boolean;
+  /**
    * Raptor recursion depth cap — highest synopsis level per scope
    * (MEMORY_RAPTOR_MAX_DEPTH, default 3, clamped 1–3).
    */
@@ -225,5 +232,36 @@ export interface QdrantConfig {
    * Max edges returned per link-graph read (MEMORY_LINK_READ_MAX, default
    * 50000) — an infra bound on the dashboard payload, ordered by score desc.
    */
+  /**
+   * Max edges returned per link-graph read (MEMORY_LINK_READ_MAX, default
+   * 50000) — an infra bound on the dashboard payload, ordered by score desc.
+   */
   linkReadMax: number;
+  /**
+   * Hybrid retrieval for the fact-recall path (MEMORY_HYBRID_ENABLED,
+   * default true): dense semantic + sparse lexical (client TF, Qdrant IDF)
+   * prefetches fused by RRF. The recency-blended episode probe is always
+   * dense-only — its exp_decay formula is cosine-scale. No effect on legacy
+   * (unnamed-vector) collections: they keep plain dense search regardless.
+   */
+  hybridEnabled: boolean;
+  /**
+   * Score fusion method for hybrid retrieval (MEMORY_HYBRID_FUSION,
+   * default 'rrf'). 'dbsf' normalizes score distributions instead of ranks.
+   */
+  hybridFusion: 'rrf' | 'dbsf';
+  /**
+   * RRF weight of the dense leg (MEMORY_HYBRID_DENSE_WEIGHT, default 1) —
+   * weighted RRF only (Qdrant v1.17+); equal weights omit the parameter.
+   */
+  hybridDenseWeight: number;
+  /**
+   * RRF weight of the sparse leg (MEMORY_HYBRID_SPARSE_WEIGHT, default 1).
+   */
+  hybridSparseWeight: number;
+  /**
+   * Sparse prefetch depth (MEMORY_HYBRID_SPARSE_LIMIT, default 50) — the
+   * lexical candidate pool feeding the fusion.
+   */
+  hybridSparseLimit: number;
 }

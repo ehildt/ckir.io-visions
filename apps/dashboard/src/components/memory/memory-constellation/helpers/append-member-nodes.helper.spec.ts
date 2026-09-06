@@ -58,6 +58,30 @@ describe('appendMemberNodes', () => {
     expect(acc.visibleNodes.map((n) => n.id)).toEqual(['a']);
   });
 
+  it('measures the stray distance from a passed synthetic main dot — the first member too', () => {
+    const acc = {
+      visibleNodes: [],
+      positions: new Map(),
+      nodeIndex: new Map(),
+    };
+    appendMemberNodes(
+      { key: 'x', label: 'x', color: '#000', memberIds: ['a', 'b'] },
+      new Map([
+        ['a', { x: 200, y: 0, z: 0 }],
+        ['b', { x: 10, y: 0, z: 0 }],
+      ]),
+      new Map([
+        ['a', makeNode('a')],
+        ['b', makeNode('b')],
+      ]),
+      acc,
+      { x: 0, y: 0, z: 0 },
+    );
+
+    // The former hub member drifted beyond 80 from the centroid — hidden.
+    expect(acc.visibleNodes.map((n) => n.id)).toEqual(['b']);
+  });
+
   it('skips members without a node or position', () => {
     const acc = {
       visibleNodes: [],

@@ -19,6 +19,8 @@ export function mapFact(
     superseded?: boolean;
     supersededBy?: string;
     evidenceIds?: string[];
+    heatAmount?: number;
+    heatTimestamp?: string;
   },
   index: number,
 ) {
@@ -41,5 +43,7 @@ export function mapFact(
     superseded: item.superseded,
     supersededBy: item.supersededBy,
     evidenceIds: item.evidenceIds,
+    heatAmount: item.heatAmount,
+    heatTimestamp: item.heatTimestamp,
   };
 }

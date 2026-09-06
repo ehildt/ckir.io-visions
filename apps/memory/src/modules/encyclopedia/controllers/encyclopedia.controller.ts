@@ -12,13 +12,16 @@ import { MemoryClusterDto } from '../../memory-partition/dtos/memory-cluster.dto
 import { MemoryFrictionDto } from '../../memory-partition/dtos/memory-friction.dto.js';
 import { MemoryLinkDto } from '../../memory-partition/dtos/memory-link.dto.js';
 import { MemoryLinksRecomputeResponseDto } from '../../memory-partition/dtos/memory-links-recompute-response.dto.js';
+import { MemoryMainNodeDto } from '../../memory-partition/dtos/memory-main-node.dto.js';
 import { MemoryClusterRepository } from '../../persistence/services/memory-cluster.repository.js';
+import { MemoryMainNodeRepository } from '../../persistence/services/memory-main-node.repository.js';
 import { EncyclopediaRepository } from '../../qdrant/services/encyclopedia.repository.js';
 import {
   ApeGetEncyclopedia,
   ApeGetEncyclopediaClusters,
   ApeGetEncyclopediaFrictions,
   ApeGetEncyclopediaLinks,
+  ApeGetEncyclopediaMainNodes,
   ApePostEncyclopediaDocument,
   ApePostEncyclopediaIndex,
   ApePostEncyclopediaLinksRecompute,
@@ -45,6 +48,7 @@ export class EncyclopediaController {
     private readonly encyclopediaQuery: EncyclopediaQueryService,
     private readonly encyclopediaRepository: EncyclopediaRepository,
     private readonly clusters: MemoryClusterRepository,
+    private readonly mainNodes: MemoryMainNodeRepository,
   ) {}
 
   @Get()
@@ -75,6 +79,16 @@ export class EncyclopediaController {
   @ApeGetEncyclopediaClusters()
   async listClusters(): Promise<MemoryClusterDto[]> {
     return this.clusters.listByScope(
+      'encyclopedia',
+      this.encyclopediaRepository.collection,
+      'global',
+    );
+  }
+
+  @Get('main-nodes')
+  @ApeGetEncyclopediaMainNodes()
+  async listMainNodes(): Promise<MemoryMainNodeDto[]> {
+    return this.mainNodes.listByScope(
       'encyclopedia',
       this.encyclopediaRepository.collection,
       'global',

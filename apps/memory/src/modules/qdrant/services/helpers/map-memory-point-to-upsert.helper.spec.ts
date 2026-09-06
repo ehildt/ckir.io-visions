@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { LEGACY_VECTOR_LAYOUT } from '../../models/collection-vector-layout.model.js';
+
 import { mapMemoryPointToUpsert } from './map-memory-point-to-upsert.helper.js';
 
 describe('mapMemoryPointToUpsert', () => {
-  it('builds a Qdrant upsert point from a memory point', () => {
+  it('builds a Qdrant upsert point from a memory point (legacy unnamed layout)', () => {
     const input = {
       memoryPartition: 'p1',
       role: 'user' as const,
@@ -25,6 +27,7 @@ describe('mapMemoryPointToUpsert', () => {
         },
         input,
         '2025-01-01T00:00:00Z',
+        LEGACY_VECTOR_LAYOUT,
       ),
     ).toEqual({
       id: 'id1',

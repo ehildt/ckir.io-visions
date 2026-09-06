@@ -59,6 +59,7 @@ export const ModelName = {
   MemoryLink: 'MemoryLink',
   MemoryFriction: 'MemoryFriction',
   MemoryCluster: 'MemoryCluster',
+  MemoryMainNode: 'MemoryMainNode',
   MemoryTaxonomyNode: 'MemoryTaxonomyNode',
   MemoryTaxonomyAlias: 'MemoryTaxonomyAlias'
 } as const
@@ -203,6 +204,24 @@ export const MemoryClusterScalarFieldEnum = {
 } as const
 
 export type MemoryClusterScalarFieldEnum = (typeof MemoryClusterScalarFieldEnum)[keyof typeof MemoryClusterScalarFieldEnum]
+
+
+export const MemoryMainNodeScalarFieldEnum = {
+  id: 'id',
+  lane: 'lane',
+  collection: 'collection',
+  scopeKey: 'scopeKey',
+  groupKey: 'groupKey',
+  fingerprint: 'fingerprint',
+  title: 'title',
+  summary: 'summary',
+  memberCount: 'memberCount',
+  memberIds: 'memberIds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemoryMainNodeScalarFieldEnum = (typeof MemoryMainNodeScalarFieldEnum)[keyof typeof MemoryMainNodeScalarFieldEnum]
 
 
 export const MemoryTaxonomyNodeScalarFieldEnum = {
