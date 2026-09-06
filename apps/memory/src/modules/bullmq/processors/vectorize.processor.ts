@@ -57,6 +57,7 @@ import {
   VECTORIZE_QUEUE,
   VECTORIZE_WORKER_CONCURRENCY,
 } from '../constants/bullmq.constants.js';
+import { describeVectorizeJob } from '../helpers/describe-vectorize-job.helper.js';
 
 /** Job names this worker owns on the shared vectorize queue. */
 const KNOWN_JOB_NAMES = new Set<string>([
@@ -254,7 +255,7 @@ export class VectorizeProcessor extends WorkerHost implements OnModuleInit {
     status: 'completed' | 'active',
   ): Promise<void> {
     try {
-      await this.bullMQLogger.log(job, status);
+      await this.bullMQLogger.log(job, status, describeVectorizeJob(job));
     } catch (err) {
       this.logger.error(`bullMQLogger.log failed in on${status}:`, err);
     }
@@ -262,7 +263,7 @@ export class VectorizeProcessor extends WorkerHost implements OnModuleInit {
 
   private async logFailureToBullMQ(job: Job<VectorizeJobData>): Promise<void> {
     try {
-      await this.bullMQLogger.error(job, 'failed');
+      await this.bullMQLogger.error(job, 'failed', describeVectorizeJob(job));
     } catch (err) {
       this.logger.error('bullMQLogger failed in onFailed:', err);
     }

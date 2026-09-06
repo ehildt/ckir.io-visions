@@ -5,6 +5,7 @@ import { ENCYCLOPEDIA_CONFIG } from './constants/encyclopedia.constants.js';
 import { EncyclopediaController } from './controllers/encyclopedia.controller.js';
 import { EncyclopediaMaintenanceController } from './controllers/encyclopedia-maintenance.controller.js';
 import { EncyclopediaClassifyService } from './services/encyclopedia-classify.service.js';
+import { EncyclopediaIngestTriageService } from './services/encyclopedia-ingest-triage.service.js';
 import { EncyclopediaQueryService } from './services/encyclopedia-query.service.js';
 import { EncyclopediaSelectService } from './services/encyclopedia-select.service.js';
 import { EncyclopediaStoreService } from './services/encyclopedia-store.service.js';
@@ -19,6 +20,7 @@ import { EncyclopediaSweepService } from './services/encyclopedia-sweep.service.
     EncyclopediaStoreService,
     EncyclopediaSweepService,
     EncyclopediaClassifyService,
+    EncyclopediaIngestTriageService,
     {
       provide: ENCYCLOPEDIA_CONFIG,
       inject: [EncyclopediaConfigService],

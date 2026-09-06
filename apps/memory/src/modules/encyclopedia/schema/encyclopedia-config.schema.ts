@@ -12,6 +12,7 @@ export const EncyclopediaConfigSchema = Joi.object<EncyclopediaConfig>({
   scoreThreshold: Joi.number().min(0).max(1).optional(),
   maxChunks: Joi.number().integer().min(16).max(4000).optional(),
   persistEnabled: Joi.boolean().optional(),
+  ingestTriageEnabled: Joi.boolean().optional(),
   probeLimit: Joi.number().integer().min(1).max(20).optional(),
   neighborExpansion: Joi.number().integer().min(0).max(3).optional(),
   maxDocumentChars: Joi.number()

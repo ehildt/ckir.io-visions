@@ -49,9 +49,8 @@ export interface EncyclopediaSelectInput {
   query: string;
   documents: EncyclopediaSourceDocument[];
   /**
-   * Search results seen this turn — indexed as cheap Tier-1 snippet points so
-   * the encyclopedia remembers every source touched, not just the fetched
-   * pages.
+   * Search results seen this turn — the ingest triage persists the on-topic
+   * ones as cheap Tier-1 snippet points (ENCYCLOPEDIA_INGEST_TRIAGE_ENABLED).
    */
   searchResults?: EncyclopediaSearchResult[];
   /** Selection budget in chars; undefined → server-side default (ENCYCLOPEDIA_BUDGET_CHARS). */
