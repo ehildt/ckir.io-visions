@@ -52,10 +52,15 @@ const { opacity, setSectionElement } = useCarouselSection(props);
 }
 
 /* Native mode: a variable-height block in the continuous scroll list — no
-   full-height slide, no snap, no internal scroll. */
+   full-height slide, no snap, no internal scroll. Off-screen sections skip
+   layout/paint until near the viewport (content-visibility), with the
+   intrinsic-size fallback keeping the scrollbar stable before the first
+   measurement; the browser auto-reveals on scroll/focus/find-in-page. */
 .carousel-section--native {
   height: auto;
   scroll-snap-align: none;
   overflow-y: visible;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 32rem;
 }
 </style>

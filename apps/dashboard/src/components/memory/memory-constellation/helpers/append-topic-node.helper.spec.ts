@@ -95,10 +95,39 @@ describe('appendTopicNode', () => {
     );
 
     expect(acc.visibleNodes[0].summary).toBe('2 records · 2 sources');
-    expect(acc.visibleNodes[0].text).toContain('click to toggle');
+    expect(acc.visibleNodes[0].text).toBe('2 records · 2 sources');
     expect(acc.visibleNodes[0].meta).toContainEqual({
       label: 'sources',
       value: '2 domains · 2 urls',
     });
+  });
+
+  it('carries the server main-node summary of the attached leafs when available', () => {
+    const acc = makeAcc();
+    appendTopicNode(
+      { key: 'cv', label: 'cv', color: '#000', memberIds: ['a', 'b'] },
+      new Map(),
+      acc,
+      undefined,
+      [],
+      new Map([
+        [
+          'cv',
+          {
+            key: 'cv',
+            title: 'CV_EN.pdf',
+            summary: 'A consulting CV spanning eight pages…',
+            memberIds: ['a', 'b'],
+          },
+        ],
+      ]),
+    );
+
+    expect(acc.visibleNodes[0].summary).toBe(
+      'A consulting CV spanning eight pages…',
+    );
+    expect(acc.visibleNodes[0].text).toBe(
+      'A consulting CV spanning eight pages…',
+    );
   });
 });

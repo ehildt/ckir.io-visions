@@ -9,11 +9,6 @@ import { drawDroplet } from './draw-droplet.helper';
  *  sibling sub-categories) and long-distance (inter-topic) edges. */
 const GRAY_LINK_COLOR = '#6b7280';
 
-/** Black for friction (contested) edges — matching the black pulse ring on
- *  contested dots; the reflection pass's open conflict pairs, drawn distinct
- *  from the semantic link graph. */
-const FRICTION_LINK_COLOR = '#000000';
-
 /** Edge kinds drawn as gray lines (hierarchy + long-distance). */
 const GRAY_KINDS = new Set([
   'inter',
@@ -75,24 +70,15 @@ export function drawLink(
   }
 
   const isGray = GRAY_KINDS.has(link.kind);
-  const isFriction = link.kind === 'friction';
   const isDashed = DASHED_KINDS.has(link.kind);
-  // Hierarchy + long-distance edges are gray; intra (leaf → main dot) edges
-  // stay in the topic color. Friction edges are black and dashed
-  // — a conflict, not a relationship.
-  let dashPattern: number[] = [];
-  if (isDashed) {
-    dashPattern = [4, 4];
-  } else if (isFriction) {
-    dashPattern = [6, 4];
-  }
-  let strokeColor = aColor;
-  if (isFriction) strokeColor = FRICTION_LINK_COLOR;
-  else if (isGray) strokeColor = GRAY_LINK_COLOR;
+  // Hierarchy + long-distance edges are gray (dashed at range); intra
+  // (leaf → main dot) edges stay in the topic color.
+  const dashPattern: number[] = isDashed ? [4, 4] : [];
+  const strokeColor = isGray ? GRAY_LINK_COLOR : aColor;
   ctx.strokeStyle = strokeColor;
   ctx.setLineDash(dashPattern);
   ctx.globalAlpha = link.alpha * opacity;
-  ctx.lineWidth = isFriction ? 1.5 : 1;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   ctx.quadraticCurveTo(midX, midY, b.x, b.y);

@@ -63,6 +63,52 @@ describe('prepareConstellation', () => {
     expect(result.positions.get(ROOT_NODE_ID)).toEqual({ x: 0, y: 0, z: 0 });
   });
 
+  it('renders a synthetic main dot per expanded multi-member topic under the main-node regime', () => {
+    const nodes = [
+      makeNode('a', 'work'),
+      makeNode('b', 'work'),
+      makeNode('c', 'hobby'),
+    ];
+    const layout = buildRelaxedLayout(nodes, []);
+    const result = prepareConstellation(
+      nodes,
+      layout,
+      [],
+      new Set(),
+      undefined,
+      [],
+      true,
+      [
+        {
+          key: 'work',
+          title: 'work',
+          summary: 'Work facts the user stated.',
+          memberIds: ['a', 'b'],
+        },
+      ],
+    );
+
+    // The title-tier dot leads the blob, then the leafs; the single-member
+    // topic stays its own main dot. The dot carries the server summary.
+    expect(result.nodeList.map((n) => n.id)).toEqual([
+      'topic:work',
+      'a',
+      'b',
+      'c',
+      ROOT_NODE_ID,
+    ]);
+    expect(result.nodeList[0].summary).toBe('Work facts the user stated.');
+    // Intra edges now bind every leaf to the synthetic title dot.
+    const orderedIds = result.nodeList.map((n) => n.id);
+    const intraPairs = result.linkIndices
+      .filter((link) => link.kind === 'intra')
+      .map((link) => [orderedIds[link.a], orderedIds[link.b]]);
+    expect(intraPairs).toEqual([
+      ['topic:work', 'a'],
+      ['topic:work', 'b'],
+    ]);
+  });
+
   it('collapses a topic whose key is in collapsedKeys', () => {
     const nodes = Array.from({ length: 3 }, (_, i) =>
       makeNode(`n${i}`, 'work'),

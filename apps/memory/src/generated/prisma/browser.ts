@@ -108,6 +108,11 @@ export type MemoryFriction = Prisma.MemoryFrictionModel
  */
 export type MemoryCluster = Prisma.MemoryClusterModel
 /**
+ * Model MemoryMainNode
+ * 
+ */
+export type MemoryMainNode = Prisma.MemoryMainNodeModel
+/**
  * Model MemoryTaxonomyNode
  * *
  *  * Canonical macro-taxonomy of the memory constellation (owned by the main

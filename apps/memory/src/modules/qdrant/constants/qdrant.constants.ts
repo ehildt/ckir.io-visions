@@ -1,6 +1,19 @@
 /** Injection token for the resolved Qdrant connection config. */
 export const QDRANT_CONFIG = Symbol('QDRANT_CONFIG');
 
+/**
+ * Vector names in the named-vector collection schema (hybrid era): `dense`
+ * is the embedding model's semantic vector (Cosine); `sparse` is the
+ * client-side term-frequency vector over the raw text, with Qdrant applying
+ * corpus IDF at search time (the `idf` modifier). Legacy collections store a
+ * single unnamed dense vector — the repositories detect that layout and keep
+ * the old unnamed query/upsert shape.
+ */
+export const DENSE_VECTOR = 'dense';
+
+/** The sparse (lexical, TF + server-side IDF) vector's name. */
+export const SPARSE_VECTOR = 'sparse';
+
 /** Job name on the vectorize queue (one job per turn-side). */
 export const VECTORIZE_JOB = 'vectorize';
 /** Cognition write jobs on the vectorize queue — the harness memoryWrite/memoryProfile steps only enqueue; the worker runs the LLM calls. */

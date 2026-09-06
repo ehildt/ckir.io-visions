@@ -13,7 +13,7 @@ import { buildProviderOptions } from '../../ollama/helpers/provider-options.help
 import type { MemoryTaxonomyKind } from '../../persistence/constants/memory-taxonomy.constant.js';
 
 /** One candidate pair under adjudication. */
-export interface TaxonomyPair {
+interface TaxonomyPair {
   kind: MemoryTaxonomyKind;
   labelA: string;
   labelB: string;

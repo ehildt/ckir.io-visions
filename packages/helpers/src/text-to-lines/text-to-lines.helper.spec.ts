@@ -83,4 +83,19 @@ describe('TextToLines', () => {
     const result = new TextToLines('Hello!').append('This has no punctuation').build();
     expect(result).toEqual(['Hello!', 'This has no punctuation']);
   });
+
+  it('should not split urls at their dots', () => {
+    const result = new TextToLines('See https://en.wikipedia.org/wiki/John_Wick for the plot. It ends sadly.').build();
+    expect(result).toEqual(['See https://en.wikipedia.org/wiki/John_Wick for the plot.', 'It ends sadly.']);
+  });
+
+  it('should not split version numbers or file paths', () => {
+    const result = new TextToLines('Requires v3.5.1 now. Then read .env.local next. Done.').build();
+    expect(result).toEqual(['Requires v3.5.1 now.', 'Then read .env.local next.', 'Done.']);
+  });
+
+  it('should still split a sentence ending right after a url', () => {
+    const result = new TextToLines('The answer is https://example.com. Thanks!').build();
+    expect(result).toEqual(['The answer is https://example.com.', 'Thanks!']);
+  });
 });

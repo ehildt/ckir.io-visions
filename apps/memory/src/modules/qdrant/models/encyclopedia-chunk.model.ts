@@ -76,5 +76,9 @@ export interface EncyclopediaChunkHit {
   isFriction?: boolean;
   superseded?: boolean;
   supersededBy?: string;
+  /** Retrieval count — incremented every time a semantic search surfaces this chunk (heat tracking). */
+  heatAmount?: number;
+  /** ISO timestamp of the last retrieval that surfaced this chunk. */
+  heatTimestamp?: string;
   score?: number;
 }

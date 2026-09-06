@@ -24,6 +24,7 @@ const emit = defineEmits<MemorySpacePanelEmits>();
 const {
   selectedNode,
   selectedFrictions,
+  selectedTags,
   metadataCollapsed,
   selectNode,
   toggleMetadata,
@@ -68,9 +69,11 @@ const {
           :links="links"
           :frictions="frictions"
           :clusters="clusters"
+          :main-nodes="mainNodes"
           :label-meta="labelMeta"
           :show-labels="showLabels"
           :show-suggested="showSuggested"
+          :show-heat="showHeat"
           :rotation-enabled="rotationEnabled"
           :reset-signal="resetSignal"
           :inter-link-min-score="interLinkMinScore"
@@ -85,6 +88,7 @@ const {
         v-if="!metadataCollapsed"
         :node="selectedNode"
         :frictions="selectedFrictions"
+        :tags="selectedTags"
         class="memory-space-panel__metadata"
       />
     </div>

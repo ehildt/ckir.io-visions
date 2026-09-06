@@ -14,6 +14,11 @@ export function EncyclopediaConfigAdapter(
       env.ENCYCLOPEDIA_CHUNK_OVERLAP_SENTENCES,
       1,
     ) as number,
+    chunkByHeadings: getBooleanEnv(env.ENCYCLOPEDIA_CHUNK_BY_HEADINGS, true)!,
+    maxHeadingDepth: getNumberEnv(
+      env.ENCYCLOPEDIA_MAX_HEADING_DEPTH,
+      3,
+    ) as number,
     scoreThreshold: getNumberEnv(
       env.ENCYCLOPEDIA_SCORE_THRESHOLD,
       0.25,
@@ -37,6 +42,23 @@ export function EncyclopediaConfigAdapter(
     classifyThreshold: getNumberEnv(
       env.ENCYCLOPEDIA_CLASSIFY_THRESHOLD,
       20,
+    ) as number,
+    hybridEnabled: getBooleanEnv(env.ENCYCLOPEDIA_HYBRID_ENABLED, true)!,
+    hybridFusion:
+      env.ENCYCLOPEDIA_HYBRID_FUSION === 'dbsf'
+        ? ('dbsf' as const)
+        : ('rrf' as const),
+    hybridDenseWeight: getNumberEnv(
+      env.ENCYCLOPEDIA_HYBRID_DENSE_WEIGHT,
+      1,
+    ) as number,
+    hybridSparseWeight: getNumberEnv(
+      env.ENCYCLOPEDIA_HYBRID_SPARSE_WEIGHT,
+      1,
+    ) as number,
+    hybridSparseLimit: getNumberEnv(
+      env.ENCYCLOPEDIA_HYBRID_SPARSE_LIMIT,
+      50,
     ) as number,
   };
 }

@@ -1,7 +1,15 @@
 type Input = string | string[];
 
-/** Regex for splitting sentences including Western and CJK punctuation */
-const sentenceRegex = /.*?(?:\.\.\.|[.?!…。？！])/gu;
+/**
+ * Regex for splitting sentences including Western and CJK punctuation.
+ * Western terminators (`.`, `?`, `!`, `...`) only split when followed by
+ * whitespace or the end of the string — a dot inside a run of non-space
+ * characters (urls, hosts, file paths like `en.wikipedia.org/wiki/X`) is
+ * never a sentence boundary. CJK terminators (`。`, `？`, `！`) and the
+ * ellipsis `…` split unconditionally — CJK text does not mark boundaries
+ * with spaces.
+ */
+const sentenceRegex = /.*?(?:\.\.\.(?=\s|$)|[.?!](?=\s|$)|[…。？！])/gu;
 
 /**
  * `TextToLines` splits text into sentences and provides a chainable API to append more text.

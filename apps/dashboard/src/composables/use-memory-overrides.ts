@@ -35,6 +35,7 @@ export function useMemoryOverrides() {
   const convictionMaxPerCluster = ref<number | undefined>(undefined);
   const clusterMinMembers = ref<number | undefined>(undefined);
   const raptorEnabled = ref<boolean | undefined>(undefined);
+  const heatTrackingEnabled = ref<boolean | undefined>(undefined);
   const raptorMaxDepth = ref<number | undefined>(undefined);
   const researchEnabled = ref<boolean | undefined>(undefined);
   const researchSearchEnabled = ref<boolean | undefined>(undefined);
@@ -74,6 +75,7 @@ export function useMemoryOverrides() {
       convictionMaxPerCluster.value = config.convictionMaxPerCluster;
       clusterMinMembers.value = config.clusterMinMembers;
       raptorEnabled.value = config.raptorEnabled;
+      heatTrackingEnabled.value = config.heatTrackingEnabled;
       raptorMaxDepth.value = config.raptorMaxDepth;
       researchEnabled.value = config.researchEnabled;
       researchSearchEnabled.value = config.researchSearchEnabled;
@@ -107,6 +109,7 @@ export function useMemoryOverrides() {
       convictionMaxPerCluster.value = undefined;
       clusterMinMembers.value = undefined;
       raptorEnabled.value = undefined;
+      heatTrackingEnabled.value = undefined;
       raptorMaxDepth.value = undefined;
       researchEnabled.value = undefined;
       researchSearchEnabled.value = undefined;
@@ -248,6 +251,11 @@ export function useMemoryOverrides() {
     await saveOverride({ raptorEnabled: value });
   }
 
+  async function saveHeatTrackingEnabled(value: boolean) {
+    heatTrackingEnabled.value = value;
+    await saveOverride({ heatTrackingEnabled: value });
+  }
+
   async function saveRaptorMaxDepth(value: number) {
     raptorMaxDepth.value = value;
     await saveOverride({ raptorMaxDepth: value });
@@ -320,6 +328,7 @@ export function useMemoryOverrides() {
     convictionMaxPerCluster,
     clusterMinMembers,
     raptorEnabled,
+    heatTrackingEnabled,
     raptorMaxDepth,
     researchEnabled,
     researchSearchEnabled,
@@ -353,6 +362,7 @@ export function useMemoryOverrides() {
     saveConvictionMaxPerCluster,
     saveClusterMinMembers,
     saveRaptorEnabled,
+    saveHeatTrackingEnabled,
     saveRaptorMaxDepth,
     saveResearchEnabled,
     saveResearchSearchEnabled,

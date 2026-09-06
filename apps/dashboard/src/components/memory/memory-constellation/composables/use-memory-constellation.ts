@@ -1,6 +1,7 @@
 import { computed, onMounted, onUnmounted, type Ref, ref, watch } from 'vue';
 
 import { attachLabelMeta } from '../helpers/attach-label-meta.helper';
+import { buildFrictionPeerMap } from '../helpers/build-friction-peer-map.helper';
 import { buildOrbitCenters } from '../helpers/build-orbit-centers.helper';
 import { buildRelaxedLayout } from '../helpers/build-relaxed-layout.helper';
 import { computeNodeRadius } from '../helpers/compute-node-radius.helper';
@@ -9,6 +10,7 @@ import { computeRelaxedCentroid } from '../helpers/compute-relaxed-centroid.help
 import { computeTopicCollapseRadius } from '../helpers/compute-topic-collapse-radius.helper';
 import { computeTopicOpacity } from '../helpers/compute-topic-opacity.helper';
 import { computeViewCenter } from '../helpers/compute-view-center.helper';
+import { cursorForInteraction } from '../helpers/cursor-for-interaction.helper';
 import { drawLink } from '../helpers/draw-link.helper';
 import { drawNode, RING_GAP, RING_SPACING } from '../helpers/draw-node.helper';
 import { drawNodeLabel } from '../helpers/draw-node-label.helper';
@@ -16,6 +18,7 @@ import { drawTopicFog } from '../helpers/draw-topic-fog.helper';
 import { hitTestNode } from '../helpers/hit-test-node.helper';
 import { idleYawIncrement } from '../helpers/idle-yaw-increment.helper';
 import { interpolateTransitionPosition } from '../helpers/interpolate-transition-position.helper';
+import { isFoldedMainDot } from '../helpers/is-folded-main-dot.helper';
 import { isPointOnScreen } from '../helpers/is-point-on-screen.helper';
 import { mapNodeToProjected } from '../helpers/map-node-to-projected.helper';
 import { mapNodeToTopicOpacity } from '../helpers/map-node-to-topic-opacity.helper';
@@ -26,6 +29,7 @@ import type {
   ConstellationFriction,
   ConstellationLabelMeta,
   ConstellationLink,
+  ConstellationMainNodeSummary,
   ConstellationNode,
   ConstellationPosition,
   DotTransition,
@@ -49,6 +53,8 @@ export interface MemoryConstellationControls {
   showLabels: Ref<boolean>;
   /** Hide the weak (suggested/topical) edges — the electricity arcs. */
   showSuggested: Ref<boolean>;
+  /** Halo warmth from retrieval heat (off = cluster-colored halos). */
+  showHeat: Ref<boolean>;
   rotationEnabled: Ref<boolean>;
   resetSignal: Ref<number>;
   /** All-topics-expanded intent — flipped by the toolbar toggle before
@@ -73,6 +79,7 @@ export function useMemoryConstellation(
   links: Ref<readonly ConstellationLink[]>,
   frictions: Ref<readonly ConstellationFriction[]>,
   clusters: Ref<readonly ConstellationClusterSummary[]>,
+  mainNodes: Ref<readonly ConstellationMainNodeSummary[] | undefined>,
   labelMeta: Ref<ReadonlyMap<string, ConstellationLabelMeta> | undefined>,
   canvasRef: Ref<HTMLCanvasElement | null>,
   tooltipRef: Ref<HTMLDivElement | null>,
@@ -115,8 +122,14 @@ export function useMemoryConstellation(
     ),
   );
 
+  /** The main-node regime: the space feeds title-tier main nodes (present,
+   *  even empty); absent keeps the legacy first-member main dot. */
+  const mainNodesEnabled = computed(() => mainNodes.value !== undefined);
+
   /** Leaf → hub orbit inputs (hubs and synthetic dots stay still). */
-  const orbitCenters = computed(() => buildOrbitCenters(relaxedLayout.value));
+  const orbitCenters = computed(() =>
+    buildOrbitCenters(relaxedLayout.value, mainNodesEnabled.value),
+  );
 
   /** Effective collapsed keys: every topic not expanded (user or auto),
    *  minus topics still animating their collapse. */
@@ -146,12 +159,23 @@ export function useMemoryConstellation(
       controls.interLinkMinScore.value,
       frictions.value,
       controls.showSuggested.value,
+      mainNodes.value,
     ),
   );
 
   /** prepared + taxonomy registry metadata attached to the macro-node dots. */
   const prepared = computed(() =>
     attachLabelMeta(preparedBase.value, labelMeta.value),
+  );
+
+  /** Friction adjacency (node index → contested peers) for the hover halo. */
+  const frictionPeers = computed(() =>
+    buildFrictionPeerMap(prepared.value.linkIndices),
+  );
+
+  /** Links that draw as edges — friction pairs drive the hover halo instead. */
+  const drawableLinkIndices = computed(() =>
+    prepared.value.linkIndices.filter((link) => link.kind !== 'friction'),
   );
 
   // Camera state lives in a plain object (not reactive) — the rAF loop reads
@@ -201,11 +225,11 @@ export function useMemoryConstellation(
     const {
       nodeList,
       positions,
-      linkIndices,
       linkCounts,
       nodeColor,
       hubIds,
       topicFog,
+      heatIntensity,
     } = prepared.value;
     const s = state;
     const cx = s.W / 2;
@@ -295,8 +319,9 @@ export function useMemoryConstellation(
       topicOpacity,
     );
 
-    for (let i = 0; i < linkIndices.length; i++) {
-      const link = linkIndices[i];
+    const edges = drawableLinkIndices.value;
+    for (let i = 0; i < edges.length; i++) {
+      const link = edges[i];
       const a = projected[link.a];
       const b = projected[link.b];
       // Cull edges whose both endpoints are off-screen.
@@ -325,8 +350,17 @@ export function useMemoryConstellation(
     if (s.mouseX >= 0 && !s.isDragging) {
       s.hoverIndex = hitTestNode(s.mouseX, s.mouseY, projected);
     }
+    // Click affordance: a dot is selectable (the metadata column shows its
+    // payload), so hovering one switches the canvas cursor to pointer; while
+    // dragging/panning the camera the grab cursors win.
+    canvas.style.cursor = cursorForInteraction(
+      s.isDragging || s.isPanning,
+      s.hoverIndex >= 0,
+    );
 
     const maxLinkCount = Math.max(1, ...linkCounts.values());
+    // No hover (-1) misses the map — no ternary needed.
+    const frictionPeerSet = frictionPeers.value.get(s.hoverIndex);
     drawNodes(
       ctx,
       nodeList,
@@ -337,6 +371,8 @@ export function useMemoryConstellation(
       linkCounts,
       nodeColor,
       hubIds,
+      heatIntensity,
+      frictionPeerSet,
     );
 
     if (s.hoverIndex >= 0) {
@@ -372,6 +408,8 @@ export function useMemoryConstellation(
     linkCounts: Map<string, number>,
     nodeColor: Map<string, string>,
     hubIds: Set<string>,
+    heatIntensity: Map<string, number>,
+    frictionPeerSet?: ReadonlySet<number>,
   ): void {
     for (let i = 0; i < nodeList.length; i++) {
       // Cull dots outside the viewport (with margin).
@@ -379,6 +417,7 @@ export function useMemoryConstellation(
         continue;
       }
       const nodeOpacity = topicOpacity.get(nodeList[i].topicKey) ?? 1;
+      const folded = isFoldedMainDot(nodeList[i], effectiveCollapsed.value);
       drawNode(ctx, {
         index: i,
         projected,
@@ -391,11 +430,15 @@ export function useMemoryConstellation(
         time,
         isTopic: nodeList[i].isTopic === true,
         isRoot: nodeList[i].isRoot === true,
-        memberCount: nodeList[i].memberCount ?? 0,
+        memberCount: folded ? (nodeList[i].memberCount ?? 0) : 0,
         opacity: nodeOpacity,
         isFriction: nodeList[i].isFriction === true,
         isSuperseded: nodeList[i].superseded === true,
         icon: nodeList[i].icon,
+        heatIntensity: controls.showHeat.value
+          ? (heatIntensity.get(nodeList[i].id) ?? 0)
+          : 0,
+        isFrictionPeer: frictionPeerSet?.has(i) === true,
       });
       if (
         controls.showLabels.value &&
@@ -404,7 +447,7 @@ export function useMemoryConstellation(
       ) {
         const isHub = hubIds.has(nodeList[i].id);
         const isTopic = nodeList[i].isTopic === true;
-        const isMultiLeaf = isTopic && (nodeList[i].memberCount ?? 0) > 1;
+        const isMultiLeaf = folded && (nodeList[i].memberCount ?? 0) > 1;
         const r = computeNodeRadius(
           linkCounts.get(nodeList[i].id) ?? 0,
           isHub,
@@ -531,7 +574,13 @@ export function useMemoryConstellation(
   function isTopicInView(key: string, zoom: number): boolean {
     const topic = relaxedLayout.value.topics.find((c) => c.key === key);
     if (!topic) return false;
-    const hubPos = relaxedLayout.value.positions.get(topic.memberIds[0]);
+    // Under the main-node regime the main dot sits at the blob centroid
+    // (always visible for multi-member topics); legacy expanded blobs keep
+    // it on the first member.
+    const hubPos =
+      mainNodesEnabled.value && topic.memberIds.length > 1
+        ? computeRelaxedCentroid(topic, relaxedLayout.value.positions)
+        : relaxedLayout.value.positions.get(topic.memberIds[0]);
     if (!hubPos) return false;
     const fov = Math.max(state.W, state.H) * 1.2;
     const p = projectPoint(
@@ -796,14 +845,6 @@ export function useMemoryConstellation(
     }
   }
 
-  function toggleTopic(key: string) {
-    if (isExpanded(key)) {
-      collapseTopic(key, true);
-    } else {
-      expandTopic(key, true);
-    }
-  }
-
   /**
    * Toggle a cluster hub: expand every collapsed member topic at once,
    * or — when none is collapsed — pull them all back into their category
@@ -862,8 +903,11 @@ export function useMemoryConstellation(
     const dy = Math.abs(state.pitch - state.pitchStart);
     if (dx < 0.01 && dy < 0.01 && state.hoverIndex >= 0) {
       const node = prepared.value.nodeList[state.hoverIndex];
-      // Every dot selects (the metadata column shows its payload); hubs
-      // additionally toggle their folded members, the root only selects.
+      // Every dot selects (the metadata column shows its payload); cluster
+      // and community hubs additionally toggle their folded members. The
+      // title-tier main dot only selects — topic collapse/expand is the
+      // camera's job (zoom bands) or the toolbar's expand-all toggle; the
+      // root only selects.
       if (node.isRoot) {
         onNodeClick?.(node);
       } else if (node.isCluster && node.clusterKey) {
@@ -871,9 +915,6 @@ export function useMemoryConstellation(
         onNodeClick?.(node);
       } else if (node.isCommunity && node.communityKey) {
         toggleCommunity(node.communityKey);
-        onNodeClick?.(node);
-      } else if (node.isTopic) {
-        toggleTopic(node.topicKey);
         onNodeClick?.(node);
       } else {
         onNodeClick?.(node);

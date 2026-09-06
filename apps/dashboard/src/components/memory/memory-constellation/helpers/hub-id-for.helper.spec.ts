@@ -22,4 +22,13 @@ describe('hubIdFor', () => {
     const single = { ...topic, memberIds: ['a'] };
     expect(hubIdFor(single, new Set(['work']))).toBe('a');
   });
+
+  it('returns the synthetic dot for an expanded multi-member topic under the main-node regime', () => {
+    expect(hubIdFor(topic, new Set(), true)).toBe('topic:work');
+  });
+
+  it('still returns the member for a single-member topic under the main-node regime', () => {
+    const single = { ...topic, memberIds: ['a'] };
+    expect(hubIdFor(single, new Set(), true)).toBe('a');
+  });
 });

@@ -2,6 +2,7 @@ import type {
   ConstellationCluster,
   ConstellationFriction,
   ConstellationLink,
+  ConstellationMainNodeSummary,
   ConstellationNode,
   ConstellationTopic,
   PreparedConstellation,
@@ -12,6 +13,7 @@ import { appendCommunityNodes } from './append-community-nodes.helper';
 import { appendRootNode } from './append-root-node.helper';
 import { buildEdges } from './build-edges.helper';
 import { buildFrictionLinks } from './build-friction-links.helper';
+import { buildHeatIntensity } from './build-heat-intensity.helper';
 import { buildHubIds } from './build-hub-ids.helper';
 import { buildLinkCounts } from './build-link-counts.helper';
 import { buildLinkIndices } from './build-link-indices.helper';
@@ -22,13 +24,17 @@ import { DEFAULT_INTER_LINK_MIN_SCORE } from './inter-link-min-score.constant';
 
 /**
  * Pure render-prep from a pre-relaxed layout: collapse the given topic
- * keys into category dots, append the always-on cluster hubs and the ZERO
- * root, resolve links to visible nodes, and precompute edge opacity + fog.
- * Deterministic for a given (relaxedLayout, links, frictions, collapsedKeys,
- * interLinkMinScore, showSuggested) tuple. When `showSuggested` is off, the
- * weak arcs (every inter edge below the strong-relation tier) are dropped
- * before both the render list and the per-node degree counts, so a node held
- * up only by weak links reads as unlinked.
+ * keys into their main dots, append the always-on cluster hubs and the
+ * ZERO root, resolve links to visible nodes, and precompute edge opacity +
+ * fog. Deterministic for a given (relaxedLayout, links, frictions,
+ * collapsedKeys, interLinkMinScore, showSuggested, mainNodes) tuple. When
+ * `showSuggested` is off, the weak arcs (every inter edge below the
+ * strong-relation tier) are dropped before both the render list and the
+ * per-node degree counts, so a node held up only by weak links reads as
+ * unlinked. When `mainNodes` is present (the space feeds server-written
+ * title-tier main nodes — even empty, cold scope), every multi-member blob
+ * gets its synthetic main dot carrying the leaf summary: the node between
+ * the hub tier and the leafs.
  */
 export function prepareConstellation(
   nodes: readonly ConstellationNode[],
@@ -38,6 +44,7 @@ export function prepareConstellation(
   interLinkMinScore: number = DEFAULT_INTER_LINK_MIN_SCORE,
   frictions: readonly ConstellationFriction[] = [],
   showSuggested = true,
+  mainNodes?: readonly ConstellationMainNodeSummary[],
 ): PreparedConstellation {
   const {
     topics,
@@ -46,6 +53,10 @@ export function prepareConstellation(
     positions: relaxedPositions,
   } = relaxedLayout;
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const mainNodesEnabled = mainNodes !== undefined;
+  const mainNodeByKey = mainNodesEnabled
+    ? new Map(mainNodes.map((node) => [node.key, node]))
+    : undefined;
 
   const acc = buildVisibleNodes(
     topics,
@@ -53,6 +64,7 @@ export function prepareConstellation(
     nodeById,
     collapsedKeys,
     frictions,
+    mainNodeByKey,
   );
   appendClusterNodes(clusters, relaxedPositions, acc, nodeById, frictions);
   appendCommunityNodes(communities, relaxedPositions, acc, nodeById, frictions);
@@ -68,6 +80,7 @@ export function prepareConstellation(
     clusters,
     interLinkMinScore,
     communities,
+    mainNodesEnabled,
   );
   const linkIndices = [
     ...buildLinkIndices(edges, nodeIndex, interLinkMinScore),
@@ -78,8 +91,26 @@ export function prepareConstellation(
     : linkIndices.filter((link) => !link.weak);
   const linkCounts = buildLinkCounts(visibleLinkIndices, visibleNodes);
   const nodeColor = buildNodeColor(topics, clusters, communities);
-  const hubIds = buildHubIds(topics, collapsedKeys, clusters, communities);
-  const topicFog = buildTopicFog(topics, relaxedPositions, collapsedKeys);
+  const hubIds = buildHubIds(
+    topics,
+    collapsedKeys,
+    clusters,
+    communities,
+    mainNodesEnabled,
+  );
+  const topicFog = buildTopicFog(
+    topics,
+    relaxedPositions,
+    collapsedKeys,
+    mainNodesEnabled,
+  );
+  const heatIntensity = buildHeatIntensity(
+    nodes,
+    topics,
+    communities,
+    clusters,
+    mainNodesEnabled,
+  );
 
   return {
     nodeList: visibleNodes,
@@ -89,6 +120,7 @@ export function prepareConstellation(
     nodeColor,
     hubIds,
     topicFog,
+    heatIntensity,
   };
 }
 

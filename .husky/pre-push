@@ -10,7 +10,6 @@ info 'pn -r ncu:validate' && pn -r ncu:validate
 info 'pn -r lint' && pn -r lint
 
 # dry run tests
-info 'pn -r test --silent' && pn -r test --silent
 info 'pn -r test:cov' && pn -r test:cov
 
 # no unused exports

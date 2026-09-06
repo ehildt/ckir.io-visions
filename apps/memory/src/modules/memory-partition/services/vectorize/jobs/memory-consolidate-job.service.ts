@@ -236,6 +236,8 @@ export class MemoryConsolidateJobService {
         memoryPartition: data.memoryPartition,
         text: row.text,
         limit: 5,
+        // Consolidation adjudication sweep — not user engagement.
+        trackHeat: false,
       })
     ).filter((point) => point.id !== row.pointId);
 

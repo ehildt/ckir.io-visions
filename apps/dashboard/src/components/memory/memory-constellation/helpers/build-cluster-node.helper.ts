@@ -38,7 +38,11 @@ export function buildClusterNode(
       )
     : [];
   const meta: Array<{ label: string; value: string }> = [
-    { label: 'category', value: cluster.label },
+    // The hub's human category — never the key: a server-driven hub is
+    // keyed by the cluster id (a hash), which must never print as text.
+    ...(cluster.categoryLabel
+      ? [{ label: 'category', value: cluster.categoryLabel }]
+      : []),
     { label: 'topics', value: String(topics) },
     { label: 'records', value: String(records) },
     ...rollup,

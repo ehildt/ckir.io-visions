@@ -9,6 +9,8 @@ export function mapInsight(
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    heatAmount?: number;
+    heatTimestamp?: string;
   },
   index: number,
 ) {
@@ -21,5 +23,7 @@ export function mapInsight(
     isFriction: insight.isFriction,
     superseded: insight.superseded,
     supersededBy: insight.supersededBy,
+    heatAmount: insight.heatAmount,
+    heatTimestamp: insight.heatTimestamp,
   };
 }

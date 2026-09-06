@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { groupHeatIncrements } from './helpers/group-heat-increments.helper.js';
 import { QdrantClientService } from './qdrant-client.service.js';
 
 /** The two lanes the synopsis layer covers (mirrors the cluster lanes). */
@@ -24,6 +25,10 @@ interface SynopsisRecord {
   summary: string;
   /** Direct members of the summarized cluster (points at level 0, clusters above). */
   memberCount: number;
+  /** Retrieval count — incremented every time the synopsis probe surfaces this synopsis (heat tracking). */
+  heatAmount?: number;
+  /** ISO timestamp of the last probe hit. */
+  heatTimestamp?: string;
 }
 
 /** One synopsis point to write (record + vector). */
@@ -165,6 +170,30 @@ export class SynopsisRepository {
     });
   }
 
+  /**
+   * Increment probe heat on synopsis hits: `heat_amount` +1,
+   * `heat_timestamp` = now — one batched setPayload per distinct current
+   * count. Approximate under concurrency (last-writer-wins) — acceptable
+   * for an access-frequency metric. Degrades silently when the synopsis
+   * collection is missing.
+   */
+  async incrementHeat(
+    lane: SynopsisLane,
+    hits: ReadonlyArray<{ id: string; heatAmount?: number }>,
+  ): Promise<void> {
+    if (hits.length === 0) return;
+    if (!(await this.clientService.hasSynopsisCollection(lane))) return;
+    const timestamp = new Date().toISOString();
+    const client = this.clientService.getClient();
+    for (const group of groupHeatIncrements(hits)) {
+      await client.setPayload(this.collectionFor(lane), {
+        payload: { heat_amount: group.nextAmount, heat_timestamp: timestamp },
+        points: group.ids,
+        wait: false,
+      });
+    }
+  }
+
   private collectionFor(lane: SynopsisLane): string {
     return lane === 'partition'
       ? this.clientService.partitionSynopsisCollection
@@ -187,6 +216,8 @@ export class SynopsisRepository {
       title: (payload.title as string) ?? '',
       summary: (payload.summary as string) ?? '',
       memberCount: (payload.member_count as number) ?? 0,
+      heatAmount: payload.heat_amount as number | undefined,
+      heatTimestamp: payload.heat_timestamp as string | undefined,
     };
   }
 }

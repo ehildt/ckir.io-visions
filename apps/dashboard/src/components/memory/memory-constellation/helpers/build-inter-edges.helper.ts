@@ -21,6 +21,7 @@ export function buildInterEdges(
   collapsedKeys: ReadonlySet<string>,
   clusters: readonly ConstellationCluster[] = [],
   minScore: number = DEFAULT_INTER_LINK_MIN_SCORE,
+  mainNodesEnabled = false,
 ): ConstellationEdge[] {
   const topicByNode = new Map<string, string>();
   for (const topic of topics) {
@@ -48,8 +49,8 @@ export function buildInterEdges(
     const topicB = topicByKey.get(keyB);
     if (!topicA || !topicB) continue;
     edges.push({
-      source: hubIdFor(topicA, collapsedKeys),
-      target: hubIdFor(topicB, collapsedKeys),
+      source: hubIdFor(topicA, collapsedKeys, mainNodesEnabled),
+      target: hubIdFor(topicB, collapsedKeys, mainNodesEnabled),
       kind: interScore.sameCluster ? 'sibling' : 'inter',
       score: interScore.score,
       suggested: interScore.suggested ? true : undefined,

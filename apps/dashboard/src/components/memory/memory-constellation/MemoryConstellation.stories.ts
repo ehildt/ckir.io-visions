@@ -76,6 +76,52 @@ export const Friction: Story = {
 };
 
 /**
+ * The access-heat overlay: dots with high retrieval counts (the `likes`
+ * topic here) warm toward the heat ramp's hot end and brighten, cold dots
+ * keep their cluster color. Toggle the flame toolbar button (showHeat) to
+ * compare against the neutral look.
+ */
+export const HeatOverlay: Story = {
+  args: {
+    nodes: [
+      { ...NODES[0], heatAmount: 24, heatTimestamp: '2026-01-12T18:30:00Z' },
+      { ...NODES[1], heatAmount: 9, heatTimestamp: '2026-01-10T09:00:00Z' },
+      { ...NODES[2], heatAmount: 1, heatTimestamp: '2025-12-28T12:00:00Z' },
+      NODES[3],
+    ],
+    links: LINKS,
+  },
+};
+
+/**
+ * The main-node regime (what the memory spaces render): every multi-member
+ * blob keeps a synthetic title dot visible between the hub tier and its
+ * leafs — the dot carries the server-written summary of the attached leafs
+ * (hover it), and every leaf links and orbits to it. Single-member blobs
+ * keep their leaf as the main dot.
+ */
+export const MainNodes: Story = {
+  args: {
+    nodes: NODES,
+    links: LINKS,
+    mainNodes: [
+      {
+        key: 'likes',
+        title: 'likes',
+        summary: 'The user shared two durable likes: cars and music.',
+        memberIds: ['a', 'b'],
+      },
+      {
+        key: 'work',
+        title: 'work',
+        summary: 'The user works at Acme and identifies as a Rust developer.',
+        memberIds: ['c', 'd'],
+      },
+    ],
+  },
+};
+
+/**
  * Two game topics sharing the `games` category form a category hub that
  * connects to the ZERO root, the strong same-category link (0.85) draws a
  * solid sibling edge between the two sub-categories, and the weak dog↔game

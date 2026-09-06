@@ -8,6 +8,12 @@ const markdown = new MarkdownIt({
   breaks: true,
 });
 
+/** Max memoized renderMarkdown results (FIFO eviction beyond the cap). */
+const CACHE_CAP = 500;
+
+/** Source content → sanitized HTML. Referentially transparent memoization. */
+const htmlCache = new Map<string, string>();
+
 /**
  * Shift model-authored heading levels down by two (h1 → h3, …, clamped at
  * h6). Chat prose lives inside responses whose own outline is h2 (response
@@ -32,8 +38,22 @@ markdown.core.ruler.push(
 /**
  * Render a markdown string to sanitized HTML, safe for v-html. Raw HTML in
  * the source is escaped by markdown-it; DOMPurify sanitizes the output.
+ *
+ * Memoized by source content: the chat re-renders every message of the
+ * active conversation on each remount (conversation switches, route
+ * changes), and markdown-it + DOMPurify are the per-mount burst — a repeat
+ * render is a Map lookup. FIFO-evicted at CACHE_CAP so a long session can
+ * not grow the cache forever.
  */
 export function renderMarkdown(content: string): string {
   if (!content) return '';
-  return sanitizeHtml(markdown.render(content));
+  const cached = htmlCache.get(content);
+  if (cached !== undefined) return cached;
+  const html = sanitizeHtml(markdown.render(content));
+  if (htmlCache.size >= CACHE_CAP) {
+    const oldest = htmlCache.keys().next().value;
+    if (oldest !== undefined) htmlCache.delete(oldest);
+  }
+  htmlCache.set(content, html);
+  return html;
 }

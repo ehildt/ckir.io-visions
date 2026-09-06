@@ -46,6 +46,11 @@ export interface ConstellationNode {
    * cluster around one synthetic hub dot.
    */
   clusterKey?: string;
+  /**
+   * The record's human category label (unlike `clusterKey`, never a server
+   * cluster id) — aggregated into the cluster hub's `category` meta tag.
+   */
+  category?: string;
   /** Synthetic cluster hub dot (click to toggle its member topics). */
   isCluster?: boolean;
   /** Mid-tier sub-family the record belongs to (a plural label like
@@ -74,6 +79,14 @@ export interface ConstellationNode {
   isConviction?: boolean;
   /** Resolved evidence texts backing a bridge/conviction (shown in the metadata column). */
   evidenceTexts?: string[];
+  /**
+   * Retrieval count from the memory store — how often a semantic search
+   * surfaced this record (heat tracking). Drives the halo warmth and the
+   * tooltip's `accessed` row; hubs aggregate their members.
+   */
+  heatAmount?: number;
+  /** ISO timestamp of the last retrieval that surfaced this record. */
+  heatTimestamp?: string;
 }
 
 /** A colored edge between two dots. */
@@ -141,6 +154,9 @@ export interface ConstellationCluster {
   memberCommunityKeys: string[];
   /** Every real node id across the member topics. */
   memberIds: string[];
+  /** Plurality category label of the member records — the hub's human
+   *  `category` meta tag (the `key` may be a server cluster id, unprintable). */
+  categoryLabel?: string;
   /** LLM-written short label (server cluster) — overrides `label` when present. */
   title?: string;
   /** LLM-written one/two-sentence summary (server cluster) — shown in the hub tooltip/meta. */
@@ -170,6 +186,21 @@ export interface ConstellationCommunity {
 export interface ConstellationClusterSummary {
   id: string;
   title: string;
+  summary: string;
+  memberIds: string[];
+}
+
+/**
+ * A server-written title-tier main node: one per topic blob (the node
+ * between the hub tier and the leafs — a document's title node over its
+ * chunks, a subject's group node over its facts), carrying the LLM summary
+ * of the attached leafs.
+ */
+export interface ConstellationMainNodeSummary {
+  /** The blob key (subject/tag/title/domain) — matches ConstellationTopic.key. */
+  key: string;
+  title: string;
+  /** LLM-written summary of the attached leafs. */
   summary: string;
   memberIds: string[];
 }
@@ -240,6 +271,12 @@ export interface PreparedConstellation {
   nodeColor: Map<string, string>;
   hubIds: Set<string>;
   topicFog: TopicFog[];
+  /**
+   * Normalized retrieval heat per node id (0..1, sqrt-scaled within each
+   * tier): leaves from their own `heatAmount`, hub dots from their member
+   * rollup. Drives the halo warmth — all-zero when the store never tracked.
+   */
+  heatIntensity: Map<string, number>;
 }
 
 /**
@@ -291,6 +328,14 @@ export interface MemoryConstellationProps {
    *  — attached to the matching cluster hubs by member overlap. */
   clusters?: ConstellationClusterSummary[];
   /**
+   * Server-written title-tier main nodes — one per topic blob. When the prop
+   * is present (even empty), every multi-member topic gets its own synthetic
+   * main dot carrying the summary of its attached leafs (cold scopes fall
+   * back to the leaf rollup); when absent (e.g. the cognition space), the
+   * first member doubles as the topic's main dot (legacy behavior).
+   */
+  mainNodes?: ConstellationMainNodeSummary[];
+  /**
    * Taxonomy metadata per synthetic macro-node id (`cluster:<key>`,
    * `community:<key>`, `topic:<key>`): the registry's icon, summary and
    * extra meta rows, attached onto the hub dots post-layout.
@@ -300,6 +345,8 @@ export interface MemoryConstellationProps {
   showLabels?: boolean;
   /** Show the weak (suggested/topical) edges — the electricity arcs (default true). */
   showSuggested?: boolean;
+  /** Halo warmth from retrieval heat (default true; off = cluster-colored halos everywhere). */
+  showHeat?: boolean;
   /** Idle auto-rotation on/off (default true). */
   rotationEnabled?: boolean;
   /** Increment to reset the view (collapse topics + refit camera). */

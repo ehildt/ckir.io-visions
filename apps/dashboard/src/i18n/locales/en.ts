@@ -608,6 +608,8 @@ const en: LocaleMessages = {
     memoryDownloadDocument: 'Download document',
     memoryToggleSuggested:
       'Toggle weak links — faint inter-topic arcs below the strong-relation threshold',
+    memoryToggleHeat:
+      'Toggle heat halos — dots glow warmer the more often memory search surfaced them',
     memoryConstellationNodeLimit: 'Constellation node limit',
     memoryConstellationNodeLimitDesc:
       'Max fact records drawn per constellation diagram on the Memory tab (100–10000, default 5000)',
@@ -664,6 +666,9 @@ const en: LocaleMessages = {
     memoryClusterMinMembersDesc:
       'Minimum members for a structural cluster (1–100)',
     memoryRaptorEnabled: 'Raptor enabled',
+    memoryHeatTrackingEnabled: 'Heat tracking',
+    memoryHeatTrackingEnabledDesc:
+      'Count every memory-search hit on the record (heat amount + last-access timestamp) — drives the constellation\u2019s warm halo overlay across every lane',
     memoryRaptorEnabledDesc:
       'Raptor synopsis layer: embed each cluster\u2019s summary as a searchable point and recurse clusters of synopses one level up — cross-cutting questions can match the community summary directly',
     memoryRaptorMaxDepth: 'Raptor max depth',
