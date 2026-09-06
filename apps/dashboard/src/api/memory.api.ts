@@ -16,6 +16,10 @@ export interface MemoryCognitionSnapshot {
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    /** Retrieval count — how often a semantic search surfaced this insight (heat tracking). */
+    heatAmount?: number;
+    /** ISO timestamp of the last retrieval. */
+    heatTimestamp?: string;
   }>;
   /**
    * Conviction records — the AI's synthesized conclusions about the
@@ -29,6 +33,10 @@ export interface MemoryCognitionSnapshot {
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    /** Retrieval count — how often the conviction probe surfaced this record (heat tracking). */
+    heatAmount?: number;
+    /** ISO timestamp of the last retrieval. */
+    heatTimestamp?: string;
   }>;
 }
 
@@ -60,6 +68,8 @@ export async function fetchMemoryCognition(
       isFriction?: boolean;
       superseded?: boolean;
       supersededBy?: string;
+      heatAmount?: number;
+      heatTimestamp?: string;
     }>;
     convictions?: Array<{
       id?: string;
@@ -69,6 +79,8 @@ export async function fetchMemoryCognition(
       isFriction?: boolean;
       superseded?: boolean;
       supersededBy?: string;
+      heatAmount?: number;
+      heatTimestamp?: string;
     }>;
   };
   return {
@@ -86,6 +98,8 @@ export async function fetchMemoryCognition(
         isFriction: conviction.isFriction,
         superseded: conviction.superseded,
         supersededBy: conviction.supersededBy,
+        heatAmount: conviction.heatAmount,
+        heatTimestamp: conviction.heatTimestamp,
       })),
   };
 }
@@ -130,6 +144,10 @@ export interface MemoryFactRecord {
   supersededBy?: string;
   /** Point ids this bridge cites as its supporting evidence (bridge/conviction records only). */
   evidenceIds?: string[];
+  /** Retrieval count — how often a semantic search surfaced this record (heat tracking). */
+  heatAmount?: number;
+  /** ISO timestamp of the last retrieval. */
+  heatTimestamp?: string;
 }
 
 /**
@@ -166,6 +184,8 @@ export async function fetchMemoryFacts(
     superseded?: boolean;
     supersededBy?: string;
     evidenceIds?: string[];
+    heatAmount?: number;
+    heatTimestamp?: string;
   }>;
   return items.filter((item) => item.text).map(mapFact);
 }
@@ -245,6 +265,10 @@ export interface EncyclopediaChunkRecord {
   superseded?: boolean;
   /** Chunk id that superseded this one. */
   supersededBy?: string;
+  /** Retrieval count — how often a semantic search surfaced this chunk (heat tracking). */
+  heatAmount?: number;
+  /** ISO timestamp of the last retrieval. */
+  heatTimestamp?: string;
 }
 
 /**
@@ -282,6 +306,8 @@ export async function fetchEncyclopediaChunks(
     isFriction?: boolean;
     superseded?: boolean;
     supersededBy?: string;
+    heatAmount?: number;
+    heatTimestamp?: string;
   }>;
   return items
     .filter((item) => item.content && item.url)
@@ -387,6 +413,54 @@ export async function fetchEncyclopediaClusters(): Promise<
   if (!res.ok)
     throw new Error(`Failed to load encyclopedia clusters: ${res.status}`);
   return (await res.json()) as MemoryClusterRecord[];
+}
+
+/** One title-tier main node (a topic blob's group node) with the LLM summary of its leafs. */
+export interface MemoryMainNodeRecord {
+  /** Deterministic row id (sha256 of lane|collection|scopeKey|groupKey). */
+  id: string;
+  lane: string;
+  scopeKey: string;
+  /** The blob key this main node represents (subject/tag/title/domain). */
+  groupKey: string;
+  title: string;
+  /** LLM-written summary of the attached leafs. */
+  summary: string;
+  memberCount: number;
+  memberIds: string[];
+}
+
+/**
+ * Read the title-tier main nodes of a memory partition (one per topic blob:
+ * the group node above the leafs, LLM-summarized). Returns [] when the
+ * cluster job has not run yet (cold scope). Throws on failure so the caller
+ * can degrade.
+ */
+export async function fetchMemoryMainNodes(
+  partitionKey: string,
+): Promise<MemoryMainNodeRecord[]> {
+  const res = await fetch(
+    getMemoryApiUrl(
+      `/api/v1/memory/main-nodes?memoryPartition=${encodeURIComponent(partitionKey)}`,
+    ),
+  );
+  if (!res.ok)
+    throw new Error(`Failed to load memory main nodes: ${res.status}`);
+  return (await res.json()) as MemoryMainNodeRecord[];
+}
+
+/**
+ * Read the title-tier main nodes of the shared knowledge encyclopedia (one
+ * per topic/document blob). Returns [] when the cluster job has not run
+ * yet. Throws on failure so the caller can degrade.
+ */
+export async function fetchEncyclopediaMainNodes(): Promise<
+  MemoryMainNodeRecord[]
+> {
+  const res = await fetch(getMemoryApiUrl('/api/v1/encyclopedia/main-nodes'));
+  if (!res.ok)
+    throw new Error(`Failed to load encyclopedia main nodes: ${res.status}`);
+  return (await res.json()) as MemoryMainNodeRecord[];
 }
 
 /**

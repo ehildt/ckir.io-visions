@@ -4,6 +4,7 @@ import { formatFileSize } from '@/helpers/format-file-size.helper';
 
 import { truncateText } from '../../memory-constellation/helpers/truncate-text.helper';
 import type { ConstellationNode } from '../../memory-constellation/MemoryConstellation.types';
+import { mimeTypeLabel } from './mime-type-label.helper';
 
 const UNKNOWN_DOMAIN = 'unknown';
 const SUMMARY_CHARS = 140;
@@ -29,6 +30,7 @@ export function mapChunkToNode(
     label: topic,
     topicKey: topic,
     clusterKey: chunk.clusterId?.trim() || chunk.category?.trim() || undefined,
+    category: chunk.category?.trim() || undefined,
     communityKey: chunk.community?.trim() || undefined,
     text: chunk.content,
     summary: truncateText(chunk.content, SUMMARY_CHARS),
@@ -46,14 +48,31 @@ export function mapChunkToNode(
       ...(chunk.domain ? [{ label: 'domain', value: chunk.domain }] : []),
       { label: 'url', value: chunk.url },
       { label: 'chunk', value: `${chunk.chunkIndex + 1}/${chunk.chunkCount}` },
-      ...(chunk.mimeType ? [{ label: 'type', value: chunk.mimeType }] : []),
+      ...(chunk.mimeType
+        ? [{ label: 'type', value: mimeTypeLabel(chunk.mimeType) }]
+        : []),
       ...(chunk.sizeBytes !== undefined
         ? [{ label: 'size', value: formatFileSize(chunk.sizeBytes) }]
+        : []),
+      ...(chunk.heatAmount
+        ? [
+            { label: 'accessed', value: `×${chunk.heatAmount}` },
+            ...(chunk.heatTimestamp
+              ? [
+                  {
+                    label: 'last access',
+                    value: chunk.heatTimestamp.slice(0, 10),
+                  },
+                ]
+              : []),
+          ]
         : []),
     ],
     isConsolidated: chunk.isConsolidated,
     isReflected: chunk.isReflected,
     isFriction: chunk.isFriction,
     superseded: chunk.superseded,
+    heatAmount: chunk.heatAmount,
+    heatTimestamp: chunk.heatTimestamp,
   };
 }

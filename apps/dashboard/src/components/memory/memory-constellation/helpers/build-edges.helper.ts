@@ -17,9 +17,10 @@ import { buildRootEdges } from './build-root-edges.helper';
  * above the minimum score), sibling (main dot → main dot within one
  * category), community (member topic hub → community hub), cluster
  * (community/community-less hubs → category hub), and root
- * (category hub → ZERO). Collapsed topics contribute no intra edges (their
- * leaves are hidden) and their inter/sibling/cluster edges use the
- * synthetic category dot as the main dot.
+ * (category hub → ZERO). The main dot of a multi-member topic is the
+ * synthetic title dot when it exists (collapsed, or always under the
+ * main-node regime), else the first member. Collapsed topics contribute no
+ * intra edges (their leaves are hidden).
  */
 export function buildEdges(
   topics: readonly ConstellationTopic[],
@@ -28,12 +29,31 @@ export function buildEdges(
   clusters: readonly ConstellationCluster[] = [],
   minScore?: number,
   communities: readonly ConstellationCommunity[] = [],
+  mainNodesEnabled = false,
 ): ConstellationEdge[] {
   return [
-    ...buildIntraEdges(topics, collapsedKeys),
-    ...buildInterEdges(topics, links, collapsedKeys, clusters, minScore),
-    ...buildCommunityEdges(topics, communities, collapsedKeys),
-    ...buildClusterEdges(topics, clusters, collapsedKeys, communities),
-    ...buildRootEdges(topics, clusters, collapsedKeys),
+    ...buildIntraEdges(topics, collapsedKeys, mainNodesEnabled),
+    ...buildInterEdges(
+      topics,
+      links,
+      collapsedKeys,
+      clusters,
+      minScore,
+      mainNodesEnabled,
+    ),
+    ...buildCommunityEdges(
+      topics,
+      communities,
+      collapsedKeys,
+      mainNodesEnabled,
+    ),
+    ...buildClusterEdges(
+      topics,
+      clusters,
+      collapsedKeys,
+      communities,
+      mainNodesEnabled,
+    ),
+    ...buildRootEdges(topics, clusters, collapsedKeys, mainNodesEnabled),
   ];
 }

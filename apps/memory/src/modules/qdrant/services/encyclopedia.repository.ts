@@ -1,5 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
+import { ENCYCLOPEDIA_CONFIG } from '../../encyclopedia/constants/encyclopedia.constants.js';
+import type { EncyclopediaConfig } from '../../encyclopedia/models/encyclopedia-config.model.js';
 import {
   type MemoryFrictionEdge,
   MemoryFrictionRepository,
@@ -9,13 +11,21 @@ import {
   MemoryLinkRepository,
   type MemoryLinkRow,
 } from '../../persistence/services/memory-link.repository.js';
-import { QDRANT_CONFIG } from '../constants/qdrant.constants.js';
+import {
+  DENSE_VECTOR,
+  QDRANT_CONFIG,
+  SPARSE_VECTOR,
+} from '../constants/qdrant.constants.js';
+import { buildFusionQuery } from '../helpers/build-fusion-query.helper.js';
+import { buildSparseVector } from '../helpers/build-sparse-vector.helper.js';
+import { readDenseVector } from '../helpers/read-dense-vector.helper.js';
 import type {
   EncyclopediaChunkHit,
   EncyclopediaChunkPoint,
 } from '../models/encyclopedia-chunk.model.js';
 import type { QdrantConfig } from '../models/qdrant-config.model.js';
 
+import { groupHeatIncrements } from './helpers/group-heat-increments.helper.js';
 import { mapEncyclopediaPointToIdVector } from './helpers/map-encyclopedia-point-to-id-vector.helper.js';
 import { mapEncyclopediaPointToUpsert } from './helpers/map-encyclopedia-point-to-upsert.helper.js';
 import { mapFacetHit } from './helpers/map-facet-hit.helper.js';
@@ -54,6 +64,8 @@ export class EncyclopediaRepository {
     private readonly links: MemoryLinkRepository,
     private readonly frictions: MemoryFrictionRepository,
     @Inject(QDRANT_CONFIG) private readonly config: QdrantConfig,
+    @Inject(ENCYCLOPEDIA_CONFIG)
+    private readonly encyclopediaConfig: EncyclopediaConfig,
   ) {}
 
   get collection(): string {
@@ -67,9 +79,12 @@ export class EncyclopediaRepository {
   ): Promise<void> {
     if (points.length === 0) return;
     if (!(await this.clientService.hasEncyclopediaCollection())) return;
+    const layout = await this.clientService.vectorLayout(this.collection);
     await this.clientService.getClient().upsert(this.collection, {
       wait: true,
-      points: points.map(mapEncyclopediaPointToUpsert),
+      points: points.map((point) =>
+        mapEncyclopediaPointToUpsert(point, layout),
+      ),
     });
 
     // Graph bookkeeping is warn-and-continue: a missing edge degrades to a
@@ -233,27 +248,66 @@ export class EncyclopediaRepository {
     );
   }
 
-  /** Vector query with an optional url filter (Lane A / Lane B). */
+  /**
+   * Vector query with an optional url filter (Lane A / Lane B). Hybrid when
+   * the collection has the sparse vector and ENCYCLOPEDIA_HYBRID_ENABLED:
+   * dense + lexical prefetches fused by RRF/DBSF in one call (the dense leg
+   * keeps `scoreThreshold` as its noise floor); fused results are rank-scored.
+   * Legacy collections (unnamed vectors) stay on the plain dense query.
+   */
   async queryByFilter(
     vector: number[],
+    queryText: string,
     filter: EncyclopediaQueryFilter,
     limit: number,
     scoreThreshold: number,
   ): Promise<EncyclopediaChunkHit[]> {
     if (!(await this.clientService.hasEncyclopediaCollection())) return [];
-    const result = await this.clientService.getClient().query(this.collection, {
+    const effectiveFilter = {
+      ...filter,
+      must_not: [
+        ...(filter.must_not ?? []),
+        // Superseded chunks were adjudicated stale — excluded from recall.
+        { key: 'superseded', match: { value: true } },
+      ],
+    };
+    const layout = await this.clientService.vectorLayout(this.collection);
+    const client = this.clientService.getClient();
+
+    if (layout.sparse && this.encyclopediaConfig.hybridEnabled) {
+      const sparse = buildSparseVector(queryText);
+      if (sparse.indices.length > 0) {
+        const result = await client.query(this.collection, {
+          prefetch: [
+            {
+              query: vector,
+              using: DENSE_VECTOR,
+              limit: Math.max(limit, this.encyclopediaConfig.hybridSparseLimit),
+              score_threshold: scoreThreshold,
+              filter: effectiveFilter,
+            },
+            {
+              query: sparse,
+              using: SPARSE_VECTOR,
+              limit: this.encyclopediaConfig.hybridSparseLimit,
+              filter: effectiveFilter,
+            },
+          ],
+          query: buildFusionQuery(this.encyclopediaConfig),
+          limit,
+          with_payload: true,
+        });
+        return result.points.map((point) => this.toHit(point));
+      }
+    }
+
+    const result = await client.query(this.collection, {
       query: vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit,
       score_threshold: scoreThreshold,
       with_payload: true,
-      filter: {
-        ...filter,
-        must_not: [
-          ...(filter.must_not ?? []),
-          // Superseded chunks were adjudicated stale — excluded from recall.
-          { key: 'superseded', match: { value: true } },
-        ],
-      },
+      filter: effectiveFilter,
     });
     return result.points.map((point) => this.toHit(point));
   }
@@ -610,9 +664,33 @@ export class EncyclopediaRepository {
   }
 
   /**
+   * Increment the retrieval heat of search hits: `heat_amount` +1 and
+   * `heat_timestamp` = now, one batched setPayload per distinct current
+   * count. Approximate under concurrency (last-writer-wins) — acceptable
+   * for an access-frequency metric. `wait: false` keeps it off the recall
+   * hot path.
+   */
+  async incrementHeat(
+    hits: ReadonlyArray<{ id: string; heatAmount?: number }>,
+  ): Promise<void> {
+    if (hits.length === 0) return;
+    if (!(await this.clientService.hasEncyclopediaCollection())) return;
+    const timestamp = new Date().toISOString();
+    const client = this.clientService.getClient();
+    for (const group of groupHeatIncrements(hits)) {
+      await client.setPayload(this.collection, {
+        payload: { heat_amount: group.nextAmount, heat_timestamp: timestamp },
+        points: group.ids,
+        wait: false,
+      });
+    }
+  }
+
+  /**
    * Scroll every non-superseded content chunk of the global encyclopedia with
-   * vectors — the cluster-detection input (id + vector + content + category
-   * + topic-as-tags). Paginated; `limit` is a hard cap.
+   * vectors — the cluster-detection + main-node-grouping input (id + vector +
+   * content + category + community + topic-as-tags + provenance fields for
+   * the document/title grouping). Paginated; `limit` is a hard cap.
    */
   async scrollScopePoints(limit: number): Promise<
     Array<{
@@ -620,6 +698,11 @@ export class EncyclopediaRepository {
       vector: number[];
       text: string;
       category?: string;
+      community?: string;
+      topic?: string;
+      title?: string;
+      domain?: string;
+      originalHash?: string;
       tags: string[];
     }>
   > {
@@ -634,6 +717,11 @@ export class EncyclopediaRepository {
       vector: number[];
       text: string;
       category?: string;
+      community?: string;
+      topic?: string;
+      title?: string;
+      domain?: string;
+      originalHash?: string;
       tags: string[];
     }> = [];
     let offset: string | number | null = null;
@@ -646,15 +734,20 @@ export class EncyclopediaRepository {
         with_vector: true,
       });
       for (const point of scroll.points) {
-        const vector = point.vector;
-        if (!Array.isArray(vector) || typeof vector[0] !== 'number') continue;
+        const vector = readDenseVector(point.vector);
+        if (vector.length === 0) continue;
         const payload = point.payload ?? {};
         const topic = payload.topic as string | undefined;
         points.push({
           id: String(point.id),
-          vector: vector as number[],
+          vector,
           text: (payload.content as string) ?? '',
           category: payload.category as string | undefined,
+          community: payload.community as string | undefined,
+          topic,
+          title: payload.title as string | undefined,
+          domain: payload.domain as string | undefined,
+          originalHash: payload.original_hash as string | undefined,
           tags: topic ? [topic] : [],
         });
         if (points.length >= limit) return points;
@@ -697,6 +790,7 @@ export class EncyclopediaRepository {
   ): Promise<void> {
     if (points.length === 0) return;
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const edges: MemoryLinkRow[] = [];
     const seen = new Set<string>();
     for (const point of points) {
@@ -704,6 +798,7 @@ export class EncyclopediaRepository {
       if (!Array.isArray(vector) || typeof vector[0] !== 'number') continue;
       const result = await client.query(this.collection, {
         query: vector as number[],
+        ...(layout.named ? { using: DENSE_VECTOR } : {}),
         limit: this.config.linkNeighbors + 1,
         score_threshold: this.config.linkScoreThreshold,
         with_payload: false,
@@ -748,9 +843,9 @@ export class EncyclopediaRepository {
         with_vector: true,
       });
       for (const point of scroll.points) {
-        const vector = point.vector;
-        if (Array.isArray(vector) && typeof vector[0] === 'number') {
-          points.push({ id: String(point.id), vector: vector as number[] });
+        const vector = readDenseVector(point.vector);
+        if (vector.length > 0) {
+          points.push({ id: String(point.id), vector });
         }
       }
       offset = (scroll.next_page_offset as string | number | null) ?? null;
@@ -794,7 +889,7 @@ export class EncyclopediaRepository {
       const payload = point.payload ?? {};
       return {
         id: String(point.id),
-        vector: (point.vector as number[]) ?? [],
+        vector: readDenseVector(point.vector),
         content: (payload.content as string) ?? '',
         fetchedAt: (payload.fetched_at as string) ?? '',
         category: payload.category as string | undefined,
@@ -868,6 +963,8 @@ export class EncyclopediaRepository {
       isFriction: payload.is_friction as boolean | undefined,
       superseded: payload.superseded as boolean | undefined,
       supersededBy: payload.superseded_by as string | undefined,
+      heatAmount: payload.heat_amount as number | undefined,
+      heatTimestamp: payload.heat_timestamp as string | undefined,
       score: point.score,
     };
   }

@@ -103,6 +103,7 @@ export const QdrantConfigSchema = Joi.object<QdrantConfig>({
     .optional(),
   clusterAutoEnabled: Joi.boolean().optional(),
   raptorEnabled: Joi.boolean().optional(),
+  heatTrackingEnabled: Joi.boolean().optional(),
   raptorMaxDepth: Joi.number()
     .integer()
     .min(RAPTOR_MAX_DEPTH_MIN)
@@ -142,4 +143,11 @@ export const QdrantConfigSchema = Joi.object<QdrantConfig>({
   linkTopicalThreshold: Joi.number().min(0).max(1).optional(),
   linkBackfillMaxPoints: Joi.number().integer().min(100).max(50000).optional(),
   linkReadMax: Joi.number().integer().min(100).optional(),
+  // Hybrid retrieval (dense + sparse fused): enable switch, fusion method,
+  // RRF leg weights, and the sparse prefetch depth.
+  hybridEnabled: Joi.boolean().optional(),
+  hybridFusion: Joi.string().valid('rrf', 'dbsf').optional(),
+  hybridDenseWeight: Joi.number().min(0).optional(),
+  hybridSparseWeight: Joi.number().min(0).optional(),
+  hybridSparseLimit: Joi.number().integer().min(1).max(1000).optional(),
 }).required();

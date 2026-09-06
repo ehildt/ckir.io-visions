@@ -9,6 +9,7 @@ import { MemoryCognitionProfileRepository } from './services/memory-cognition-pr
 import { MemoryFrictionRepository } from './services/memory-friction.repository.js';
 import { MemoryInsertLedgerRepository } from './services/memory-insert-ledger.repository.js';
 import { MemoryLinkRepository } from './services/memory-link.repository.js';
+import { MemoryMainNodeRepository } from './services/memory-main-node.repository.js';
 import { MemoryTaxonomyRepository } from './services/memory-taxonomy.repository.js';
 import { ProviderOverridesRepository } from './services/provider-overrides.repository.js';
 
@@ -34,6 +35,7 @@ import { ProviderOverridesRepository } from './services/provider-overrides.repos
     MemoryLinkRepository,
     MemoryFrictionRepository,
     MemoryClusterRepository,
+    MemoryMainNodeRepository,
     MemoryTaxonomyRepository,
     ProviderOverridesRepository,
   ],
@@ -46,6 +48,7 @@ import { ProviderOverridesRepository } from './services/provider-overrides.repos
     MemoryLinkRepository,
     MemoryFrictionRepository,
     MemoryClusterRepository,
+    MemoryMainNodeRepository,
     MemoryTaxonomyRepository,
     ProviderOverridesRepository,
   ],

@@ -1,5 +1,11 @@
 import { normalizeCategory } from '../../../memory-partition/helpers/normalize-category.helper.js';
+import {
+  DENSE_VECTOR,
+  SPARSE_VECTOR,
+} from '../../constants/qdrant.constants.js';
+import { buildSparseVector } from '../../helpers/build-sparse-vector.helper.js';
 import { normalizeCommunity } from '../../helpers/normalize-community.helper.js';
+import type { CollectionVectorLayout } from '../../models/collection-vector-layout.model.js';
 import type { UpsertBatchInput } from '../../models/memory.model.js';
 
 type UpsertPoint = UpsertBatchInput['points'][number];
@@ -9,10 +15,18 @@ export function mapMemoryPointToUpsert(
   point: UpsertPoint,
   input: UpsertBatchInput,
   createdAt: string,
+  layout: CollectionVectorLayout,
 ) {
   return {
     id: point.id,
-    vector: point.vector,
+    vector: layout.named
+      ? {
+          [DENSE_VECTOR]: point.vector,
+          ...(layout.sparse && point.text.trim()
+            ? { [SPARSE_VECTOR]: buildSparseVector(point.text) }
+            : {}),
+        }
+      : point.vector,
     payload: {
       memory_partition: input.memoryPartition,
       memory_cognition: input.memoryCognition,

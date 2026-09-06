@@ -93,6 +93,8 @@ export function buildHubMeta(
     .at(-1);
   if (latest) meta.push({ label: 'updated', value: latest.slice(0, 10) });
 
+  meta.push(...heatRollupRows(members));
+
   const records = `${members.length} ${members.length === 1 ? 'record' : 'records'}`;
   const summary = [
     records,
@@ -104,4 +106,30 @@ export function buildHubMeta(
     .join(' · ');
 
   return { meta, summary };
+}
+
+/**
+ * The hub's heat rollup rows: total retrievals + the freshest last-access
+ * date across members. Appears only when the store actually tracks
+ * retrievals — a lane with no heat payloads must not show a misleading ×0.
+ */
+function heatRollupRows(
+  members: readonly ConstellationNode[],
+): Array<{ label: string; value: string }> {
+  if (!members.some((member) => member.heatAmount !== undefined)) return [];
+  const total = members.reduce(
+    (sum, member) => sum + (member.heatAmount ?? 0),
+    0,
+  );
+  const lastAccess = members
+    .map((member) => member.heatTimestamp)
+    .filter((timestamp): timestamp is string => Boolean(timestamp))
+    .sort()
+    .at(-1);
+  return [
+    { label: 'accessed', value: `×${total}` },
+    ...(lastAccess
+      ? [{ label: 'last access', value: lastAccess.slice(0, 10) }]
+      : []),
+  ];
 }

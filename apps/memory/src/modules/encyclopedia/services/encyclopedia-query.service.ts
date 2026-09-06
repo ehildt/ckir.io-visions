@@ -9,6 +9,7 @@ import type {
 import type { EncyclopediaChunkHit } from '../../qdrant/models/encyclopedia-chunk.model.js';
 import { EmbeddingService } from '../../qdrant/services/embedding.service.js';
 import { EncyclopediaRepository } from '../../qdrant/services/encyclopedia.repository.js';
+import { MemoryOverridesService } from '../../qdrant/services/memory-overrides.service.js';
 import { ENCYCLOPEDIA_CONFIG } from '../constants/encyclopedia.constants.js';
 import { mergeAdjacentChunks } from '../helpers/merge-adjacent-chunks.helper.js';
 import type { EncyclopediaConfig } from '../models/encyclopedia-config.model.js';
@@ -39,6 +40,7 @@ export class EncyclopediaQueryService {
   constructor(
     private readonly embedding: EmbeddingService,
     private readonly repository: EncyclopediaRepository,
+    private readonly overrides: MemoryOverridesService,
     @Inject(ENCYCLOPEDIA_CONFIG) private readonly config: EncyclopediaConfig,
   ) {}
 
@@ -61,10 +63,12 @@ export class EncyclopediaQueryService {
 
       const hits = await this.repository.queryByFilter(
         vector,
+        input.query,
         { must },
         Math.min(input.limit ?? DEFAULT_SEARCH_LIMIT, MAX_SEARCH_LIMIT),
         this.config.scoreThreshold,
       );
+      this.trackRetrieval(hits);
       return hits.map(mapHitToSearchHit);
     } catch (error) {
       this.logger.warn(
@@ -74,6 +78,20 @@ export class EncyclopediaQueryService {
       );
       return [];
     }
+  }
+
+  /**
+   * Heat tracking (fire-and-forget): stamp the search's hits with
+   * `heat_amount +1` / `heat_timestamp = now`. Never awaited, never breaks
+   * recall — a failed heat write logs a warning and nothing else.
+   */
+  private trackRetrieval(hits: readonly EncyclopediaChunkHit[]): void {
+    if (!this.overrides.getHeatTrackingEnabled() || hits.length === 0) return;
+    void this.repository.incrementHeat(hits).catch((error) => {
+      this.logger.warn(
+        `Heat write failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
   }
 
   /**

@@ -405,6 +405,7 @@ export const ModelName = {
   MemoryLink: 'MemoryLink',
   MemoryFriction: 'MemoryFriction',
   MemoryCluster: 'MemoryCluster',
+  MemoryMainNode: 'MemoryMainNode',
   MemoryTaxonomyNode: 'MemoryTaxonomyNode',
   MemoryTaxonomyAlias: 'MemoryTaxonomyAlias'
 } as const
@@ -422,7 +423,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "deadLetterJob" | "harnessProviderOverride" | "memoryCognitionProfile" | "memoryInsertLedger" | "memoryEncyclopediaInsertLedger" | "memoryLink" | "memoryFriction" | "memoryCluster" | "memoryTaxonomyNode" | "memoryTaxonomyAlias"
+    modelProps: "deadLetterJob" | "harnessProviderOverride" | "memoryCognitionProfile" | "memoryInsertLedger" | "memoryEncyclopediaInsertLedger" | "memoryLink" | "memoryFriction" | "memoryCluster" | "memoryMainNode" | "memoryTaxonomyNode" | "memoryTaxonomyAlias"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1018,6 +1019,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MemoryMainNode: {
+      payload: Prisma.$MemoryMainNodePayload<ExtArgs>
+      fields: Prisma.MemoryMainNodeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MemoryMainNodeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MemoryMainNodeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        findFirst: {
+          args: Prisma.MemoryMainNodeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MemoryMainNodeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        findMany: {
+          args: Prisma.MemoryMainNodeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>[]
+        }
+        create: {
+          args: Prisma.MemoryMainNodeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        createMany: {
+          args: Prisma.MemoryMainNodeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MemoryMainNodeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>[]
+        }
+        delete: {
+          args: Prisma.MemoryMainNodeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        update: {
+          args: Prisma.MemoryMainNodeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        deleteMany: {
+          args: Prisma.MemoryMainNodeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MemoryMainNodeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MemoryMainNodeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>[]
+        }
+        upsert: {
+          args: Prisma.MemoryMainNodeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MemoryMainNodePayload>
+        }
+        aggregate: {
+          args: Prisma.MemoryMainNodeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMemoryMainNode>
+        }
+        groupBy: {
+          args: Prisma.MemoryMainNodeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemoryMainNodeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MemoryMainNodeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MemoryMainNodeCountAggregateOutputType> | number
+        }
+      }
+    }
     MemoryTaxonomyNode: {
       payload: Prisma.$MemoryTaxonomyNodePayload<ExtArgs>
       fields: Prisma.MemoryTaxonomyNodeFieldRefs
@@ -1329,6 +1404,24 @@ export const MemoryClusterScalarFieldEnum = {
 } as const
 
 export type MemoryClusterScalarFieldEnum = (typeof MemoryClusterScalarFieldEnum)[keyof typeof MemoryClusterScalarFieldEnum]
+
+
+export const MemoryMainNodeScalarFieldEnum = {
+  id: 'id',
+  lane: 'lane',
+  collection: 'collection',
+  scopeKey: 'scopeKey',
+  groupKey: 'groupKey',
+  fingerprint: 'fingerprint',
+  title: 'title',
+  summary: 'summary',
+  memberCount: 'memberCount',
+  memberIds: 'memberIds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MemoryMainNodeScalarFieldEnum = (typeof MemoryMainNodeScalarFieldEnum)[keyof typeof MemoryMainNodeScalarFieldEnum]
 
 
 export const MemoryTaxonomyNodeScalarFieldEnum = {
@@ -1663,6 +1756,7 @@ export type GlobalOmitConfig = {
   memoryLink?: Prisma.MemoryLinkOmit
   memoryFriction?: Prisma.MemoryFrictionOmit
   memoryCluster?: Prisma.MemoryClusterOmit
+  memoryMainNode?: Prisma.MemoryMainNodeOmit
   memoryTaxonomyNode?: Prisma.MemoryTaxonomyNodeOmit
   memoryTaxonomyAlias?: Prisma.MemoryTaxonomyAliasOmit
 }

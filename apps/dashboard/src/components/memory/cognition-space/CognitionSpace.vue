@@ -41,6 +41,8 @@ const {
   toggleStrictMode,
   showSuggested,
   toggleSuggested,
+  showHeat,
+  toggleHeat,
 } = useConstellationControls();
 
 const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
@@ -65,6 +67,7 @@ const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
     :unavailable-text="$t('common.memoryCognitionUnavailable')"
     :show-labels="showLabels"
     :show-suggested="showSuggested"
+    :show-heat="showHeat"
     :rotation-enabled="rotationEnabled"
     :reset-signal="resetSignal"
     :is-all-expanded="isAllExpanded"
@@ -81,6 +84,7 @@ const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
         :is-all-expanded="isAllExpanded"
         :strict-mode="strictMode"
         :show-suggested="showSuggested"
+        :show-heat="showHeat"
         :wipe-title="$t('common.memoryCognitionWipe')"
         :wipe-armed="wipeArmed"
         :is-wipe-disabled="isLoading || isEmpty"
@@ -90,6 +94,7 @@ const { visibleNodes, visibleLinks, visibleFrictions } = useConstellationView(
         @toggle-all-topics="toggleAllTopics"
         @toggle-strict-mode="toggleStrictMode"
         @toggle-suggested="toggleSuggested"
+        @toggle-heat="toggleHeat"
         @reset-view="resetView"
         @wipe="handleWipeClick"
       />

@@ -17,6 +17,7 @@ export function mapClusterEntry(
   [key, topicKeys]: [string, string[]],
   index: number,
   memberIdsByCluster: Map<string, string[]>,
+  categoryLabel?: string,
 ): ConstellationCluster {
   return {
     key,
@@ -25,5 +26,6 @@ export function mapClusterEntry(
     memberTopicKeys: topicKeys,
     memberCommunityKeys: [],
     memberIds: memberIdsByCluster.get(key) ?? [],
+    categoryLabel,
   };
 }

@@ -39,6 +39,20 @@ describe('buildTopicFog', () => {
     expect(fog[0]?.center).toEqual({ x: 20, y: 0, z: 0 });
   });
 
+  it('centers an expanded topic fog on the blob centroid under the main-node regime', () => {
+    const fog = buildTopicFog(
+      [topic],
+      new Map([
+        ['a', { x: 0, y: 0, z: 0 }],
+        ['b', { x: 40, y: 0, z: 0 }],
+      ]),
+      new Set(),
+      true,
+    );
+
+    expect(fog[0]?.center).toEqual({ x: 20, y: 0, z: 0 });
+  });
+
   it('skips topics whose center has no relaxed position', () => {
     expect(buildTopicFog([topic], new Map(), new Set())).toEqual([]);
   });

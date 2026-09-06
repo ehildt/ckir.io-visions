@@ -14,9 +14,14 @@ import type {
 import type { EncyclopediaChunkHit } from '../../qdrant/models/encyclopedia-chunk.model.js';
 import { EmbeddingService } from '../../qdrant/services/embedding.service.js';
 import { EncyclopediaRepository } from '../../qdrant/services/encyclopedia.repository.js';
+import { MemoryOverridesService } from '../../qdrant/services/memory-overrides.service.js';
 import { ENCYCLOPEDIA_CONFIG } from '../constants/encyclopedia.constants.js';
-import { chunkTextBySentences } from '../helpers/chunk-text.helper.js';
+import {
+  chunkTextBySections,
+  chunkTextBySentences,
+} from '../helpers/chunk-text.helper.js';
 import { fillChunkBudget } from '../helpers/fill-chunk-budget.helper.js';
+import { fuseByRank } from '../helpers/fuse-by-rank.helper.js';
 import {
   type AdjacentChunk,
   mergeAdjacentChunks,
@@ -50,6 +55,7 @@ export class EncyclopediaSelectService {
     private readonly embedding: EmbeddingService,
     private readonly repository: EncyclopediaRepository,
     private readonly store: EncyclopediaStoreService,
+    private readonly overrides: MemoryOverridesService,
     @Inject(ENCYCLOPEDIA_CONFIG) private readonly config: EncyclopediaConfig,
   ) {}
 
@@ -92,31 +98,33 @@ export class EncyclopediaSelectService {
 
     // 3. Lane A: current documents (persisted via one vector query, ephemeral
     //    via in-memory chunk + embed + cosine).
-    const laneA = await this.collectLaneA(queryVector, persist);
+    const laneA = await this.collectLaneA(queryVector, input.query, persist);
 
-    // 4. Sort desc, dedupe identical text (first = highest score), threshold.
-    const sorted = [...laneA.chunks].sort((a, b) => b.score - a.score);
-    const deduped = dedupeByContent(sorted);
-    const aboveThreshold = deduped.filter(
+    // 4. Threshold the cosine-scored ephemeral chunks (persisted chunks were
+    //    thresholded server-side by the dense leg), then rank-fuse both
+    //    lists — their score scales are incomparable, only rank order merges.
+    const aboveThreshold = laneA.ephemeralChunks.filter(
       (chunk) => chunk.score >= this.config.scoreThreshold,
     );
-    const droppedByThreshold = deduped.length - aboveThreshold.length;
+    const droppedByThreshold =
+      laneA.ephemeralChunks.length - aboveThreshold.length;
+    const fused = fuseByRank([laneA.persistedChunks, aboveThreshold]);
 
-    // 5. Greedy budget fill over the current-turn passages.
+    // 5. Greedy budget fill over the fused passages.
     const budget = input.budgetChars ?? this.config.budgetChars;
-    const { selected } = fillChunkBudget(aboveThreshold, budget);
+    const { selected } = fillChunkBudget(fused, budget);
 
     // 6. Lane B: global probe of previously persisted sources.
     const pastChunks =
       this.config.persistEnabled && this.config.probeLimit > 0
-        ? await this.probePast(queryVector, currentUrls, deduped)
+        ? await this.probePast(queryVector, input.query, currentUrls, fused)
         : undefined;
 
     this.logger.log(
       {
         queryChars: input.query.length,
         docCount: input.documents.length,
-        consideredChunks: deduped.length,
+        consideredChunks: fused.length,
         selectedChunks: selected.length,
         selectedChars: selected.reduce(
           (sum, chunk) => sum + chunk.content.length,
@@ -131,7 +139,7 @@ export class EncyclopediaSelectService {
 
     return {
       chunks: selected,
-      consideredChunks: deduped.length,
+      consideredChunks: fused.length,
       selectedChunks: selected.length,
       droppedByThreshold,
       inputChunksDropped: laneA.inputChunksDropped,
@@ -144,16 +152,20 @@ export class EncyclopediaSelectService {
   /** Lane A: current documents, scored against the query. */
   private async collectLaneA(
     queryVector: number[],
+    queryText: string,
     persist: PersistOutcome,
   ): Promise<{
-    chunks: EncyclopediaSelectedChunk[];
+    persistedChunks: EncyclopediaSelectedChunk[];
+    ephemeralChunks: EncyclopediaSelectedChunk[];
     inputChunksDropped: number;
   }> {
-    const chunks: EncyclopediaSelectedChunk[] = [];
+    const persistedChunks: EncyclopediaSelectedChunk[] = [];
+    const ephemeralChunks: EncyclopediaSelectedChunk[] = [];
 
     if (persist.indexedUrls.length > 0) {
       const hits = await this.repository.queryByFilter(
         queryVector,
+        queryText,
         {
           must: [
             { key: 'url', match: { any: persist.indexedUrls } },
@@ -164,7 +176,7 @@ export class EncyclopediaSelectService {
         this.config.maxChunks,
         this.config.scoreThreshold,
       );
-      chunks.push(...hits.map(mapHitToChunk));
+      persistedChunks.push(...hits.map(mapHitToChunk));
     }
 
     let inputChunksDropped = 0;
@@ -177,7 +189,7 @@ export class EncyclopediaSelectService {
           'document',
         );
         const scores = cosineScores(queryVector, vectors);
-        chunks.push(
+        ephemeralChunks.push(
           ...ephemeral.chunks.map((chunk, index) =>
             mapChunkWithScore(chunk, index, scores),
           ),
@@ -185,7 +197,7 @@ export class EncyclopediaSelectService {
       }
     }
 
-    return { chunks, inputChunksDropped };
+    return { persistedChunks, ephemeralChunks, inputChunksDropped };
   }
 
   /** Chunk + dedupe + round-robin cap the no-url/oversize documents. */
@@ -196,11 +208,18 @@ export class EncyclopediaSelectService {
     const chunks: EncyclopediaSelectedChunk[] = [];
     const seen = new Set<string>();
     for (const doc of docs) {
-      for (const content of chunkTextBySentences(
-        doc.content,
-        this.config.chunkChars,
-        this.config.chunkOverlapSentences,
-      )) {
+      for (const content of this.config.chunkByHeadings
+        ? chunkTextBySections(
+            doc.content,
+            this.config.chunkChars,
+            this.config.chunkOverlapSentences,
+            this.config.maxHeadingDepth,
+          )
+        : chunkTextBySentences(
+            doc.content,
+            this.config.chunkChars,
+            this.config.chunkOverlapSentences,
+          )) {
         if (seen.has(content)) continue;
         seen.add(content);
         chunks.push({ url: doc.url, title: doc.title, content, score: 0 });
@@ -223,6 +242,7 @@ export class EncyclopediaSelectService {
    */
   private async probePast(
     queryVector: number[],
+    queryText: string,
     currentUrls: string[],
     laneA: EncyclopediaSelectedChunk[],
   ): Promise<EncyclopediaSelectedChunk[] | undefined> {
@@ -232,6 +252,7 @@ export class EncyclopediaSelectService {
         : {};
     const hits = await this.repository.queryByFilter(
       queryVector,
+      queryText,
       filter,
       this.config.probeLimit * PROBE_OVERFETCH_MULTIPLIER,
       this.config.scoreThreshold,
@@ -243,6 +264,16 @@ export class EncyclopediaSelectService {
     if (fresh.length === 0) return undefined;
 
     const top = fresh.slice(0, this.config.probeLimit);
+
+    // Heat tracking (fire-and-forget): the probe's surfaced chunks count as
+    // retrievals — Lane A (the turn's own documents) does not.
+    if (this.overrides.getHeatTrackingEnabled()) {
+      void this.repository.incrementHeat(top).catch((error) => {
+        this.logger.warn(
+          `Heat write failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    }
 
     // Snippets surface as-is; content chunks expand into contiguous passages.
     const snippets: EncyclopediaSelectedChunk[] = [];
@@ -290,18 +321,6 @@ export class EncyclopediaSelectService {
 
     return [...passages, ...snippets];
   }
-}
-
-/** Keep the first occurrence of each chunk text (input is score-sorted desc). */
-function dedupeByContent(
-  chunks: EncyclopediaSelectedChunk[],
-): EncyclopediaSelectedChunk[] {
-  const seen = new Set<string>();
-  return chunks.filter((chunk) => {
-    if (seen.has(chunk.content)) return false;
-    seen.add(chunk.content);
-    return true;
-  });
 }
 
 /**

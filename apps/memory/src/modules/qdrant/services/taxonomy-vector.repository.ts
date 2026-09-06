@@ -9,7 +9,7 @@ import type {
 import { QdrantClientService } from './qdrant-client.service.js';
 
 /** One taxonomy label point to write (id = the Postgres node id). */
-export interface TaxonomyLabelPoint {
+interface TaxonomyLabelPoint {
   id: string;
   vector: number[];
   lane: MemoryTaxonomyLane;
@@ -20,7 +20,7 @@ export interface TaxonomyLabelPoint {
 }
 
 /** One semantic label hit (probe candidate). */
-export interface TaxonomyLabelHit {
+interface TaxonomyLabelHit {
   id: string;
   score: number;
   normalizedName: string;

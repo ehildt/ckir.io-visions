@@ -7,11 +7,12 @@ import type {
 const FRICTION_ALPHA = 0.8;
 
 /**
- * Resolve open frictions to visible-node indices. A friction edge only draws
- * when BOTH endpoints are visible — a collapsed topic hides its leaves, so
- * a friction between two hidden leaves renders nothing until the topic is
- * expanded (the endpoints resolve to the synthetic category dot, not the
- * leaves).
+ * Resolve open frictions to visible-node indices. Frictions never draw as
+ * edges — they feed the hover highlight (buildFrictionPeerMap): hovering a
+ * contested dot pulses a black halo on the dots it conflicts with. A pair
+ * only enters the map when BOTH endpoints are visible — a collapsed topic
+ * hides its leaves, so a friction between two hidden leaves yields nothing
+ * until the topic is expanded.
  */
 export function buildFrictionLinks(
   frictions: readonly ConstellationFriction[],

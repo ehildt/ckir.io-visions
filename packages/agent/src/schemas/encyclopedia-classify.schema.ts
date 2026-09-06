@@ -11,14 +11,18 @@ export const EncyclopediaClassifySchema = z.object({
   /**
    * One broad lowercase PLURAL family label for the document (e.g. `games`,
    * `work`, `health`) — the constellation's CLUSTER tier. Never a specific
-   * entity, product, company, or title.
+   * entity, product, company, or title. Fiction/entertainment content takes
+   * the medium family (e.g. `shows`) — never an in-universe domain (`family`,
+   * `education`, `business` describe reality, not an invented life).
    */
   category: z.string(),
   /**
    * One lowercase PLURAL sub-family label narrowing the category (e.g.
-   * `survival-games` under `games`) — the constellation's COMMUNITY tier, one
-   * level below the cluster. Optional: omit when no sub-family applies. Never
-   * a specific entity, product, company, or title.
+   * `survival-games` under `games`, `tv-shows` under `shows`) — the
+   * constellation's COMMUNITY tier, one level below the cluster. Optional:
+   * omit when no sub-family applies. Never a specific entity, product,
+   * company, or title — a show/work title like `breaking-bad` is a topic or
+   * tag, never a community.
    */
   community: z.string().optional(),
   /**

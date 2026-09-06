@@ -10,6 +10,7 @@ const api = {
   fetchMemoryLinks: vi.fn(),
   fetchMemoryFrictions: vi.fn(),
   fetchMemoryClusters: vi.fn(),
+  fetchMemoryMainNodes: vi.fn(),
   wipeMemoryFacts: vi.fn(),
 };
 
@@ -19,6 +20,8 @@ vi.mock('@/api/memory.api', () => ({
   fetchMemoryFrictions: (...args: unknown[]) =>
     api.fetchMemoryFrictions(...args),
   fetchMemoryClusters: (...args: unknown[]) => api.fetchMemoryClusters(...args),
+  fetchMemoryMainNodes: (...args: unknown[]) =>
+    api.fetchMemoryMainNodes(...args),
   wipeMemoryFacts: (...args: unknown[]) => api.wipeMemoryFacts(...args),
 }));
 
@@ -27,6 +30,7 @@ describe('usePartitionSpace', () => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
     api.fetchMemoryClusters.mockResolvedValue([]);
+    api.fetchMemoryMainNodes.mockResolvedValue([]);
   });
 
   it('maps fetched facts to nodes and links', async () => {

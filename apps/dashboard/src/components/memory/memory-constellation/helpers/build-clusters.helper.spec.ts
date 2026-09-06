@@ -80,4 +80,25 @@ describe('buildClusters', () => {
     expect(clusters).toHaveLength(2);
     expect(clusters[0]?.color).not.toBe(clusters[1]?.color);
   });
+
+  it('derives the printable category label from the members plurality category', () => {
+    const nodes: ConstellationNode[] = [
+      { ...makeNode('a-a', 'a', 'c1d2e3f4'), category: 'games' },
+      { ...makeNode('a-b', 'a', 'c1d2e3f4'), category: 'games' },
+      { ...makeNode('b-a', 'b', 'c1d2e3f4'), category: 'pets' },
+    ];
+    const clusters = buildClusters(nodes, topics(['a', 'b']));
+
+    // The key stays the hash — the label is the human category.
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].key).toBe('c1d2e3f4');
+    expect(clusters[0].categoryLabel).toBe('games');
+  });
+
+  it('leaves the category label undefined when no member carries a category', () => {
+    const nodes = [makeNode('a-a', 'a', 'c1d2e3f4')];
+    const clusters = buildClusters(nodes, topics(['a']));
+
+    expect(clusters[0].categoryLabel).toBeUndefined();
+  });
 });

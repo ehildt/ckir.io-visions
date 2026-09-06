@@ -21,6 +21,7 @@ import {
   FileDown,
   Filter,
   Fingerprint,
+  Flame,
   Gauge,
   GitBranch,
   Globe,
@@ -80,6 +81,7 @@ const {
   convictionMaxPerCluster,
   clusterMinMembers,
   raptorEnabled,
+  heatTrackingEnabled,
   raptorMaxDepth,
   researchEnabled,
   researchSearchEnabled,
@@ -112,6 +114,7 @@ const {
   saveConvictionMaxPerCluster,
   saveClusterMinMembers,
   saveRaptorEnabled,
+  saveHeatTrackingEnabled,
   saveRaptorMaxDepth,
   saveResearchEnabled,
   saveResearchSearchEnabled,
@@ -501,6 +504,13 @@ const RESEARCH_PROVIDER_OPTIONS = ['serper', 'bright-data'];
           :description="$t('common.memoryRaptorEnabledDesc')"
           :checked="raptorEnabled"
           @toggle="saveRaptorEnabled(!raptorEnabled)"
+        />
+        <FieldCard
+          :icon="Flame"
+          :label="$t('common.memoryHeatTrackingEnabled')"
+          :description="$t('common.memoryHeatTrackingEnabledDesc')"
+          :checked="heatTrackingEnabled"
+          @toggle="saveHeatTrackingEnabled(!heatTrackingEnabled)"
         />
         <FieldCard
           :icon="Layers"

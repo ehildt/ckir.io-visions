@@ -8,6 +8,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Filter,
+  Flame,
   RefreshCw,
   Rotate3d,
   Shrink,
@@ -76,6 +77,14 @@ const emit = defineEmits<ConstellationToolbarEmits>();
     @click="emit('toggleSuggested')"
   >
     <Zap />
+  </IconButton>
+  <IconButton
+    :title="$t('common.memoryToggleHeat')"
+    :active="showHeat"
+    size="sm"
+    @click="emit('toggleHeat')"
+  >
+    <Flame />
   </IconButton>
   <IconButton
     :title="$t('common.memoryResetView')"

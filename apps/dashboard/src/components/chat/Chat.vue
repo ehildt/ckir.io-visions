@@ -39,6 +39,9 @@ import ChatToolbar from './toolbar/ChatToolbar.vue';
 
 const { socketProvider } = useAppViewContext();
 
+// KeepAlive caches the chat tree across tab switches (App.vue include list).
+defineOptions({ name: 'Chat' });
+
 const { isEventConnected, isRoomConnected } =
   useSocketSubscription(socketProvider);
 

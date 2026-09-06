@@ -19,10 +19,12 @@ interface MergedPassage {
 
 /**
  * Merge neighbor-expanded chunks into contiguous passages per document:
- * group by url, sort by chunk index, split on gaps, and strip the sentence
- * overlap between adjacent chunks (chunk i+1 starts with the last
- * `overlapSentences` sentences of chunk i). Each passage's score is the best
- * score of its chunks — the ordering key for the probe result.
+ * group by url, sort by chunk index, split on gaps, and strip the verbatim
+ * sentence overlap between adjacent chunks (chunk i+1 begins with the last
+ * `overlapSentences` sentences of chunk i — inside one document section).
+ * Section-first chunks carry no overlap, so their heads are kept whole.
+ * Each passage's score is the best score of its chunks — the ordering key
+ * for the probe result.
  */
 export function mergeAdjacentChunks(
   chunks: AdjacentChunk[],
@@ -44,7 +46,11 @@ export function mergeAdjacentChunks(
         .map((chunk, index) =>
           index === 0
             ? chunk.content
-            : stripOverlap(chunk.content, overlapSentences),
+            : stripOverlap(
+                chunk.content,
+                run[index - 1].content,
+                overlapSentences,
+              ),
         )
         .join(' ');
       passages.push({
@@ -74,10 +80,28 @@ function splitRuns(sorted: AdjacentChunk[]): AdjacentChunk[][] {
   return runs;
 }
 
-/** Drop the leading overlap sentences (they duplicate the previous chunk's tail). */
-function stripOverlap(content: string, overlapSentences: number): string {
+/**
+ * Drop the leading sentences of `content` that verbatim duplicate the
+ * previous chunk's tail (the packer copies the overlap sentences verbatim
+ * across chunk boundaries). A section-first chunk duplicates nothing —
+ * nothing is stripped. Never empties the chunk.
+ */
+function stripOverlap(
+  content: string,
+  previous: string,
+  overlapSentences: number,
+): string {
   if (overlapSentences <= 0) return content;
   const sentences = new TextToLines(content).build();
-  if (sentences.length <= overlapSentences) return content;
-  return sentences.slice(overlapSentences).join(' ');
+  const previousSentences = new TextToLines(previous).build();
+  const tail = previousSentences.slice(-overlapSentences);
+  let strip = 0;
+  while (
+    strip < tail.length &&
+    strip < sentences.length - 1 &&
+    sentences[strip] === tail[strip]
+  ) {
+    strip++;
+  }
+  return sentences.slice(strip).join(' ');
 }

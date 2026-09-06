@@ -298,6 +298,8 @@ export class MemoryRelinkJobService {
         category,
         text: point.text,
         limit: DEDUPE_CANDIDATES,
+        // Relink dedupe sweep — not user engagement.
+        trackHeat: false,
       })
     ).filter((candidate) => candidate.id !== point.id);
     if (candidates.length === 0) return 0;

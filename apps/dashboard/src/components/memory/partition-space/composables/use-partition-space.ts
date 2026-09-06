@@ -6,6 +6,7 @@ import {
   fetchMemoryFacts,
   fetchMemoryFrictions,
   fetchMemoryLinks,
+  fetchMemoryMainNodes,
   wipeMemoryFacts,
 } from '@/api/memory.api';
 import type { MemoryTaxonomyNodeRecord } from '@/api/memory-taxonomy.api';
@@ -20,6 +21,7 @@ import type {
   ConstellationClusterSummary,
   ConstellationFriction,
   ConstellationLink,
+  ConstellationMainNodeSummary,
   ConstellationNode,
 } from '../../memory-constellation/MemoryConstellation.types';
 import { buildPartitionNodes } from '../helpers/build-partition-nodes.helper';
@@ -45,6 +47,7 @@ export function usePartitionSpace() {
   const links = ref<ConstellationLink[]>([]);
   const frictions = ref<ConstellationFriction[]>([]);
   const clusters = ref<ConstellationClusterSummary[]>([]);
+  const mainNodes = ref<ConstellationMainNodeSummary[]>([]);
   const taxonomy = ref<MemoryTaxonomyNodeRecord[]>([]);
   /** Raw fact records (kept for the label-meta graph-cluster aliasing). */
   const facts = ref<
@@ -69,6 +72,7 @@ export function usePartitionSpace() {
       linksResult,
       frictionsResult,
       clustersResult,
+      mainNodesResult,
       taxonomyResult,
     ] = await Promise.allSettled([
       fetchMemoryFacts(
@@ -78,6 +82,7 @@ export function usePartitionSpace() {
       fetchMemoryLinks({ memoryPartition: partitionKey.value }),
       fetchMemoryFrictions({ memoryPartition: partitionKey.value }),
       fetchMemoryClusters(partitionKey.value),
+      fetchMemoryMainNodes(partitionKey.value),
       fetchMemoryTaxonomy('partition', partitionKey.value),
     ]);
     if (factsResult.status === 'fulfilled') {
@@ -103,6 +108,17 @@ export function usePartitionSpace() {
             title: cluster.title,
             summary: cluster.summary,
             memberIds: cluster.memberIds,
+          }))
+        : [];
+    // A main-node fetch failure degrades to rollup-only hub dots — the
+    // constellation itself is unaffected.
+    mainNodes.value =
+      mainNodesResult.status === 'fulfilled'
+        ? mainNodesResult.value.map((node) => ({
+            key: node.groupKey,
+            title: node.title,
+            summary: node.summary,
+            memberIds: node.memberIds,
           }))
         : [];
     // A taxonomy fetch failure degrades to undecorated dots — the
@@ -140,6 +156,7 @@ export function usePartitionSpace() {
     links,
     frictions,
     clusters,
+    mainNodes,
     labelMeta,
     isLoading,
     isUnavailable,

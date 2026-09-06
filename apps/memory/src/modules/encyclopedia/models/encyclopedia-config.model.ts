@@ -13,6 +13,18 @@ export interface EncyclopediaConfig {
   chunkChars: number;
   /** Sentence overlap between adjacent chunks (ENCYCLOPEDIA_CHUNK_OVERLAP_SENTENCES, default 1). */
   chunkOverlapSentences: number;
+  /**
+   * Split Markdown documents at heading boundaries before sentence-packing
+   * (ENCYCLOPEDIA_CHUNK_BY_HEADINGS, default true) — chunks never span
+   * sections, and the sentence overlap resets at each heading.
+   */
+  chunkByHeadings: boolean;
+  /**
+   * Deepest heading level that opens a new section
+   * (ENCYCLOPEDIA_MAX_HEADING_DEPTH, default 3, clamp 1–6) — deeper
+   * headings stay body text.
+   */
+  maxHeadingDepth: number;
   /** Cosine floor; below it a chunk is noise (ENCYCLOPEDIA_SCORE_THRESHOLD, default 0.25). */
   scoreThreshold: number;
   /** Safety bound on the embed batch (ENCYCLOPEDIA_MAX_CHUNKS, default 400). */
@@ -55,4 +67,32 @@ export interface EncyclopediaConfig {
    * (ENCYCLOPEDIA_CLASSIFY_THRESHOLD, default 20).
    */
   classifyThreshold: number;
+  /**
+   * Hybrid retrieval for the knowledge search (ENCYCLOPEDIA_HYBRID_ENABLED,
+   * default true): dense semantic + sparse lexical (client TF, Qdrant IDF)
+   * prefetches fused by RRF in one query. No effect on legacy
+   * (unnamed-vector) collections: they keep plain dense search regardless.
+   */
+  hybridEnabled: boolean;
+  /**
+   * Score fusion method for hybrid retrieval (ENCYCLOPEDIA_HYBRID_FUSION,
+   * default 'rrf'). 'dbsf' normalizes score distributions instead of ranks.
+   */
+  hybridFusion: 'rrf' | 'dbsf';
+  /**
+   * RRF weight of the dense leg (ENCYCLOPEDIA_HYBRID_DENSE_WEIGHT,
+   * default 1) — weighted RRF only (Qdrant v1.17+); equal weights omit the
+   * parameter.
+   */
+  hybridDenseWeight: number;
+  /**
+   * RRF weight of the sparse leg (ENCYCLOPEDIA_HYBRID_SPARSE_WEIGHT,
+   * default 1).
+   */
+  hybridSparseWeight: number;
+  /**
+   * Sparse prefetch depth (ENCYCLOPEDIA_HYBRID_SPARSE_LIMIT, default 50) —
+   * the lexical candidate pool feeding the fusion.
+   */
+  hybridSparseLimit: number;
 }

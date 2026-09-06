@@ -13,6 +13,8 @@ export interface ConstellationToolbarProps {
   strictMode: boolean;
   /** Weak (suggested/topical) edges on — the electricity arcs. */
   showSuggested: boolean;
+  /** Halo warmth from retrieval heat on — the access-heat overlay. */
+  showHeat: boolean;
   /** Wipe action tooltip — omit for read-only spaces (no wipe button). */
   wipeTitle?: string;
   /** Wipe confirm armed (two-click wipe). */
@@ -28,6 +30,7 @@ export interface ConstellationToolbarEmits {
   (e: 'toggleAllTopics'): void;
   (e: 'toggleStrictMode'): void;
   (e: 'toggleSuggested'): void;
+  (e: 'toggleHeat'): void;
   (e: 'resetView'): void;
   (e: 'wipe'): void;
 }

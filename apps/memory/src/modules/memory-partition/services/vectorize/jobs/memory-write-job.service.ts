@@ -47,6 +47,8 @@ export class MemoryWriteJobService {
       sessionId: data.sessionId,
       text: data.userRequest,
       limit: 5,
+      // Dedupe probe before writing — not user engagement.
+      trackHeat: false,
     });
     const priorMemory = prior.map((p) => `- ${p.text}`).join('\n');
 

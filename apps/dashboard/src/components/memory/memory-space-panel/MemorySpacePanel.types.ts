@@ -5,6 +5,7 @@ import type {
   ConstellationFriction,
   ConstellationLabelMeta,
   ConstellationLink,
+  ConstellationMainNodeSummary,
   ConstellationNode,
 } from '../memory-constellation/MemoryConstellation.types';
 
@@ -23,6 +24,13 @@ export interface MemorySpacePanelProps {
   frictions?: ConstellationFriction[];
   /** Server-detected cluster summaries (the memory graph's topic reports). */
   clusters?: ConstellationClusterSummary[];
+  /**
+   * Server-written title-tier main nodes (one per topic blob). Present —
+   * even empty — switches the constellation to the main-node regime (a
+   * synthetic leaf-summary dot per multi-member blob); absent keeps the
+   * legacy first-member main dot (cognition space).
+   */
+  mainNodes?: ConstellationMainNodeSummary[];
   /** Taxonomy metadata per macro-node dot id (icons + operational rows). */
   labelMeta?: ReadonlyMap<string, ConstellationLabelMeta>;
   /** Read round-trip in flight — blocks the refresh action. */
@@ -35,6 +43,8 @@ export interface MemorySpacePanelProps {
   showLabels?: boolean;
   /** Show the weak (suggested/topical) edges — the electricity arcs (default true). */
   showSuggested?: boolean;
+  /** Halo warmth from retrieval heat — the access-heat overlay (default true). */
+  showHeat?: boolean;
   /** Idle auto-rotation on/off (default true). */
   rotationEnabled?: boolean;
   /** Increment to reset the view (collapse topics + refit camera). */

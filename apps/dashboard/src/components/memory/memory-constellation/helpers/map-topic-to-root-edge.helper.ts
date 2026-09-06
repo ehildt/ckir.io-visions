@@ -6,9 +6,10 @@ import { ROOT_NODE_ID } from './root-node-id.constant';
 export function mapTopicToRootEdge(
   topic: ConstellationTopic,
   collapsedKeys: ReadonlySet<string>,
+  mainNodesEnabled = false,
 ) {
   return {
-    source: hubIdFor(topic, collapsedKeys),
+    source: hubIdFor(topic, collapsedKeys, mainNodesEnabled),
     target: ROOT_NODE_ID,
     kind: 'root' as const,
   };

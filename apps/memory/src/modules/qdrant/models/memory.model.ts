@@ -103,6 +103,14 @@ export interface MemoryPoint {
   evidenceIds?: string[];
   /** Detected cluster id this point belongs to (written by the cluster job). */
   clusterId?: string;
+  /**
+   * Retrieval count — incremented every time a semantic search surfaces
+   * this point as a hit (heat tracking; written by the read path, never
+   * filtered or ranked on).
+   */
+  heatAmount?: number;
+  /** ISO timestamp of the last retrieval that surfaced this point. */
+  heatTimestamp?: string;
 }
 
 /** Optional tightening filters on a memory read (search + list share them). */
@@ -178,6 +186,13 @@ export interface UpsertBatchInput {
 
 export interface SearchMemoryInput extends MemoryScopeFilters {
   vector: number[];
+  /**
+   * The raw query text — enables the sparse (lexical) leg of hybrid
+   * retrieval when the collection has sparse vectors. Raw vectors (no text)
+   * search dense-only. Never prompt-prefixed: the lexical leg hashes the
+   * user-visible text, not the embedding-task prefix.
+   */
+  text?: string;
   limit?: number;
   /**
    * Blend recency into the ranking (formula query with exp_decay on

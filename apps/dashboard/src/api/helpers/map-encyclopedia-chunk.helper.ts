@@ -23,6 +23,8 @@ export function mapEncyclopediaChunk(item: {
   isFriction?: boolean;
   superseded?: boolean;
   supersededBy?: string;
+  heatAmount?: number;
+  heatTimestamp?: string;
 }) {
   return {
     id: item.id ?? '',
@@ -48,5 +50,7 @@ export function mapEncyclopediaChunk(item: {
     isFriction: item.isFriction,
     superseded: item.superseded,
     supersededBy: item.supersededBy,
+    heatAmount: item.heatAmount,
+    heatTimestamp: item.heatTimestamp,
   };
 }

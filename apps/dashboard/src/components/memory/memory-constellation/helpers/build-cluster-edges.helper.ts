@@ -20,6 +20,7 @@ export function buildClusterEdges(
   clusters: readonly ConstellationCluster[],
   collapsedKeys: ReadonlySet<string>,
   communities: readonly ConstellationCommunity[] = [],
+  mainNodesEnabled = false,
 ): ConstellationEdge[] {
   const topicByKey = new Map(topics.map((topic) => [topic.key, topic]));
   const communityByTopic = new Map(
@@ -41,7 +42,7 @@ export function buildClusterEdges(
       const topic = topicByKey.get(topicKey);
       if (!topic) continue;
       edges.push({
-        source: hubIdFor(topic, collapsedKeys),
+        source: hubIdFor(topic, collapsedKeys, mainNodesEnabled),
         target: clusterNodeId(cluster.key),
         kind: 'cluster',
       });
