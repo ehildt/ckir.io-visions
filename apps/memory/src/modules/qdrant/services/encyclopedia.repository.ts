@@ -910,8 +910,10 @@ export class EncyclopediaRepository {
   ): Promise<Array<{ id: string; content: string; fetchedAt: string }>> {
     if (!(await this.clientService.hasEncyclopediaCollection())) return [];
     const client = this.clientService.getClient();
+    const layout = await this.clientService.vectorLayout(this.collection);
     const result = await client.query(this.collection, {
       query: vector,
+      ...(layout.named ? { using: DENSE_VECTOR } : {}),
       limit,
       score_threshold: scoreThreshold,
       with_payload: true,

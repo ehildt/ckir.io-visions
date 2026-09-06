@@ -19,6 +19,7 @@ export * from './helpers/zod/format-zod-shape.helper.js';
 export * from './intent.schema.js';
 export * from './memory/cluster-summary.schema.js';
 export * from './memory/consolidation-verdict.schema.js';
+export * from './memory/encyclopedia-ingest-triage.schema.js';
 export * from './memory/enrichment.schema.js';
 export * from './memory/extraction.schema.js';
 export * from './memory/memory-cognition.model.js';

@@ -35,6 +35,13 @@ export interface EncyclopediaConfig {
    */
   persistEnabled: boolean;
   /**
+   * Ingest triage switch (ENCYCLOPEDIA_INGEST_TRIAGE_ENABLED, default true):
+   * before anything is persisted, the model strips off-topic search/fetch
+   * content so the encyclopedia only stores what is on-topic for the turn.
+   * false = persist everything gathered (the pre-triage behavior).
+   */
+  ingestTriageEnabled: boolean;
+  /**
    * Max global-probe passages returned per select (ENCYCLOPEDIA_PROBE_LIMIT,
    * default 3) — the past-research lane, mirroring the episode probe's
    * count cap. Each passage is at most `chunkChars` (plus neighbor expansion).

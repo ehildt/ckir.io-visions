@@ -33,6 +33,10 @@ import { mapChunkWithScore } from './helpers/map-chunk-with-score.helper.js';
 import { mapHitToChunk } from './helpers/map-hit-to-chunk.helper.js';
 import { mapPassageToChunk } from './helpers/map-passage-to-chunk.helper.js';
 import {
+  EncyclopediaIngestTriageService,
+  type IngestTriageOutcome,
+} from './encyclopedia-ingest-triage.service.js';
+import {
   EncyclopediaStoreService,
   type PersistOutcome,
 } from './encyclopedia-store.service.js';
@@ -55,6 +59,7 @@ export class EncyclopediaSelectService {
     private readonly embedding: EmbeddingService,
     private readonly repository: EncyclopediaRepository,
     private readonly store: EncyclopediaStoreService,
+    private readonly ingestTriage: EncyclopediaIngestTriageService,
     private readonly overrides: MemoryOverridesService,
     @Inject(ENCYCLOPEDIA_CONFIG) private readonly config: EncyclopediaConfig,
   ) {}
@@ -66,10 +71,15 @@ export class EncyclopediaSelectService {
       throw new ServiceUnavailableException('encyclopedia selection disabled');
     }
 
+    // 0. Ingest triage: strip off-topic content before anything is persisted.
+    //    Dropped documents stay ephemeral for the live turn (the answer never
+    //    loses sources) but are never written to the encyclopedia.
+    const triage = await this.triageForIngest(input);
+
     // 1. Persist documents (read-through cache). Disabled → pure ephemeral.
     const persist = this.config.persistEnabled
       ? await this.store.persistDocuments(
-          input.documents,
+          triage.documents,
           input.partitionScope ?? 'global',
           input.model,
         )
@@ -81,12 +91,19 @@ export class EncyclopediaSelectService {
           ephemeralDocs: input.documents,
           rejectedDocs: [],
         };
+    if (triage.droppedDocuments.length > 0) {
+      persist.ephemeralDocs = [
+        ...persist.ephemeralDocs,
+        ...triage.droppedDocuments,
+      ];
+    }
 
-    // 1b. Tier-1 index: every search result becomes a snippet point (cheap,
-    //     no page fetch) so the encyclopedia remembers every source touched.
+    // 1b. Tier-1 index: every kept search result becomes a snippet point
+    //     (cheap, no page fetch) so the encyclopedia remembers the sources
+    //     that proved on-topic.
     const snippetUrls = this.config.persistEnabled
       ? await this.store.indexSearchResults(
-          input.searchResults ?? [],
+          triage.searchResults,
           input.partitionScope ?? 'global',
           input.model,
         )
@@ -147,6 +164,29 @@ export class EncyclopediaSelectService {
       reusedDocs: persist.reusedDocs,
       storedDocs: persist.storedDocs,
     };
+  }
+
+  /**
+   * Ingest triage: when persistence and the triage are both enabled, ask the
+   * model to strip off-topic candidates before anything is written. Disabled
+   * → everything passes through unchanged (the caller's explicit opt-out).
+   */
+  private async triageForIngest(
+    input: EncyclopediaSelectInput,
+  ): Promise<IngestTriageOutcome> {
+    if (!this.config.persistEnabled || !this.config.ingestTriageEnabled) {
+      return {
+        documents: input.documents,
+        searchResults: input.searchResults ?? [],
+        droppedDocuments: [],
+      };
+    }
+    return this.ingestTriage.filter({
+      topic: input.query,
+      documents: input.documents,
+      searchResults: input.searchResults ?? [],
+      model: input.model,
+    });
   }
 
   /** Lane A: current documents, scored against the query. */

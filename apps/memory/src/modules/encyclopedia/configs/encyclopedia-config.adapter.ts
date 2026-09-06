@@ -25,6 +25,10 @@ export function EncyclopediaConfigAdapter(
     ) as number,
     maxChunks: getNumberEnv(env.ENCYCLOPEDIA_MAX_CHUNKS, 400) as number,
     persistEnabled: getBooleanEnv(env.ENCYCLOPEDIA_PERSIST_ENABLED, true)!,
+    ingestTriageEnabled: getBooleanEnv(
+      env.ENCYCLOPEDIA_INGEST_TRIAGE_ENABLED,
+      true,
+    )!,
     probeLimit: getNumberEnv(env.ENCYCLOPEDIA_PROBE_LIMIT, 3) as number,
     neighborExpansion: getNumberEnv(
       env.ENCYCLOPEDIA_NEIGHBOR_EXPANSION,
