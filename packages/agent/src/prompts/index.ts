@@ -36,6 +36,7 @@ export * from './instructions/text.instruction.js';
 export * from './instructions/videolist.instruction.js';
 export * from './memory/conviction-synthesis-prompt.constant.js';
 export * from './memory/encyclopedia-classify-prompt.constant.js';
+export * from './memory/encyclopedia-ingest-triage.prompt.js';
 export * from './memory/format-provenance-line.helper.js';
 export * from './memory/friction-prompt.constant.js';
 export * from './memory/memory-cluster-prompt.constant.js';

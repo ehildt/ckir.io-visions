@@ -7,7 +7,7 @@ import { NESTJS_PINO_OPTIONS } from './bullmq-logger.constants.ts';
 
 type JobTypeExtended = JobType | JobState | 'canceled' | 'error' | 'stalled' | 'unknown';
 
-const MSG_TEMPLATE = '📦 %s(%s) 🆔 ID-%s 🔄 Attempts-%d %s %s';
+const MSG_TEMPLATE = '📦 %s(%s) 🆔 ID-%s%s 🔄 Attempts-%d %s %s';
 
 /**
  * Logger service for BullMQ jobs using pino.
@@ -28,15 +28,24 @@ export class BullMQLoggerService implements LoggerService {
   }
 
   /** Logs job info with state emoji icon. */
-  async log<T = any>(job: Job<T>, type?: JobTypeExtended) {
+  async log<T = any>(job: Job<T>, type?: JobTypeExtended, identifier?: string) {
     const state = await this.getJobState(job, type);
     this.logger!.info(
-      format(MSG_TEMPLATE, job.queueName, job.name, job.id, job.attemptsMade, this.getStateIcon(type ?? state), state),
+      format(
+        MSG_TEMPLATE,
+        job.queueName,
+        job.name,
+        job.id,
+        this.formatIdentifier(identifier),
+        job.attemptsMade,
+        this.getStateIcon(type ?? state),
+        state,
+      ),
     );
   }
 
   /** Logs job error with failedReason and stacktrace when state is failed. */
-  async error<T = any>(job: Job<T>, type?: JobTypeExtended) {
+  async error<T = any>(job: Job<T>, type?: JobTypeExtended, identifier?: string) {
     const state = await this.getJobState(job, type);
     this.logger!.error({
       msg: format(
@@ -44,17 +53,19 @@ export class BullMQLoggerService implements LoggerService {
         job.queueName,
         job.name,
         job.id,
+        this.formatIdentifier(identifier),
         job.attemptsMade,
         this.getStateIcon(type ?? state),
         state,
       ),
+      identifier,
       failedReason: state === 'failed' ? job.failedReason : undefined,
       stacktrace: state === 'failed' ? job.stacktrace : undefined,
     });
   }
 
   /** Logs job warning with queue metadata. */
-  async warn<T = any>(job: Job<T>, type?: JobTypeExtended) {
+  async warn<T = any>(job: Job<T>, type?: JobTypeExtended, identifier?: string) {
     const state = await this.getJobState(job, type);
     this.logger!.warn({
       msg: format(
@@ -62,6 +73,7 @@ export class BullMQLoggerService implements LoggerService {
         job.queueName,
         job.name,
         job.id,
+        this.formatIdentifier(identifier),
         job.attemptsMade,
         this.getStateIcon(type ?? state),
         state,
@@ -76,7 +88,7 @@ export class BullMQLoggerService implements LoggerService {
   }
 
   /** Logs job debug info with opts and data. */
-  async debug<T = any>(job: Job<T>, type?: JobTypeExtended) {
+  async debug<T = any>(job: Job<T>, type?: JobTypeExtended, identifier?: string) {
     const state = await this.getJobState(job, type);
     this.logger!.debug({
       msg: format(
@@ -84,6 +96,7 @@ export class BullMQLoggerService implements LoggerService {
         job.queueName,
         job.name,
         job.id,
+        this.formatIdentifier(identifier),
         job.attemptsMade,
         this.getStateIcon(type ?? state),
         state,
@@ -96,11 +109,20 @@ export class BullMQLoggerService implements LoggerService {
   }
 
   /** Logs verbose trace with full job object. */
-  async verbose<T = any>(job: Job<T>, type?: JobTypeExtended) {
+  async verbose<T = any>(job: Job<T>, type?: JobTypeExtended, identifier?: string) {
     const state = await this.getJobState(job, type);
     this.logger!.trace(
       job,
-      format(MSG_TEMPLATE, job.queueName, job.name, job.id, job.attemptsMade, this.getStateIcon(type ?? state), state),
+      format(
+        MSG_TEMPLATE,
+        job.queueName,
+        job.name,
+        job.id,
+        this.formatIdentifier(identifier),
+        job.attemptsMade,
+        this.getStateIcon(type ?? state),
+        state,
+      ),
     );
   }
 
@@ -113,6 +135,11 @@ export class BullMQLoggerService implements LoggerService {
     if (job.finishedOn) return 'completed';
     if (job.processedOn) return 'active';
     return 'error';
+  }
+
+  /** Renders the optional identifier segment (` 📌 <id>`) or an empty string. */
+  private formatIdentifier(identifier?: string): string {
+    return identifier ? ` 📌 ${identifier}` : '';
   }
 
   /** Maps job states to emoji icons for log visualization. */

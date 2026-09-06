@@ -310,8 +310,8 @@ importers:
         specifier: ^1.19.0
         version: 1.19.0(typescript@5.9.3)
       '@triplef/agent':
-        specifier: ^0.1.27
-        version: 0.1.27(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)
+        specifier: ^0.1.28
+        version: 0.1.28(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)
       '@triplef/ai-sdk':
         specifier: ^0.1.5
         version: 0.1.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)
@@ -319,8 +319,8 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4(@nestjs/bullmq@11.0.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0)))(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(ioredis@6.0.0(supports-color@8.1.1))(joi@18.2.8)
       '@triplef/bullmq-logger':
-        specifier: ^1.2.4
-        version: 1.2.4(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)
+        specifier: ^1.2.5
+        version: 1.2.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)
       '@triplef/config-factory':
         specifier: ^1.1.4
         version: 1.1.4(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@triplef/helpers@1.5.6(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(joi@18.2.8)(pino@10.3.1))(joi@18.2.8)
@@ -491,8 +491,8 @@ importers:
         specifier: '7'
         version: 7.10.0(prisma@7.10.0(@types/react@19.2.18)(magicast@0.5.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
       '@triplef/agent':
-        specifier: ^0.1.27
-        version: 0.1.27(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)
+        specifier: ^0.1.28
+        version: 0.1.28(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)
       '@triplef/ai-sdk':
         specifier: ^0.1.5
         version: 0.1.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)
@@ -500,8 +500,8 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4(@nestjs/bullmq@11.0.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0)))(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(ioredis@6.0.0(supports-color@8.1.1))(joi@18.2.8)
       '@triplef/bullmq-logger':
-        specifier: ^1.2.4
-        version: 1.2.4(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)
+        specifier: ^1.2.5
+        version: 1.2.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)
       '@triplef/config-factory':
         specifier: ^1.1.4
         version: 1.1.4(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@triplef/helpers@1.5.6(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(joi@18.2.8)(pino@10.3.1))(joi@18.2.8)
@@ -4115,8 +4115,8 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@triplef/agent@0.1.27':
-    resolution: {integrity: sha512-l+AlgFH+C8spplroyMe+iHl4qFPcdW25Zuch6LqFiqxY+/fp+I2t1vFQ08Reekg8TwSK1t1ebKkhqTiLQ0mtSQ==}
+  '@triplef/agent@0.1.28':
+    resolution: {integrity: sha512-1rRpoCXcVKrPmc0LMUrdRZatEDnLZ/eLKwqFAdH4v7i+Iw3V+kh6ef1sOpUm4LPCZsWjA46YbQt4oxFmGtD1Vw==}
     peerDependencies:
       ai: ^7.0.93
       zod: ^4.5.4
@@ -4131,12 +4131,12 @@ packages:
       ai: ^7.0.92
       joi: ^18.2.8
 
-  '@triplef/bullmq-logger@1.2.4':
-    resolution: {integrity: sha512-xzVBDQldY6YxdPKSf7o4iGpxU8jxfjD7V4hV/UVELJ5Y9JEw1TT3keL+0+ZilCQ7b5+12wym2wdakRveTAtLAQ==}
+  '@triplef/bullmq-logger@1.2.5':
+    resolution: {integrity: sha512-CWnZ1fUi9LnSmlwoKe2Wt/zKroTS/WPdpl0bdBYrqET95r9Y/5rpZSuQg0jG9N3//JeY9es4YJyJ44qSI9++lA==}
     peerDependencies:
-      '@nestjs/common': ^11.1.17
-      bullmq: ^5.71.0
-      joi: ^18.0.2
+      '@nestjs/common': ^11.2.3
+      bullmq: ^5.81.4
+      joi: ^18.2.8
       pino: ^10.3.1
       pino-pretty: ^13.1.3
 
@@ -11080,7 +11080,7 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@triplef/agent@0.1.27(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)':
+  '@triplef/agent@0.1.28(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(ai@7.0.93(zod@4.5.4))(joi@18.2.8)(pino@10.3.1)(zod@4.5.4)':
     dependencies:
       '@mozilla/readability': 0.6.0
       '@triplef/helpers': 1.5.6(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/swagger@11.4.7(@fastify/static@10.1.3)(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@11.2.3)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2))(joi@18.2.8)(pino@10.3.1)
@@ -11102,7 +11102,7 @@ snapshots:
       ai: 7.0.93(zod@4.5.4)
       joi: 18.2.8
 
-  '@triplef/bullmq-logger@1.2.4(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)':
+  '@triplef/bullmq-logger@1.2.5(@nestjs/common@11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(bullmq@6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0))(joi@18.2.8)(pino-pretty@13.1.3)(pino@10.3.1)':
     dependencies:
       '@nestjs/common': 11.2.3(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       bullmq: 6.3.4(ioredis@6.0.0(supports-color@8.1.1))(pg@8.23.0)

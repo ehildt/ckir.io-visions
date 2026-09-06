@@ -286,9 +286,9 @@ export class SanitizeActionService {
       extractArticles(finalToolResults),
       sources,
     );
-    // Tier-1 index: every search result (post source-policy) becomes a cheap
-    // snippet point in the encyclopedia — the encyclopedia remembers every source
-    // touched, not just the pages that were fetched.
+    // Tier-1 candidates: search results (post source-policy) offered to the
+    // encyclopedia — the memory app's ingest triage persists only the
+    // on-topic ones as cheap snippet points.
     const searchResults = articles
       .map(mapArticleToSearchResult)
       .filter((result) => result.url && result.snippet.trim().length > 0);
@@ -463,8 +463,8 @@ export class SanitizeActionService {
       '';
     if (!query) return { references: normalized };
 
-    // Index search results even when no fetched documents exist — the encyclopedia
-    // remembers every source touched, not just the pages that were fetched.
+    // Offer search results even when no fetched documents exist — the ingest
+    // triage persists the on-topic ones as snippet points.
     if (documents.length === 0 && searchResults.length === 0) {
       return { references: normalized };
     }
