@@ -2,7 +2,7 @@
   "name": "@triplef/ollama-api",
   "description": "A lean NestJS module for the Ollama API — merged local + Ollama Cloud model catalog, capability and origin resolution, and provider-client factory.",
   "version": "0.1.0",
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@11.26.0",
   "license": "MIT",
   "type": "module",
   "exports": {

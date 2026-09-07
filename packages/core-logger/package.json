@@ -2,7 +2,7 @@
   "name": "@triplef/core-logger",
   "description": "A lightweight NestJS LoggerService backed by pino — structured logging with inline context rendering and error-stack preservation.",
   "version": "1.0.0",
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@11.26.0",
   "license": "MIT",
   "type": "module",
   "exports": {
