@@ -1,5 +1,19 @@
 # @triplef/config-factory
 
+## 1.2.0
+
+### Minor Changes
+
+- 36adb77: Expose a root export (`@triplef/config-factory`) that re-exports the full public API (`ConfigFactoryModule`, `CacheReturnValue`, `ValidateReturnValue`, and their types). Consumers can now import `ConfigFactoryModule` from the package root instead of the repetitive `@triplef/config-factory/config-factory` subpath. Existing subpath exports remain available for backward compatibility.
+
+### Patch Changes
+
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [be7ff5f]
+- Updated dependencies [36adb77]
+- Updated dependencies [4a03c4d]
+  - @triplef/helpers@1.6.0
+
 ## 1.1.4
 
 ### Patch Changes

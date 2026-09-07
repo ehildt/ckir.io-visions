@@ -1,5 +1,70 @@
 # @triplef/server
 
+## 1.5.0
+
+### Minor Changes
+
+- ec0d0a5: - **Document conversion service**: converts fetched documents (PDF/HTML/text) into markdown for the encyclopedia pipeline.
+  - **Memory client**: wired for encyclopedia persistence, relink, and cognition endpoints; removed the qdrant/memory-overrides proxy controllers.
+  - **Minio service**: object-store support for document/media storage.
+- bbe382d: Migrated both apps from their local `pino-logger` modules to the published `@triplef/core-logger` package:
+
+  - Replaced `PinoLoggerService`/`PinoLoggerModule` with `CoreLoggerService`/`CoreLoggerModule.registerAsync`, wired through a new app-level `CoreLoggerConfigService` (`@CacheReturnValue(CoreLoggerSchema)`).
+  - Logging now renders the NestJS context inline as `[Context] message` (via the pino-pretty `messageFormat` + `ignore: 'pid,hostname,context'`), preserves error stacks, and supports `setLogLevels` and per-call `onLog` hooks.
+  - Bumped `@triplef/config-factory` to `^1.1.4` (root export).
+  - Removed the unused `json5` dependency.
+
+- 3fc42b2: PDF documents now have a full encyclopedia lifecycle, mirroring how the client treats pdf attachments (a pdf turn is a vision turn by construction):
+
+  - **Upload time** (`POST /harness/documents`): the original is stored, pages are rendered via `@triplef/pdf` (single pdfjs) and re-encoded to JPEG, the text layer is extracted **per page** into the conversion manifest (`pageTexts`), and the extracted text is delegated to the memory encyclopedia immediately — the node exists before the first question.
+  - **Ask time**: the pages the user kept in the gallery (selection is authoritative) get a one-time vision description per page (`PdfPageDescribeService`, sequential, thinking off), persisted into the manifest (`pageDescriptions`, `null` = pending, `''` = described-empty, nothing persisted on model failure). The encyclopedia node is then re-indexed — enriched in place with text layers + descriptions under the original's MinIO url (idempotent content-hash reuse on the memory side).
+  - A pdf no longer injects its text into the prompt; the model sees the selected page images and probes the encyclopedia for the text via the existing encyclopedia tools. Non-pdf documents (docx/pptx/txt) are unchanged.
+  - Legacy manifests heal their missing `pageTexts` on next reference; scanned/exotic PDFs end up as description-only encyclopedia nodes.
+  - Dropped the `pdf-to-img` and direct `pdfjs-dist` dependencies in favor of `@triplef/pdf`.
+
+### Patch Changes
+
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [6d288c6]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [4a03c4d]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [6d288c6]
+- Updated dependencies [13383bb]
+- Updated dependencies [ec0d0a5]
+- Updated dependencies [be7ff5f]
+- Updated dependencies [36adb77]
+- Updated dependencies [4a03c4d]
+- Updated dependencies [3fc42b2]
+- Updated dependencies [36adb77]
+- Updated dependencies [ec0d0a5]
+  - @triplef/agent@1.0.0
+  - @triplef/ai-sdk@1.0.0
+  - @triplef/bullmq-logger@1.3.0
+  - @triplef/core-logger@1.0.0
+  - @triplef/helpers@1.6.0
+  - @triplef/pdf@1.0.0
+  - @triplef/config-factory@1.2.0
+  - @triplef/socketio@1.0.0
+
 ## 1.4.0
 
 ### Minor Changes

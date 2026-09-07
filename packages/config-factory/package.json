@@ -1,7 +1,7 @@
 {
   "name": "@triplef/config-factory",
   "description": "A dynamic NestJS module factory designed to register, manage, and expose custom configuration providers throughout the application.",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "packageManager": "pnpm@11.25.0",
   "license": "MIT",
   "type": "module",
@@ -85,7 +85,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
-    "@triplef/helpers": "^1.5.6",
+    "@triplef/helpers": "^1.6.0",
     "@nestjs/common": "^11.2.3",
     "joi": "^18.2.8"
   }
