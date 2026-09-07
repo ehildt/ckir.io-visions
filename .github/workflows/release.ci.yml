@@ -21,6 +21,12 @@ on:
 
 env:
   HUSKY: 0
+  # Identity for automated CI commits. NOTE: for commits to show "Verified",
+  # the GitHub account holding CI_SSH_SIGNING_KEY's public key (as a Signing
+  # key) must own this email address. github-actions[bot] can't hold keys, so
+  # point these at a dedicated CI/machine account (see team runbook).
+  CI_BOT_NAME: "github-actions[bot]"
+  CI_BOT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
 
 permissions:
   contents: write
@@ -57,6 +63,17 @@ jobs:
         with:
           node-version: 24
 
+      - name: Setup SSH commit signing
+        env:
+          CI_SSH_SIGNING_KEY: ${{ secrets.CI_SSH_SIGNING_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$CI_SSH_SIGNING_KEY" > ~/.ssh/ci_signing_key
+          chmod 600 ~/.ssh/ci_signing_key
+          git config --global gpg.format ssh
+          git config --global user.signingkey ~/.ssh/ci_signing_key
+          git config --global commit.gpgsign true
+
       - run: pnpm -r install --frozen-lockfile
 
       - name: Changeset
@@ -66,6 +83,9 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "VERSION BUMP"
+          commit_author: "${{ env.CI_BOT_NAME }} <${{ env.CI_BOT_EMAIL }}>"
+          commit_user_name: ${{ env.CI_BOT_NAME }}
+          commit_user_email: ${{ env.CI_BOT_EMAIL }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -79,6 +99,9 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "BADGE BUMP"
+          commit_author: "${{ env.CI_BOT_NAME }} <${{ env.CI_BOT_EMAIL }}>"
+          commit_user_name: ${{ env.CI_BOT_NAME }}
+          commit_user_email: ${{ env.CI_BOT_EMAIL }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -97,6 +120,17 @@ jobs:
           repository: ${{ github.repository }}.wiki
           path: wiki
 
+      - name: Setup SSH commit signing
+        env:
+          CI_SSH_SIGNING_KEY: ${{ secrets.CI_SSH_SIGNING_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$CI_SSH_SIGNING_KEY" > ~/.ssh/ci_signing_key
+          chmod 600 ~/.ssh/ci_signing_key
+          git config --global gpg.format ssh
+          git config --global user.signingkey ~/.ssh/ci_signing_key
+          git config --global commit.gpgsign true
+
       - name: Sync wiki
         run: |
           test -d .wiki || { echo "::error::.wiki folder missing"; exit 1; }
@@ -105,8 +139,8 @@ jobs:
       - name: Commit wiki
         working-directory: wiki
         run: |
-          git config user.name "wiki[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "${{ env.CI_BOT_NAME }}"
+          git config user.email "${{ env.CI_BOT_EMAIL }}"
           git add -A
           git diff --cached --quiet || git commit -m "WIKI UPDATE"
           git push

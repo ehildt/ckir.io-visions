@@ -2,7 +2,7 @@
   "name": "@triplef/agent",
   "description": "tripleF (3F) agent domain — structured-output schemas, prompt builders, and model tools shared across the apps.",
   "version": "1.0.0",
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@11.26.0",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "@triplef/helpers": "^1.6.0",
+    "@triplef/helpers": "^1.5.6",
     "linkedom": "^0.18.13",
     "turndown": "^7.2.4"
   },
@@ -72,7 +72,7 @@
     "@changesets/cli": "^3.0.2",
     "@eslint/js": "^10.0.1",
     "@types/eslint": "^9.6.1",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.5.0",
     "@types/turndown": "^5.0.6",
     "@vitest/coverage-v8": "4.1.11",
     "depcheck": "^1.4.7",
@@ -92,7 +92,7 @@
     "ts-unused-exports": "^11.0.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.69.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.11"
   }
 }

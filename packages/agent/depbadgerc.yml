@@ -1,4 +1,4 @@
-integrity: f8001f0edd0cb556e7544e94225f75f24c3b054b3865e839b119f3f657247de3
+integrity: ead124977b40ce6c9007f7579d983208545b4f40546f28aa4f701c386deec80e
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -38,24 +38,33 @@ peerDependencies:
     <<: *DEPENDENCIES_STYLE
     style: flat
   items:
-    - name: '@nestjs/bullmq'
+    - name: ai
       namedLogo: npm
-      link: https://github.com/nestjs/nest
-    - name: '@nestjs/common'
+      link: https://github.com/vercel/ai
+    - name: zod
       namedLogo: npm
-      link: https://github.com/nestjs/nest
-    - name: 'bullmq'
-      namedLogo: npm
-      link: https://github.com/taskforcesh/bullmq
-    - name: 'ioredis'
-      namedLogo: npm
-      link: https://github.com/luin/ioredis
-    - name: joi
-      namedLogo: npm
-      link: https://github.com/sideway/joi
+      link: https://github.com/colinhacks/zod
 
 dependencies:
-  items: []
+  layout:
+    <<: *DEPENDENCIES_LAYOUT
+    header: Dependencies
+    showHeader: true
+    position: center
+  badgeStyle: *DEPENDENCIES_STYLE
+  items:
+    - name: '@mozilla/readability'
+      namedLogo: npm
+      link: https://github.com/mozilla/readability
+    - name: '@triplef/helpers'
+      namedLogo: npm
+      link: https://github.com/ehildt/tripleF
+    - name: linkedom
+      namedLogo: npm
+      link: https://github.com/WebReflection/linkedom
+    - name: turndown
+      namedLogo: npm
+      link: https://github.com/mixmark-io/turndown
 
 devDependencies:
   layout:
@@ -71,12 +80,12 @@ devDependencies:
       namedLogo: npm
     - name: '@eslint/js'
       namedLogo: eslint
-    - name: '@nestjs/testing'
-      namedLogo: npm
     - name: '@types/eslint'
       namedLogo: eslint
     - name: '@types/node'
       namedLogo: node
+    - name: '@types/turndown'
+      namedLogo: npm
     - name: '@vitest/coverage-v8'
       namedLogo: vitest
     - name: depcheck
@@ -105,8 +114,6 @@ devDependencies:
       namedLogo: npm
     - name: prettier
       namedLogo: prettier
-    - name: reflect-metadata
-      namedLogo: npm
     - name: rimraf
       namedLogo: npm
     - name: ts-unused-exports

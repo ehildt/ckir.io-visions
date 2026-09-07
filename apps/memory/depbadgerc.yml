@@ -1,4 +1,4 @@
-integrity: 662563bfe130054f706f254fa71a4f6d41fa7d30993b53be27e66c17acc4263c
+integrity: 28f3b1da08f576096c573726f38b727722f89a543d1628ef4d39edfff85baa0e
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -40,22 +40,8 @@ dependencies:
     position: center
   badgeStyle: *DEPENDENCIES_STYLE
   items:
-    - name: '@ai-sdk/mcp'
-      link: https://github.com/vercel/ai
-    - name: '@triplef/helpers'
-      link: https://github.com/ehildt/tripleF
-    - name: '@triplef/bullmq'
-      link: https://github.com/ehildt/tripleF
-    - name: '@triplef/bullmq-logger'
-      link: https://github.com/ehildt/tripleF
-    - name: '@triplef/config-factory'
-      link: https://github.com/ehildt/tripleF
-    - name: '@ehildt/nestjs-socket.io'
-      link: https://github.com/ehildt/nestjs-socket.io
     - name: '@fastify/compress'
       link: https://github.com/fastify/fastify-compress
-    - name: '@fastify/multipart'
-      link: https://github.com/fastify/fastify-multipart
     - name: '@fastify/static'
       link: https://github.com/fastify/fastify-static
     - name: '@nestjs/axios'
@@ -78,6 +64,24 @@ dependencies:
       link: https://github.com/prisma/prisma
     - name: '@prisma/client'
       link: https://github.com/prisma/prisma
+    - name: '@qdrant/js-client-rest'
+      link: https://github.com/qdrant/qdrant-js
+    - name: '@triplef/agent'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/ai-sdk'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/bullmq'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/bullmq-logger'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/config-factory'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/core-logger'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/helpers'
+      link: https://github.com/ehildt/tripleF
+    - name: '@triplef/ollama-api'
+      link: https://github.com/ehildt/tripleF
     - name: ai
       link: https://github.com/vercel/ai
     - name: bullmq
@@ -86,24 +90,12 @@ dependencies:
       link: https://github.com/typestack/class-transformer
     - name: class-validator
       link: https://github.com/typestack/class-validator
-    - name: cld3-asm
-      link: https://github.com/kwonoj/cld3-asm
     - name: fastify
       link: https://github.com/fastify/fastify
     - name: ioredis
       link: https://github.com/luin/ioredis
     - name: joi
       link: https://github.com/sideway/joi
-    - name: json5
-      link: https://github.com/json5/json5
-    - name: minio
-      link: https://github.com/minio/minio-js
-    - name: npm
-      link: https://github.com/npm/cli
-    - name: ollama
-      link: https://github.com/ollama/ollama
-    - name: ollama-ai-provider-v2
-      link: https://github.com/nordwestt/ollama-ai-provider-v2
     - name: pino
       link: https://github.com/pinojs/pino
     - name: pino-pretty
@@ -112,8 +104,6 @@ dependencies:
       link: https://github.com/rbuckton/reflect-metadata
     - name: rxjs
       link: https://github.com/reactivex/rxjs
-    - name: sharp
-      link: https://github.com/lovell/sharp
     - name: zod
       link: https://github.com/colinhacks/zod
 
@@ -131,18 +121,12 @@ devDependencies:
       link: https://github.com/nestjs/nest
     - name: '@nestjs/schematics'
       link: https://github.com/nestjs/nest
-    - name: '@nestjs/testing'
-      link: https://github.com/nestjs/nest
     - name: '@swc/core'
       link: https://github.com/swc-project/swc
     - name: '@types/node'
       link: https://github.com/DefinitelyTyped/DefinitelyTyped
-    - name: '@types/supertest'
-      link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: '@vitest/coverage-v8'
       link: https://github.com/vitest-dev/vitest
-    - name: '@vue/eslint-config-typescript'
-      link: https://github.com/vuejs/eslint-config-typescript
     - name: depcheck
       link: https://github.com/depcheck/depcheck
     - name: dependency-cruiser
@@ -161,8 +145,6 @@ devDependencies:
       link: https://github.com/SonarSource/eslint-plugin-sonarjs
     - name: globals
       link: https://github.com/sindresorhus/globals
-    - name: husky
-      link: https://github.com/typicode/husky
     - name: jiti
       link: https://github.com/unjs/jiti
     - name: lint-staged
@@ -173,18 +155,8 @@ devDependencies:
       link: https://github.com/prisma/prisma
     - name: rimraf
       link: https://github.com/isaacs/rimraf
-    - name: source-map-support
-      link: https://github.com/evanw/source-map-support
-    - name: supertest
-      link: https://github.com/visionmedia/supertest
-    - name: ts-loader
-      link: https://github.com/TypeStrong/ts-loader
-    - name: ts-node
-      link: https://github.com/TypeStrong/ts-node
     - name: ts-unused-exports
       link: https://github.com/pinterest/ts-unused-exports
-    - name: tsconfig-paths
-      link: https://github.com/david-driscoll/tsconfig-paths
     - name: typescript
       link: https://github.com/Microsoft/TypeScript
     - name: typescript-eslint
