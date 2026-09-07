@@ -28,7 +28,11 @@ function makeService() {
   const embeddingService = { embed: vi.fn() };
   const links = { deleteByKind: vi.fn(), upsertEdges: vi.fn() };
   const memoryEnqueue = { enqueueClusterJob: vi.fn() };
-  const overrides = { getClusterAutoEnabled: vi.fn().mockReturnValue(false) };
+  const overrides = {
+    getClusterAutoEnabled: vi.fn().mockReturnValue(false),
+    getClusterModel: vi.fn(),
+    getClusterMinMembers: vi.fn(),
+  };
   const service = new MemoryRelinkJobService(
     adjudicator as never,
     aiSdkService as never,
@@ -55,6 +59,8 @@ function makeService() {
     memoryRepository,
     embeddingService,
     links,
+    memoryEnqueue,
+    overrides,
   };
 }
 
@@ -224,5 +230,125 @@ describe('MemoryRelinkJobService', () => {
     expect(memoryRepository.collapseCategory).not.toHaveBeenCalled();
     expect(links.deleteByKind).not.toHaveBeenCalled();
     expect(links.upsertEdges).not.toHaveBeenCalled();
+  });
+
+  it('writes inter-category edges when the pair shares a tag', async () => {
+    const { service, memoryRepository, links, memorySearch } = makeService();
+    memoryRepository.facetCategories.mockResolvedValue([
+      { value: 'pets', count: 1 },
+      { value: 'cars', count: 1 },
+    ]);
+    memoryRepository.scrollCategoryPoints.mockImplementation(
+      async (_partition: string, category: string) =>
+        category === 'pets'
+          ? [
+              {
+                id: 'p1',
+                vector: [1, 0, 0],
+                text: 'likes dogs',
+                role: 'user' as const,
+                tags: ['dogs'],
+                createdAt: '2026-01-01',
+              },
+            ]
+          : [],
+    );
+    memorySearch.searchByText.mockResolvedValue([]);
+    // Inter-category neighbor in a different category sharing the 'dogs' tag.
+    // The intra query (category='pets') returns nothing; the inter query
+    // (category=undefined) returns the cross-category neighbor.
+    memoryRepository.queryNeighbors.mockImplementation(
+      async (_partition: string, category?: string) =>
+        category === 'pets'
+          ? []
+          : [
+              {
+                id: 'p2',
+                score: 0.5,
+                category: 'cars',
+                tags: ['dogs'],
+              },
+            ],
+    );
+
+    await service.execute(jobData);
+
+    expect(links.upsertEdges).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'p1', target: 'p2' }),
+      ]),
+    );
+  });
+
+  it('drops inter-category pairs below the semantic bar without a shared tag', async () => {
+    const { service, memoryRepository, links, memorySearch } = makeService();
+    memoryRepository.facetCategories.mockResolvedValue([
+      { value: 'pets', count: 1 },
+      { value: 'cars', count: 1 },
+    ]);
+    memoryRepository.scrollCategoryPoints.mockImplementation(
+      async (_partition: string, category: string) =>
+        category === 'pets'
+          ? [
+              {
+                id: 'p1',
+                vector: [1, 0, 0],
+                text: 'likes dogs',
+                role: 'user' as const,
+                tags: ['dogs'],
+                createdAt: '2026-01-01',
+              },
+            ]
+          : [],
+    );
+    memorySearch.searchByText.mockResolvedValue([]);
+    memoryRepository.queryNeighbors.mockImplementation(
+      async (_partition: string, category?: string) =>
+        category === 'pets'
+          ? []
+          : [
+              {
+                id: 'p2',
+                score: 0.5,
+                category: 'cars',
+                tags: ['unrelated'],
+              },
+            ],
+    );
+
+    await service.execute(jobData);
+
+    expect(links.upsertEdges).not.toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'p1', target: 'p2' }),
+      ]),
+    );
+  });
+
+  it('auto-triggers the cluster job when enabled', async () => {
+    const { service, memoryRepository, memoryEnqueue, overrides } =
+      makeService();
+    memoryRepository.facetCategories.mockResolvedValue([]);
+    overrides.getClusterAutoEnabled.mockReturnValue(true);
+    overrides.getClusterModel.mockReturnValue('cluster-model');
+    overrides.getClusterMinMembers.mockReturnValue(3);
+
+    await service.execute(jobData);
+
+    expect(memoryEnqueue.enqueueClusterJob).toHaveBeenCalledWith({
+      lane: 'partition',
+      scopeKey: 'christopher',
+      model: 'cluster-model',
+      minMembers: 3,
+    });
+  });
+
+  it('does not auto-trigger the cluster job when disabled', async () => {
+    const { service, memoryRepository, memoryEnqueue } = makeService();
+    memoryRepository.facetCategories.mockResolvedValue([]);
+
+    await service.execute(jobData);
+
+    expect(memoryEnqueue.enqueueClusterJob).not.toHaveBeenCalled();
   });
 });

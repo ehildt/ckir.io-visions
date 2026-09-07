@@ -215,4 +215,95 @@ describe('SharpService', () => {
       );
     });
   });
+
+  describe('effectiveResize', () => {
+    it('merges live overrides over the env defaults', () => {
+      sharpOverrides.buildOptions.mockReturnValue({
+        resize: { maxWidth: 1024 },
+      });
+
+      const resize = service.effectiveResize();
+
+      expect(resize).toEqual({
+        maxWidth: 1024,
+        maxHeight: null,
+        withoutEnlargement: true,
+      });
+    });
+
+    it('falls back to the env defaults when overrides are disabled', () => {
+      sharpOverrides.buildOptions.mockReturnValue(undefined);
+
+      const resize = service.effectiveResize();
+
+      expect(resize).toEqual(defaults.resize);
+    });
+  });
+
+  describe('resizeImages', () => {
+    it('creates an original for every buffer', async () => {
+      const original: PreprocessedImage = {
+        buffer,
+        meta: { ...meta[0], variant: 'original' },
+        variant: 'original',
+        description: 'original',
+      };
+      variantProcessor.createOriginal.mockResolvedValue(original);
+
+      const result = await service.resizeImages([buffer], meta);
+
+      expect(result).toEqual([original]);
+      expect(variantProcessor.createOriginal).toHaveBeenCalledWith(
+        buffer,
+        meta[0],
+        defaults.resize,
+      );
+    });
+  });
+
+  describe('generateVariants', () => {
+    it('returns an empty array when no variants are requested', async () => {
+      const result = await service.generateVariants([buffer], meta, []);
+
+      expect(result).toEqual([]);
+      expect(pipelineFactory.createBasePipeline).not.toHaveBeenCalled();
+    });
+
+    it('processes each requested variant per image', async () => {
+      const basePipeline = {} as any;
+      const grayscale: PreprocessedImage = {
+        buffer,
+        meta: { ...meta[0], variant: 'grayscale' },
+        variant: 'grayscale',
+        description: 'grayscale',
+      };
+
+      pipelineFactory.createBasePipeline.mockReturnValue(basePipeline);
+      variantProcessor.process.mockResolvedValue(grayscale);
+
+      const result = await service.generateVariants([buffer], meta, [
+        'grayscale',
+      ]);
+
+      expect(result).toEqual([grayscale]);
+      expect(variantProcessor.process).toHaveBeenCalledWith(
+        basePipeline,
+        meta[0],
+        'grayscale',
+        expect.any(Function),
+      );
+    });
+
+    it('skips an image when its variant batch fails', async () => {
+      const basePipeline = {} as any;
+      pipelineFactory.createBasePipeline.mockReturnValue(basePipeline);
+      variantProcessor.process.mockRejectedValue(new Error('failed'));
+
+      const result = await service.generateVariants([buffer], meta, [
+        'grayscale',
+      ]);
+
+      expect(result).toEqual([]);
+    });
+  });
 });
