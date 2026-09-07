@@ -1,4 +1,4 @@
-integrity: f8001f0edd0cb556e7544e94225f75f24c3b054b3865e839b119f3f657247de3
+integrity: 6888913218952c42b2b773d5ec83715f2fbf68e427d5b8314c007e9847cc1a78
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -38,24 +38,24 @@ peerDependencies:
     <<: *DEPENDENCIES_STYLE
     style: flat
   items:
-    - name: '@nestjs/bullmq'
-      namedLogo: npm
-      link: https://github.com/nestjs/nest
     - name: '@nestjs/common'
       namedLogo: npm
       link: https://github.com/nestjs/nest
-    - name: 'bullmq'
-      namedLogo: npm
-      link: https://github.com/taskforcesh/bullmq
-    - name: 'ioredis'
-      namedLogo: npm
-      link: https://github.com/luin/ioredis
-    - name: joi
-      namedLogo: npm
-      link: https://github.com/sideway/joi
 
 dependencies:
-  items: []
+  layout:
+    <<: *DEPENDENCIES_LAYOUT
+    header: Dependencies
+    showHeader: true
+    position: center
+  badgeStyle: *DEPENDENCIES_STYLE
+  items:
+    - name: '@napi-rs/canvas'
+      namedLogo: npm
+      link: https://github.com/Brooooooklyn/canvas
+    - name: pdfjs-dist
+      namedLogo: npm
+      link: https://github.com/mozilla/pdf.js
 
 devDependencies:
   layout:
@@ -71,8 +71,6 @@ devDependencies:
       namedLogo: npm
     - name: '@eslint/js'
       namedLogo: eslint
-    - name: '@nestjs/testing'
-      namedLogo: npm
     - name: '@types/eslint'
       namedLogo: eslint
     - name: '@types/node'
@@ -105,8 +103,6 @@ devDependencies:
       namedLogo: npm
     - name: prettier
       namedLogo: prettier
-    - name: reflect-metadata
-      namedLogo: npm
     - name: rimraf
       namedLogo: npm
     - name: ts-unused-exports
