@@ -1,5 +1,13 @@
 # @triplef/dashboard
 
+## 0.6.0
+
+### Minor Changes
+
+- ec0d0a5: - **Memory constellation**: new 3D visualization with a ZERO root, category/sub-category hierarchy, community hubs, expand/collapse animations, semantic zoom, leaf orbit, and a collapsible metadata column; configurable node limit (default 5000).
+  - **Document preview**: modal preview for fetched documents (text + media).
+  - **Media handling**: add-to-files button, YouTube thumbnail/video-poster fallbacks, storage-image hash extraction.
+
 ## 0.5.0
 
 ### Minor Changes

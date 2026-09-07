@@ -1,5 +1,30 @@
 # @triplef/helpers
 
+## 1.6.0
+
+### Minor Changes
+
+- ec0d0a5: Add the `limit-text` subpath export: `limitText(text, maxChars?)` caps LLM-facing text without a silent cut — unchanged when it fits or when `maxChars` is undefined/<=0, otherwise a hard slice plus an explicit `[TRUNCATED — showing X of Y chars…]` marker so the model knows content is incomplete.
+- be7ff5f: - `retry-with-backoff`: added `AbortSignal` support, full jitter, `shouldRetry`, `onRetry`, and `backoffFactor` options. Defaults changed: `attempts` now defaults to 3 (was 1) and `jitter` defaults to `true`.
+  - `is-buffer-or-serialized`: fixed the `BufferLike` type — it no longer incorrectly includes `boolean` (now uses `ArrayBufferView`).
+  - Refactored `parse-llm-json`, `mask-api-key`, and `is-buffer-or-serialized` internals to one function per file (no public API change).
+- 36adb77: Add six shared helper modules extracted from the server and memory apps:
+
+  - `mask-api-key` — `maskApiKey`, `isMaskedApiKey`
+  - `retry-with-backoff` — `retryWithBackoff` (+ `RetryWithBackoffOptions`)
+  - `decrypt-secret` — `decryptSecret`
+  - `encrypt-secret` — `encryptSecret`
+  - `key-fingerprint` — `keyFingerprint`
+  - `parse-llm-json` — `parseLlmJson`
+
+  Adds `json5` as a runtime dependency.
+
+### Patch Changes
+
+- 4a03c4d: Fix `TextToLines` sentence splitting mangling URLs, hosts, and file paths: Western terminators (`.`, `?`, `!`, `...`) now only end a sentence when followed by whitespace or the end of the string, so `en.wikipedia.org/wiki/X`, `v3.5.1`, and `.env.local` are never split mid-token. CJK punctuation (`。`, `？`, `！`, `…`) keeps splitting unconditionally — CJK text does not mark boundaries with spaces.
+
+  This repairs the encyclopedia chunking pipeline (`chunkTextBySentences` rejoins sentences with spaces and previously corrupted every dotted URL on ingest, e.g. `https://en. wikipedia. org/wiki/X`) and the memory search query-variant builder, which shares the splitter.
+
 ## 1.5.2
 
 ### Patch Changes
