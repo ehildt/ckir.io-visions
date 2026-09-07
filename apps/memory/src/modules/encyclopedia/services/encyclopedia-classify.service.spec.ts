@@ -216,4 +216,111 @@ describe('EncyclopediaClassifyService', () => {
 
     expect(memoryEnqueue.enqueueReflectJob).not.toHaveBeenCalled();
   });
+
+  it('classifies tier-1 snippet urls discovered by missing labels', async () => {
+    const { service, aiSdkService, ledger, repository } = makeService();
+    ledger.listPendingClassification.mockResolvedValue([]);
+    repository.scrollUnclassifiedSnippetUrls.mockResolvedValue([
+      'https://example.com/snippet',
+    ]);
+    repository.scrollSnippetsByUrl.mockResolvedValue([
+      { content: 'A snippet about games.' },
+    ]);
+    aiSdkService.generateWithTools.mockResolvedValue({ text: classification });
+
+    await service.execute(jobData);
+
+    expect(repository.setClassificationByUrl).toHaveBeenCalledWith(
+      'https://example.com/snippet',
+      'games',
+      'stellar blade',
+      undefined,
+    );
+    // Snippet urls have no ledger rows.
+    expect(ledger.markClassified).not.toHaveBeenCalled();
+  });
+
+  it('leaves snippet urls unlabeled when the classification is unparseable', async () => {
+    const { service, aiSdkService, ledger, repository } = makeService();
+    ledger.listPendingClassification.mockResolvedValue([]);
+    repository.scrollUnclassifiedSnippetUrls.mockResolvedValue([
+      'https://example.com/snippet',
+    ]);
+    repository.scrollSnippetsByUrl.mockResolvedValue([
+      { content: 'A snippet about games.' },
+    ]);
+    aiSdkService.generateWithTools.mockResolvedValue({ text: 'not json' });
+
+    await service.execute(jobData);
+
+    expect(repository.setClassificationByUrl).not.toHaveBeenCalled();
+    expect(ledger.markClassified).not.toHaveBeenCalled();
+  });
+
+  it('applies nothing to snippet urls in dryRun mode', async () => {
+    const { service, aiSdkService, ledger, repository } = makeService();
+    ledger.listPendingClassification.mockResolvedValue([]);
+    repository.scrollUnclassifiedSnippetUrls.mockResolvedValue([
+      'https://example.com/snippet',
+    ]);
+    repository.scrollSnippetsByUrl.mockResolvedValue([
+      { content: 'A snippet about games.' },
+    ]);
+    aiSdkService.generateWithTools.mockResolvedValue({ text: classification });
+
+    await service.execute({ ...jobData, dryRun: true });
+
+    expect(repository.setClassificationByUrl).not.toHaveBeenCalled();
+    expect(ledger.markClassified).not.toHaveBeenCalled();
+  });
+
+  it('resolves a community label when the classification names one', async () => {
+    const { service, aiSdkService, ledger, repository } = makeService();
+    ledger.listPendingClassification.mockResolvedValue([pendingRow]);
+    repository.facetCategories.mockResolvedValue([]);
+    repository.scrollByUrl.mockResolvedValue([chunk]);
+    aiSdkService.generateWithTools.mockResolvedValue({
+      text: JSON.stringify({
+        category: 'games',
+        community: 'action',
+        topic: 'stellar blade',
+      }),
+    });
+
+    await service.execute(jobData);
+
+    expect(repository.setClassificationByUrl).toHaveBeenCalledWith(
+      'https://example.com/a',
+      'games',
+      'stellar blade',
+      'action',
+    );
+  });
+
+  it('auto-triggers the cluster job when enabled', async () => {
+    const {
+      service,
+      aiSdkService,
+      ledger,
+      repository,
+      memoryEnqueue,
+      overrides,
+    } = makeService();
+    ledger.listPendingClassification.mockResolvedValue([pendingRow]);
+    repository.facetCategories.mockResolvedValue([]);
+    repository.scrollByUrl.mockResolvedValue([chunk]);
+    aiSdkService.generateWithTools.mockResolvedValue({ text: classification });
+    overrides.getClusterAutoEnabled.mockReturnValue(true);
+    overrides.getClusterModel.mockReturnValue('cluster-model');
+    overrides.getClusterMinMembers.mockReturnValue(3);
+
+    await service.execute(jobData);
+
+    expect(memoryEnqueue.enqueueClusterJob).toHaveBeenCalledWith({
+      lane: 'encyclopedia',
+      scopeKey: 'global',
+      model: 'cluster-model',
+      minMembers: 3,
+    });
+  });
 });

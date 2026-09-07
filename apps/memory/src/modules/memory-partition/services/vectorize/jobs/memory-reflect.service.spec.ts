@@ -362,4 +362,118 @@ describe('MemoryReflectService', () => {
 
     expect(memoryEnqueue.enqueueConvictionJob).not.toHaveBeenCalled();
   });
+
+  it('auto-triggers conviction synthesis after a real partition run', async () => {
+    const { service, adjudicator, memoryRepository, memoryEnqueue, overrides } =
+      makeService();
+    memoryRepository.scrollUnreflected.mockResolvedValue([point]);
+    memoryRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue({ contradicts: false });
+    overrides.getConvictionAutoEnabled.mockReturnValue(true);
+    overrides.getConvictionModel.mockReturnValue('conviction-model');
+    overrides.getConvictionBatchLimit.mockReturnValue(20);
+    overrides.getConvictionMaxPerCluster.mockReturnValue(3);
+
+    await service.execute(partitionJob);
+
+    expect(memoryEnqueue.enqueueConvictionJob).toHaveBeenCalledWith({
+      memoryPartition: 'christopher',
+      model: 'conviction-model',
+      limit: 20,
+      maxConvictionsPerCluster: 3,
+    });
+  });
+
+  it('falls back to the reflection model for conviction synthesis', async () => {
+    const { service, adjudicator, memoryRepository, memoryEnqueue, overrides } =
+      makeService();
+    memoryRepository.scrollUnreflected.mockResolvedValue([point]);
+    memoryRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue({ contradicts: false });
+    overrides.getConvictionAutoEnabled.mockReturnValue(true);
+    overrides.getConvictionModel.mockReturnValue(undefined);
+
+    await service.execute(partitionJob);
+
+    expect(memoryEnqueue.enqueueConvictionJob).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'qwen3.8:27b' }),
+    );
+  });
+
+  it('skips auto-trigger when conviction synthesis is disabled', async () => {
+    const { service, adjudicator, memoryRepository, memoryEnqueue, overrides } =
+      makeService();
+    memoryRepository.scrollUnreflected.mockResolvedValue([point]);
+    memoryRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue({ contradicts: false });
+    overrides.getConvictionAutoEnabled.mockReturnValue(false);
+
+    await service.execute(partitionJob);
+
+    expect(memoryEnqueue.enqueueConvictionJob).not.toHaveBeenCalled();
+  });
+
+  it('skips auto-trigger on dry runs', async () => {
+    const { service, adjudicator, memoryRepository, memoryEnqueue, overrides } =
+      makeService();
+    memoryRepository.scrollUnreflected.mockResolvedValue([point]);
+    memoryRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue({ contradicts: false });
+    overrides.getConvictionAutoEnabled.mockReturnValue(true);
+
+    await service.execute({ ...partitionJob, dryRun: true });
+
+    expect(memoryEnqueue.enqueueConvictionJob).not.toHaveBeenCalled();
+  });
+
+  it('screens encyclopedia chunks and marks them reflected', async () => {
+    const { service, adjudicator, encyclopediaRepository } = makeService();
+    encyclopediaRepository.scrollUnreflected.mockResolvedValue([
+      {
+        id: 'c1',
+        vector: [1, 0, 0],
+        content: 'Chunk text',
+        fetchedAt: '2026-01-01',
+      },
+    ]);
+    encyclopediaRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue({ contradicts: false });
+
+    await service.execute({
+      lane: 'encyclopedia',
+      scopeKey: 'global',
+      model: 'm',
+    });
+
+    expect(encyclopediaRepository.scrollUnreflected).toHaveBeenCalledWith(100);
+    expect(encyclopediaRepository.setPayloadForPoints).toHaveBeenCalledWith(
+      ['c1'],
+      { is_reflected: true },
+    );
+  });
+
+  it('defers encyclopedia chunks with unparseable verdicts', async () => {
+    const { service, adjudicator, encyclopediaRepository } = makeService();
+    encyclopediaRepository.scrollUnreflected.mockResolvedValue([
+      {
+        id: 'c1',
+        vector: [1, 0, 0],
+        content: 'Chunk text',
+        fetchedAt: '2026-01-01',
+      },
+    ]);
+    encyclopediaRepository.queryNeighborFacts.mockResolvedValue([]);
+    adjudicator.adjudicate.mockResolvedValue(undefined);
+
+    await service.execute({
+      lane: 'encyclopedia',
+      scopeKey: 'global',
+      model: 'm',
+    });
+
+    expect(encyclopediaRepository.setPayloadForPoints).not.toHaveBeenCalledWith(
+      ['c1'],
+      { is_reflected: true },
+    );
+  });
 });

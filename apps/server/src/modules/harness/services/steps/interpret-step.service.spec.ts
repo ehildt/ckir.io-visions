@@ -29,9 +29,10 @@ function createContext(overrides?: Partial<HarnessContext>): HarnessContext {
 describe('InterpretStepService', () => {
   let service: InterpretStepService;
   let action: InterpretActionService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         InterpretStepService,
         {
@@ -51,7 +52,15 @@ describe('InterpretStepService', () => {
         },
         {
           provide: MemoryClientService,
-          useValue: { searchByText: vi.fn().mockResolvedValue([]) },
+          useValue: {
+            searchByText: vi.fn().mockResolvedValue([]),
+            searchSynopses: vi.fn().mockResolvedValue([]),
+            getCognition: vi.fn().mockResolvedValue({
+              profile: null,
+              insights: [],
+            }),
+            getOverrides: vi.fn().mockResolvedValue({}),
+          },
         },
       ],
     }).compile();
@@ -352,6 +361,327 @@ describe('InterpretStepService', () => {
 
     expect(ctx.outputs.intent?.clarificationQuestion).toBe(
       'Please upload the image.',
+    );
+  });
+
+  it('resolves a clarification from the memory probe and re-runs the classifier', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.searchByText as any).mockResolvedValue([
+      { text: 'User prefers concise answers.' },
+    ]);
+    (memoryClient.searchSynopses as any).mockResolvedValue([]);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: null,
+      insights: [],
+    });
+    (memoryClient.getOverrides as any).mockResolvedValue({
+      episodeProbeLimit: 3,
+    });
+
+    (action.execute as any)
+      .mockResolvedValueOnce({
+        intent: {
+          template: 'text',
+          tools: [],
+          reasoning: 'ambiguous',
+          needsClarification: true,
+          clarificationQuestion: 'What do you mean?',
+          plan: {},
+        },
+        inputTokens: 10,
+        outputTokens: 5,
+      })
+      .mockResolvedValueOnce({
+        intent: {
+          template: 'text',
+          tools: [],
+          reasoning: 'resolved from memory',
+          needsClarification: false,
+          plan: {},
+        },
+        inputTokens: 20,
+        outputTokens: 7,
+      });
+
+    const ctx = createContext({
+      memoryPartition: 'sess-1',
+      sessionId: 'sess-1',
+      lastUserPrompt: 'what did I say about tone?',
+      request: {
+        messages: [{ role: 'user', content: 'what did I say about tone?' }],
+        options: { num_ctx: 4096 },
+        model: 'model',
+        keep_alive: '5m',
+        stream: false,
+        think: false,
+      },
+    });
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.needsClarification).toBe(false);
+    expect(ctx.outputs.inputTokens).toBe(30);
+    expect(ctx.outputs.outputTokens).toBe(12);
+    expect(ctx.done).toBe(false);
+    expect(action.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the clarification when the memory probe does not resolve it', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.searchByText as any).mockResolvedValue([]);
+    (memoryClient.searchSynopses as any).mockResolvedValue([]);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: null,
+      insights: [],
+    });
+    (memoryClient.getOverrides as any).mockResolvedValue({});
+
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'ambiguous',
+        needsClarification: true,
+        clarificationQuestion: 'Which one?',
+        plan: {},
+      },
+    });
+
+    const ctx = createContext({
+      memoryPartition: 'sess-1',
+      sessionId: 'sess-1',
+      lastUserPrompt: 'which one?',
+    });
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.needsClarification).toBe(true);
+    expect(ctx.done).toBe(true);
+    expect(ctx.doneReason).toBe('clarification');
+  });
+
+  it('falls back to the first-pass question when the second pass throws', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.searchByText as any).mockResolvedValue([
+      { text: 'Some memory hit.' },
+    ]);
+    (memoryClient.searchSynopses as any).mockResolvedValue([]);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: null,
+      insights: [],
+    });
+    (memoryClient.getOverrides as any).mockResolvedValue({});
+
+    (action.execute as any)
+      .mockResolvedValueOnce({
+        intent: {
+          template: 'text',
+          tools: [],
+          reasoning: 'ambiguous',
+          needsClarification: true,
+          clarificationQuestion: 'Original question',
+          plan: {},
+        },
+      })
+      .mockRejectedValueOnce(new Error('classifier down'));
+
+    const ctx = createContext({
+      memoryPartition: 'sess-1',
+      sessionId: 'sess-1',
+      lastUserPrompt: 'huh?',
+    });
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.clarificationQuestion).toBe('Original question');
+    expect(ctx.done).toBe(true);
+  });
+
+  it('skips the memory probe when there is no memory partition', async () => {
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'ambiguous',
+        needsClarification: true,
+        clarificationQuestion: 'Which one?',
+        plan: {},
+      },
+    });
+
+    const ctx = createContext({ sessionId: undefined });
+    await service.execute(ctx);
+
+    expect(action.execute).toHaveBeenCalledTimes(1);
+    expect(ctx.done).toBe(true);
+  });
+
+  it('injects the persona name into the classifier when the user set one', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: JSON.stringify({ persona: { name: 'Shinku' } }),
+      insights: [],
+    });
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'chat',
+        needsClarification: false,
+        plan: {},
+      },
+    });
+
+    const ctx = createContext({ sessionId: 'sess-1' });
+    await service.execute(ctx);
+
+    expect(action.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ personaName: 'Shinku' }),
+    );
+  });
+
+  it('degrades gracefully when the cognition read fails', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.getCognition as any).mockRejectedValue(new Error('down'));
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'chat',
+        needsClarification: false,
+        plan: {},
+      },
+    });
+
+    const ctx = createContext({ sessionId: 'sess-1' });
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.template).toBe('text');
+    expect(ctx.done).toBe(false);
+  });
+
+  it('localizes the clarification question for non-English languages', async () => {
+    const aiSdk = module.get<AiSdkService>(AiSdkService);
+    (aiSdk.generateChat as any).mockResolvedValue({
+      text: '¿Qué quisiste decir?',
+    });
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'ambiguous',
+        needsClarification: true,
+        clarificationQuestion: 'What did you mean?',
+        language: 'es',
+        plan: {},
+      },
+    });
+
+    const ctx = createContext({
+      request: {
+        messages: [{ role: 'user', content: '¿qué?' }],
+        options: { num_ctx: 4096 },
+        model: 'model',
+        keep_alive: '5m',
+        stream: false,
+        think: false,
+      },
+    });
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.clarificationQuestion).toBe(
+      '¿Qué quisiste decir?',
+    );
+    expect(ctx.done).toBe(true);
+  });
+
+  it('keeps the English question when localization fails', async () => {
+    const aiSdk = module.get<AiSdkService>(AiSdkService);
+    (aiSdk.generateChat as any).mockRejectedValue(new Error('down'));
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'ambiguous',
+        needsClarification: true,
+        clarificationQuestion: 'What did you mean?',
+        language: 'de',
+        plan: {},
+      },
+    });
+
+    const ctx = createContext();
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.clarificationQuestion).toBe(
+      'What did you mean?',
+    );
+  });
+
+  it('does not localize English clarification questions', async () => {
+    const aiSdk = module.get<AiSdkService>(AiSdkService);
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'text',
+        tools: [],
+        reasoning: 'ambiguous',
+        needsClarification: true,
+        clarificationQuestion: 'What did you mean?',
+        language: 'en',
+        plan: {},
+      },
+    });
+
+    const ctx = createContext();
+    await service.execute(ctx);
+
+    expect(aiSdk.generateChat).not.toHaveBeenCalled();
+    expect(ctx.outputs.intent?.clarificationQuestion).toBe(
+      'What did you mean?',
+    );
+  });
+
+  it('clamps negative media counts to zero', async () => {
+    (action.execute as any).mockResolvedValue({
+      intent: {
+        template: 'article',
+        tools: [],
+        reasoning: 'chat',
+        needsClarification: false,
+        imageCount: -3,
+        videoCount: -1,
+        plan: {},
+      },
+    });
+
+    const ctx = createContext();
+    await service.execute(ctx);
+
+    expect(ctx.outputs.intent?.imageCount).toBe(0);
+    expect(ctx.outputs.intent?.videoCount).toBe(0);
+  });
+
+  it('emits reasoning deltas to the socket', async () => {
+    const io = module.get<SocketIOService>(SocketIOService);
+    (action.execute as any).mockImplementation(
+      async ({ onReasoningDelta }: any) => {
+        onReasoningDelta('thinking...');
+        return {
+          intent: {
+            template: 'text',
+            tools: [],
+            reasoning: 'chat',
+            needsClarification: false,
+            plan: {},
+          },
+        };
+      },
+    );
+
+    const ctx = createContext({ roomId: 'room-1', event: 'event-1' });
+    await service.execute(ctx);
+
+    expect(io.emitTo).toHaveBeenCalledWith(
+      'event-1',
+      'room-1',
+      expect.objectContaining({ reasoningDelta: 'thinking...' }),
     );
   });
 });

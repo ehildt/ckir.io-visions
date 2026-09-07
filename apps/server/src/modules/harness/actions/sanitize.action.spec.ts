@@ -11,12 +11,26 @@ import { ShownMediaService } from '../services/shown-media.service.js';
 
 import { SanitizeActionService } from './sanitize.action.js';
 
+// A valid 1x1 PNG so image-fingerprint downloads succeed in tests.
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 describe('SanitizeActionService', () => {
   let service: SanitizeActionService;
   let mediaUrlValidator: MediaUrlValidatorService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    // Image-fingerprint downloads hit real fetch; stub it with a valid PNG.
+    // A fresh Response per call — the body stream can only be read once.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => Promise.resolve(new Response(TINY_PNG))),
+    );
+
+    module = await Test.createTestingModule({
       providers: [
         SanitizeActionService,
         {
@@ -63,6 +77,10 @@ describe('SanitizeActionService', () => {
               .fn()
               .mockResolvedValue({ profile: null, insights: [] }),
             searchByText: vi.fn().mockResolvedValue([]),
+            searchConvictions: vi.fn().mockResolvedValue([]),
+            searchByTextWithClusters: vi.fn().mockResolvedValue({
+              clusters: [],
+            }),
             selectContext: vi.fn().mockResolvedValue(null),
           },
         },
@@ -112,6 +130,9 @@ describe('SanitizeActionService', () => {
         },
         toolResults: [],
       },
+      filters: {},
+      processedMeta: [],
+      buffers: [],
     } as any;
   }
 
@@ -424,5 +445,522 @@ describe('SanitizeActionService', () => {
     expect(reference.content).not.toContain('script');
     expect(reference.content).not.toContain('tracker.js');
     expect(reference.content).toContain('Article text');
+  });
+
+  it('drops broken image urls from the tool results', async () => {
+    const cloudIngestion = module.get<CloudImageIngestionService>(
+      CloudImageIngestionService,
+    );
+    (cloudIngestion.ingest as any).mockResolvedValue([
+      {
+        sourceUrl: 'https://img.com/good.jpg',
+        imageUrl: '/api/v1/storage/sess-1/conv-1/hash',
+        fingerprint: 'fp-good',
+      },
+    ]);
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(
+          urls.map((url) =>
+            url.includes('broken')
+              ? { url, kind: 'broken' }
+              : { url, kind: 'image' },
+          ),
+        ),
+    );
+
+    const ctx = createContext();
+    ctx.sessionId = 'sess-1';
+    ctx.filters = { conversationId: 'conv-1' };
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperImageSearch',
+          result: {
+            results: [
+              {
+                imageUrl: 'https://img.com/good.jpg',
+                title: 'Good',
+              },
+              {
+                imageUrl: 'https://img.com/broken.jpg',
+                title: 'Broken',
+              },
+            ],
+          },
+        },
+      ],
+      [],
+    );
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    // The broken URL is dropped; the good one survives as a local rewrite.
+    expect(payload.availableImages).toHaveLength(1);
+    expect(payload.availableImages[0].imageUrl).toBe(
+      '/api/v1/storage/sess-1/conv-1/hash',
+    );
+    expect(JSON.stringify(payload)).not.toContain('https://img.com/broken.jpg');
+  });
+
+  it('drops dead article page urls from the tool results', async () => {
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(
+          urls.map((url) =>
+            url.includes('dead')
+              ? { url, kind: 'broken', status: 404 }
+              : { url, kind: 'unknown' },
+          ),
+        ),
+    );
+
+    const ctx = createContext();
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperWebSearch',
+          result: {
+            results: [
+              {
+                title: 'Live',
+                url: 'https://example.com/live',
+                snippet: 's',
+              },
+              {
+                title: 'Dead',
+                url: 'https://example.com/dead',
+                snippet: 's',
+              },
+            ],
+          },
+        },
+      ],
+      [],
+    );
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    // The dead article is filtered out of the webSearch results entirely.
+    expect(payload.articles).toHaveLength(1);
+    expect(payload.articles[0].url).toBe('https://example.com/live');
+  });
+
+  it('skips previously shown images for imagelist follow-ups', async () => {
+    const shownMedia = module.get<ShownMediaService>(ShownMediaService);
+    const { buildImageFingerprint } =
+      await import('../helpers/media/build-image-fingerprint.helper.js');
+    const shownFingerprint = await buildImageFingerprint(TINY_PNG);
+    (shownMedia.lookupKeys as any).mockResolvedValue({
+      images: new Set([shownFingerprint]),
+      videos: new Set(),
+    });
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(urls.map((url) => ({ url, kind: 'image' }))),
+    );
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'more images' },
+      ],
+    });
+    ctx.outputs.intent.template = 'imagelist';
+    ctx.sessionId = 'sess-1';
+    ctx.filters = { conversationId: 'conv-1' };
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperImageSearch',
+          result: {
+            results: [
+              { imageUrl: 'https://img.com/shown.jpg', title: 'Shown' },
+              { imageUrl: 'https://img.com/fresh.jpg', title: 'Fresh' },
+            ],
+          },
+        },
+      ],
+      [],
+    );
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    // Both candidates share the same fingerprint, so both are dropped.
+    expect(payload.availableImages).toHaveLength(0);
+  });
+
+  it('skips previously shown videos for videolist follow-ups', async () => {
+    const shownMedia = module.get<ShownMediaService>(ShownMediaService);
+    (shownMedia.lookupKeys as any).mockResolvedValue({
+      images: new Set(),
+      videos: new Set(['youtube:dQw4w9WgXcQ']),
+    });
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(urls.map((url) => ({ url, kind: 'video' }))),
+    );
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'more videos' },
+      ],
+    });
+    ctx.outputs.intent.template = 'videolist';
+    ctx.sessionId = 'sess-1';
+    ctx.filters = { conversationId: 'conv-1' };
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperVideoSearch',
+          result: {
+            results: [
+              {
+                videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                title: 'Shown',
+              },
+              {
+                videoUrl: 'https://www.youtube.com/watch?v=abcdefghijk',
+                title: 'Fresh',
+              },
+            ],
+          },
+        },
+      ],
+      [],
+    );
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    expect(payload.availableVideos).toHaveLength(1);
+    expect(payload.availableVideos[0].videoUrl).toBe(
+      'https://www.youtube.com/watch?v=abcdefghijk',
+    );
+  });
+
+  it('injects the cognition profile and probed insights into the context', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: JSON.stringify({
+        persona: { name: 'F' },
+        likes: { cars: 'yes' },
+      }),
+      insights: [{ text: 'likes vintage cars', isFriction: false }],
+      convictions: [{ text: 'collects cars', isFriction: false }],
+      episodeProbeLimit: 2,
+    });
+    (memoryClient.searchByText as any).mockResolvedValue([
+      { text: 'discussed engine swaps' },
+    ]);
+    (memoryClient.searchConvictions as any).mockResolvedValue([
+      { text: 'collects cars', isFriction: false },
+    ]);
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'tell me about cars' },
+      ],
+    });
+    ctx.sessionId = 'sess-1';
+    ctx.lastUserPrompt = 'tell me about cars';
+
+    const result = await service.execute(ctx, [], []);
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[YOUR PROFILE OF THIS USER'),
+    );
+    expect(contextMessage).toBeDefined();
+    expect(String(contextMessage.content)).toContain('likes');
+
+    const insightsMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[RELEVANT PRIVATE COGNITION'),
+    );
+    expect(insightsMessage).toBeDefined();
+    expect(String(insightsMessage.content)).toContain('discussed engine swaps');
+  });
+
+  it('marks contested insights and convictions as contested', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: JSON.stringify({ likes: { cars: 'yes' } }),
+      insights: [{ text: 'likes cars', isFriction: true }],
+      convictions: [{ text: 'collects cars', isFriction: true }],
+      episodeProbeLimit: 0,
+    });
+    (memoryClient.searchByText as any).mockResolvedValue([
+      { text: 'likes cars', isFriction: true },
+    ]);
+    (memoryClient.searchConvictions as any).mockResolvedValue([
+      { text: 'collects cars', isFriction: true },
+    ]);
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'cars' },
+      ],
+    });
+    ctx.sessionId = 'sess-1';
+    ctx.lastUserPrompt = 'cars';
+
+    const result = await service.execute(ctx, [], []);
+
+    const insightsMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[RELEVANT PRIVATE COGNITION'),
+    );
+    expect(String(insightsMessage?.content)).toContain('⚠ CONTESTED');
+
+    const convictionsMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[YOUR CONVICTIONS'),
+    );
+    expect(String(convictionsMessage?.content)).toContain('⚠ CONTESTED');
+  });
+
+  it('injects cluster summaries when graphRag is enabled', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.getCognition as any).mockResolvedValue({
+      profile: JSON.stringify({ likes: ['cars'] }),
+      insights: [],
+      episodeProbeLimit: 0,
+    });
+    (memoryClient.searchByTextWithClusters as any).mockResolvedValue({
+      clusters: [{ title: 'Cars', summary: 'All about cars' }],
+    });
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'cars' },
+      ],
+    });
+    ctx.sessionId = 'sess-1';
+    ctx.lastUserPrompt = 'cars';
+    ctx.filters = { graphRag: true };
+
+    const result = await service.execute(ctx, [], []);
+
+    const clustersMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOPIC CONTEXT'),
+    );
+    expect(clustersMessage).toBeDefined();
+    expect(String(clustersMessage.content)).toContain('Cars: All about cars');
+  });
+
+  it('selects references through the memory client when a query exists', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.selectContext as any).mockResolvedValue({
+      chunks: [
+        { url: 'https://example.com/ref', title: 'Ref', content: 'Passage' },
+      ],
+      consideredChunks: 5,
+      selectedChunks: 1,
+      pastChunks: [
+        { url: 'https://example.com/past', title: 'Past', content: 'Old' },
+      ],
+    });
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'summarize the sources' },
+      ],
+    });
+    ctx.lastUserPrompt = 'summarize the sources';
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'webFetch',
+          result: { url: 'https://example.com/ref', content: 'Full text here' },
+        },
+      ],
+      [],
+    );
+
+    expect(memoryClient.selectContext).toHaveBeenCalled();
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[RELEVANT KNOWLEDGE'),
+    );
+    expect(contextMessage).toBeDefined();
+  });
+
+  it('falls back to full references when selection is unavailable', async () => {
+    const memoryClient = module.get<MemoryClientService>(MemoryClientService);
+    (memoryClient.selectContext as any).mockResolvedValue(null);
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'summarize' },
+      ],
+    });
+    ctx.lastUserPrompt = 'summarize';
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'webFetch',
+          result: { url: 'https://example.com/ref', content: 'Full text here' },
+        },
+      ],
+      [],
+    );
+
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    expect(payload.references).toHaveLength(1);
+  });
+
+  it('ingests external images for image reference tasks', async () => {
+    const cloudIngestion = module.get<CloudImageIngestionService>(
+      CloudImageIngestionService,
+    );
+    (cloudIngestion.ingest as any).mockResolvedValue([
+      {
+        sourceUrl: 'https://img.com/a.jpg',
+        imageUrl: '/api/v1/storage/sess-1/conv-1/hash',
+        fingerprint: 'fp-a',
+      },
+    ]);
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(urls.map((url) => ({ url, kind: 'image' }))),
+    );
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'compare these' },
+      ],
+    });
+    ctx.outputs.intent.template = 'compare';
+    ctx.buffers = [Buffer.from('img')];
+    ctx.sessionId = 'sess-1';
+    ctx.filters = { conversationId: 'conv-1' };
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperImageSearch',
+          result: {
+            results: [{ imageUrl: 'https://img.com/a.jpg', title: 'A' }],
+          },
+        },
+      ],
+      [],
+    );
+
+    expect(cloudIngestion.ingest).toHaveBeenCalled();
+    expect(result.ingestedImages).toHaveLength(1);
+    const contextMessage = result.messages.find(
+      (m: any) =>
+        m.role === 'system' &&
+        typeof m.content === 'string' &&
+        m.content.startsWith('[TOOL CONTEXT'),
+    );
+    const payload = JSON.parse(
+      contextMessage!.content.replace('[TOOL CONTEXT — DO NOT OUTPUT]\n', ''),
+    );
+    expect(payload.availableImages[0].imageUrl).toBe(
+      '/api/v1/storage/sess-1/conv-1/hash',
+    );
+  });
+
+  it('keeps local images without ingestion when no externals exist', async () => {
+    const cloudIngestion = module.get<CloudImageIngestionService>(
+      CloudImageIngestionService,
+    );
+    (mediaUrlValidator.validateUrls as any).mockImplementation(
+      (urls: string[]) =>
+        Promise.resolve(urls.map((url) => ({ url, kind: 'image' }))),
+    );
+
+    const ctx = createContext({
+      messages: [
+        { role: 'system', content: 'base' },
+        { role: 'user', content: 'show images' },
+      ],
+    });
+    ctx.outputs.intent.template = 'article';
+
+    const result = await service.execute(
+      ctx,
+      [
+        {
+          toolName: 'serperImageSearch',
+          result: {
+            results: [{ imageUrl: '/local/path.jpg', title: 'Local' }],
+          },
+        },
+      ],
+      [],
+    );
+
+    expect(cloudIngestion.ingest).not.toHaveBeenCalled();
+    expect(result.availableImageCount).toBe(1);
   });
 });
