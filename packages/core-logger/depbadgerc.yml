@@ -1,4 +1,4 @@
-integrity: cdc0a44a593ec81a6f04ec1ee0e63ecadf5fdbd6eb0ca57e791727cd8cf50694
+integrity: 598137ec7ef795999a6aadcb6a043ece6d392f651cf95d8bbf3fecfd1ffc0c58
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -98,12 +98,16 @@ devDependencies:
       namedLogo: npm
     - name: npm-check-updates
       namedLogo: npm
+    - name: prettier
+      namedLogo: prettier
     - name: rimraf
       namedLogo: npm
     - name: ts-unused-exports
       namedLogo: npm
     - name: tsup
       namedLogo: npm
+    - name: typescript
+      namedLogo: typescript
     - name: typescript-eslint
       namedLogo: eslint
     - name: vitest

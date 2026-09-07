@@ -1,4 +1,4 @@
-integrity: c7627213874a9c33f6921d394d60da7083f3d0a46ba28e56d16006c1d4734df5
+integrity: ecb6b5677b2f03a51e51a0a1a0fa3a3623536a416e0b2562a0edc4be15a16021
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -47,9 +47,21 @@ peerDependencies:
     - name: joi
       namedLogo: npm
       link: https://github.com/sideway/joi
+    - name: pino
+      namedLogo: npm
+      link: https://github.com/pinojs/pino
 
 dependencies:
-  items: []
+  layout:
+    <<: *DEPENDENCIES_LAYOUT
+    header: Dependencies
+    showHeader: true
+    position: center
+  badgeStyle: *DEPENDENCIES_STYLE
+  items:
+    - name: json5
+      namedLogo: npm
+      link: https://github.com/json5/json5
 
 devDependencies:
   layout:
@@ -72,8 +84,6 @@ devDependencies:
     - name: depcheck
       namedLogo: npm
     - name: dependency-cruiser
-      namedLogo: npm
-    - name: dotenv-cli
       namedLogo: npm
     - name: eslint
       namedLogo: eslint
@@ -103,13 +113,9 @@ devDependencies:
       namedLogo: prettier
     - name: rimraf
       namedLogo: npm
-    - name: source-map-support
-      namedLogo: npm
-    - name: ts-loader
-      namedLogo: npm
-    - name: ts-node
-      namedLogo: npm
     - name: ts-unused-exports
+      namedLogo: npm
+    - name: tsup
       namedLogo: npm
     - name: typescript
       namedLogo: typescript

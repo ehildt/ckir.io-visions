@@ -1,4 +1,4 @@
-integrity: b6ca6585f8544f43dd1b826fa23d9caf2bfb5363b1518d9b9faa4f87d0350089
+integrity: 8b966e7f424f5675fdf166769aa94da1ebad05931bace61051a7de3dbd90f86d
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -118,6 +118,12 @@ devDependencies:
     - name: npm-check-updates
       namedLogo: npm
       link: https://github.com/raineorshine/npm-check-updates
+    - name: prettier
+      namedLogo: prettier
+      link: https://github.com/prettier/prettier
+    - name: reflect-metadata
+      namedLogo: npm
+      link: https://github.com/rbuckton/reflect-metadata
     - name: rimraf
       namedLogo: npm
       link: https://github.com/isaacs/rimraf
@@ -127,6 +133,9 @@ devDependencies:
     - name: tsup
       namedLogo: npm
       link: https://github.com/egoist/tsup
+    - name: typescript
+      namedLogo: typescript
+      link: https://github.com/Microsoft/TypeScript
     - name: typescript-eslint
       namedLogo: eslint
       link: https://github.com/typescript-eslint/typescript-eslint

@@ -1,4 +1,4 @@
-integrity: 73ea5e51c20e6218f692954ceffbc1bc8f176e1e71f3e7c7daf575d39c83a8d0
+integrity: 7d3cfd2742f87ff16d4e116de94e8873de5a32075cd4bfbbaa6ce20af0cae1d3
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ehildt/depbadge/refs/heads/main/depbadgerc.schema.json
 
 target: README.md
@@ -42,6 +42,8 @@ dependencies:
   items:
     - name: '@headlessui/vue'
       link: https://github.com/tailwindlabs/headlessui
+    - name: '@lucide/icons'
+      link: https://github.com/lucide-icons/lucide
     - name: '@lucide/vue'
       link: https://github.com/lucide-icons/lucide
     - name: '@paralleldrive/cuid2'
@@ -52,14 +54,32 @@ dependencies:
       link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: '@vueuse/core'
       link: https://github.com/vueuse/vueuse
+    - name: d3-axis
+      link: https://github.com/d3/d3-axis
+    - name: d3-force-3d
+      link: https://github.com/vasturiano/d3-force-3d
+    - name: d3-scale
+      link: https://github.com/d3/d3-scale
+    - name: d3-selection
+      link: https://github.com/d3/d3-selection
+    - name: d3-shape
+      link: https://github.com/d3/d3-shape
+    - name: d3-time-format
+      link: https://github.com/d3/d3-time-format
+    - name: d3-zoom
+      link: https://github.com/d3/d3-zoom
     - name: date-fns
       link: https://github.com/date-fns/date-fns
+    - name: dexie
+      link: https://github.com/dexie/Dexie.js
     - name: dompurify
       link: https://github.com/cure53/DOMPurify
+    - name: flag-icons
+      link: https://github.com/lipis/flag-icons
+    - name: js-sha256
+      link: https://github.com/emn178/js-sha256
     - name: markdown-it
       link: https://github.com/markdown-it/markdown-it
-    - name: motion-v
-      link: https://github.com/motiondivision/motion-vue
     - name: p-wait-for
       link: https://github.com/sindresorhus/p-wait-for
     - name: partial-json
@@ -74,8 +94,12 @@ dependencies:
       link: https://github.com/mixmark-io/turndown
     - name: vue
       link: https://github.com/vuejs/core
+    - name: vue-i18n
+      link: https://github.com/intlify/vue-i18n
     - name: vue-router
       link: https://github.com/vuejs/router
+    - name: zod
+      link: https://github.com/colinhacks/zod
 
 devDependencies:
   layout:
@@ -109,6 +133,18 @@ devDependencies:
       link: https://github.com/testing-library/jest-dom
     - name: '@testing-library/vue'
       link: https://github.com/testing-library/vue-testing-library
+    - name: '@types/d3-axis'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
+    - name: '@types/d3-scale'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
+    - name: '@types/d3-selection'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
+    - name: '@types/d3-shape'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
+    - name: '@types/d3-time-format'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
+    - name: '@types/d3-zoom'
+      link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: '@types/dompurify'
       link: https://github.com/DefinitelyTyped/DefinitelyTyped
     - name: '@types/markdown-it'

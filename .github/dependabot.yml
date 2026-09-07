@@ -1,15 +1,9 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    versioning-strategy: "increase"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "chore(deps)"
-      prefix-development: "chore(deps-dev)"
-
+  # npm version updates are intentionally NOT handled here — the weekly
+  # NCU_UPDATE workflow (workflows/ncu-update.ci.yml) already bundles all
+  # npm dependencies into one PR (`ncu-update/deps`) and syncs badges.
+  # Dependabot security updates are unaffected (they use default repo config).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
