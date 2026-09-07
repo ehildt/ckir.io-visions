@@ -150,3 +150,267 @@ describe('MemorySearchService.searchByVector', () => {
     );
   });
 });
+
+describe('MemorySearchService clusters', () => {
+  it('attaches cluster summaries to text-search hits', async () => {
+    const { service, embed, searchMemory, findByIds } = makeService();
+    embed.mockResolvedValue([[1, 0, 0]]);
+    searchMemory.mockResolvedValue([
+      { ...makeHit('a', 0.7), clusterId: 'cl-1' },
+      makeHit('b', 0.5),
+    ]);
+    findByIds.mockResolvedValue([
+      { id: 'cl-1', title: 'Cars', summary: 'All about cars' },
+    ]);
+
+    const result = await service.searchByTextWithClusters({
+      memoryPartition: 'sess-1',
+      text: 'cars',
+    });
+
+    expect(result.points).toHaveLength(2);
+    expect(result.clusters).toEqual([
+      { id: 'cl-1', title: 'Cars', summary: 'All about cars' },
+    ]);
+    expect(findByIds).toHaveBeenCalledWith(['cl-1']);
+  });
+
+  it('attaches clusters to vector-search hits', async () => {
+    const { service, searchMemory, findByIds } = makeService();
+    searchMemory.mockResolvedValue([
+      { ...makeHit('a', 0.7), clusterId: 'cl-1' },
+    ]);
+    findByIds.mockResolvedValue([]);
+
+    const result = await service.searchByVectorWithClusters({
+      memoryPartition: 'sess-1',
+      vector: [1, 0, 0],
+    });
+
+    expect(result.points).toHaveLength(1);
+    expect(result.clusters).toEqual([]);
+  });
+});
+
+describe('MemorySearchService.searchSynopses', () => {
+  it('returns empty when raptor is disabled', async () => {
+    const { service, embed } = makeService();
+
+    const hits = await service.searchSynopses({
+      memoryPartition: 'sess-1',
+      text: 'cars',
+    });
+
+    expect(hits).toEqual([]);
+    expect(embed).not.toHaveBeenCalled();
+  });
+
+  it('searches the partition synopsis lane when raptor is enabled', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const searchSynopses = vi
+      .fn()
+      .mockResolvedValue([{ id: 's1', text: 'synopsis', score: 0.8 }]);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchMemory: vi.fn() } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses, incrementHeat: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(true),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    const hits = await service.searchSynopses({
+      memoryPartition: 'sess-1',
+      text: 'cars',
+      limit: 3,
+    });
+
+    expect(searchSynopses).toHaveBeenCalledWith(
+      'partition',
+      'sess-1',
+      [1, 0, 0],
+      3,
+    );
+    expect(hits).toHaveLength(1);
+  });
+
+  it('searches the encyclopedia lane when no partition is given', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const searchSynopses = vi.fn().mockResolvedValue([]);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchMemory: vi.fn() } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses, incrementHeat: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(true),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    await service.searchSynopses({ text: 'cars' });
+
+    expect(searchSynopses).toHaveBeenCalledWith(
+      'encyclopedia',
+      'global',
+      [1, 0, 0],
+      2,
+    );
+  });
+
+  it('increments synopsis heat when heat tracking is enabled', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const incrementHeat = vi.fn().mockResolvedValue(undefined);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchMemory: vi.fn() } as never,
+      { findByIds: vi.fn() } as never,
+      {
+        searchSynopses: vi
+          .fn()
+          .mockResolvedValue([{ id: 's1', text: 'x', score: 0.5 }]),
+        incrementHeat,
+      } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(true),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(true),
+      } as never,
+    );
+
+    await service.searchSynopses({ text: 'cars' });
+
+    expect(incrementHeat).toHaveBeenCalled();
+  });
+
+  it('degrades to empty when the embed fails', async () => {
+    const embed = vi.fn().mockRejectedValue(new Error('down'));
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchMemory: vi.fn() } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(true),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    expect(await service.searchSynopses({ text: 'cars' })).toEqual([]);
+  });
+});
+
+describe('MemorySearchService.searchBridges and searchConvictions', () => {
+  it('searches bridges with the embedded query', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const searchBridges = vi.fn().mockResolvedValue([makeHit('b1', 0.6)]);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchBridges } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(false),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    const hits = await service.searchBridges({
+      memoryPartition: 'sess-1',
+      text: 'gap',
+    });
+
+    expect(searchBridges).toHaveBeenCalledWith({
+      memoryPartition: 'sess-1',
+      vector: [1, 0, 0],
+      limit: 5,
+    });
+    expect(hits).toHaveLength(1);
+  });
+
+  it('searches convictions with the embedded query', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const searchConvictions = vi.fn().mockResolvedValue([makeHit('c1', 0.6)]);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchConvictions } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(false),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    const hits = await service.searchConvictions({
+      memoryCognition: 'cog-1',
+      text: 'conclusion',
+    });
+
+    expect(searchConvictions).toHaveBeenCalledWith({
+      memoryCognition: 'cog-1',
+      vector: [1, 0, 0],
+      limit: 5,
+    });
+    expect(hits).toHaveLength(1);
+  });
+
+  it('degrades to empty when the embed fails', async () => {
+    const embed = vi.fn().mockRejectedValue(new Error('down'));
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchBridges: vi.fn() } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(false),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(false),
+      } as never,
+    );
+
+    expect(
+      await service.searchBridges({ memoryPartition: 'sess-1', text: 'x' }),
+    ).toEqual([]);
+  });
+});
+
+describe('MemorySearchService heat tracking', () => {
+  it('increments heat on hits when heat tracking is enabled', async () => {
+    const embed = vi.fn().mockResolvedValue([[1, 0, 0]]);
+    const searchMemory = vi.fn().mockResolvedValue([makeHit('a', 0.7)]);
+    const incrementHeat = vi.fn().mockResolvedValue(undefined);
+    const service = new MemorySearchService(
+      { embed } as never,
+      { searchMemory, incrementHeat } as never,
+      { findByIds: vi.fn() } as never,
+      { searchSynopses: vi.fn() } as never,
+      {
+        getRaptorEnabled: vi.fn().mockReturnValue(false),
+        getHeatTrackingEnabled: vi.fn().mockReturnValue(true),
+      } as never,
+    );
+
+    await service.searchByText({
+      memoryPartition: 'sess-1',
+      text: 'cars',
+    });
+
+    expect(incrementHeat).toHaveBeenCalled();
+  });
+
+  it('skips heat tracking for bookkeeping probes', async () => {
+    const { service, embed, searchMemory } = makeService();
+    embed.mockResolvedValue([[0, 0, 1]]);
+    searchMemory.mockResolvedValue([makeHit('a', 0.7)]);
+
+    const result = await service.searchByText({
+      memoryPartition: 'sess-1',
+      text: 'cars',
+      trackHeat: false,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(searchMemory).toHaveBeenCalled();
+  });
+});

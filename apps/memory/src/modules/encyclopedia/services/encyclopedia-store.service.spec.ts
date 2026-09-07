@@ -44,7 +44,7 @@ function makeService(maxDocumentChars = 4_000_000) {
     overrides as never,
     config as never,
   );
-  return { service, repository, ledger, embedding };
+  return { service, repository, ledger, embedding, memoryEnqueue, overrides };
 }
 
 describe('EncyclopediaStoreService.persistDocuments', () => {
@@ -159,5 +159,141 @@ describe('EncyclopediaStoreService.persistDocuments', () => {
     expect(outcome.reusedDocs).toBe(1);
     expect(outcome.storedDocs).toBe(0);
     expect(repository.upsertChunks).not.toHaveBeenCalled();
+  });
+
+  it('stores a changed url-keyed document and supersedes the old hash', async () => {
+    const { service, repository, ledger } = makeService();
+    const content = 'A changed document body with enough words to chunk.';
+    repository.scrollByUrl.mockResolvedValue([
+      {
+        contentHash: 'old-hash',
+        fetchedAt: '2025-01-01T00:00:00.000Z',
+      },
+    ]);
+
+    const outcome = await service.persistDocuments(
+      [{ url: 'https://example.com/a', title: 'A', content }],
+      'global',
+    );
+
+    expect(outcome.storedDocs).toBe(1);
+    expect(outcome.indexedUrls).toEqual(['https://example.com/a']);
+    expect(repository.upsertChunks).toHaveBeenCalledTimes(1);
+    expect(repository.deleteByUrlExcludingHash).toHaveBeenCalledWith(
+      'https://example.com/a',
+      hashPayload(content),
+    );
+    expect(ledger.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({
+        url: 'https://example.com/a',
+        contentHash: hashPayload(content),
+        partitionScope: 'global',
+        title: 'A',
+      }),
+    ]);
+  });
+
+  it('auto-triggers the encyclopedia sweep at the pending threshold', async () => {
+    const { service, ledger, memoryEnqueue } = makeService();
+    ledger.countPending.mockResolvedValue(200);
+
+    await service.persistDocuments(
+      [{ url: 'https://example.com/a', content: 'Some content here.' }],
+      'global',
+    );
+
+    expect(memoryEnqueue.enqueueEncyclopediaSweep).toHaveBeenCalledWith({});
+  });
+
+  it('auto-triggers classification at the pending threshold', async () => {
+    const { service, ledger, memoryEnqueue } = makeService();
+    ledger.countPendingClassification.mockResolvedValue(20);
+
+    await service.persistDocuments(
+      [{ url: 'https://example.com/a', content: 'Some content here.' }],
+      'global',
+      'turn-model',
+    );
+
+    expect(memoryEnqueue.enqueueEncyclopediaClassify).toHaveBeenCalledWith({
+      model: 'turn-model',
+    });
+  });
+
+  it('continues when the ledger write fails', async () => {
+    const { service, ledger, repository } = makeService();
+    ledger.insertMany.mockRejectedValue(new Error('db down'));
+
+    const outcome = await service.persistDocuments(
+      [{ url: 'https://example.com/a', content: 'Some content here.' }],
+      'global',
+    );
+
+    expect(outcome.storedDocs).toBe(1);
+    expect(repository.upsertChunks).toHaveBeenCalled();
+  });
+});
+
+describe('EncyclopediaStoreService.indexSearchResults', () => {
+  it('indexes search results as snippet points', async () => {
+    const { service, repository, embedding } = makeService();
+
+    const urls = await service.indexSearchResults(
+      [
+        { url: 'https://example.com/1', title: 'One', snippet: 'snippet one' },
+        { url: 'https://example.com/2', snippet: 'snippet two' },
+      ],
+      'global',
+    );
+
+    expect(urls).toEqual(['https://example.com/1', 'https://example.com/2']);
+    expect(embedding.embed).toHaveBeenCalledWith(
+      ['snippet one', 'snippet two'],
+      'document',
+    );
+    expect(repository.upsertChunks).toHaveBeenCalledWith(expect.any(Array), {
+      skipLinks: true,
+    });
+  });
+
+  it('skips results without a url or snippet', async () => {
+    const { service, repository, embedding } = makeService();
+
+    const urls = await service.indexSearchResults(
+      [
+        { url: '', snippet: 'no url' },
+        { url: 'https://example.com/3', snippet: '   ' },
+      ],
+      'global',
+    );
+
+    expect(urls).toEqual([]);
+    expect(embedding.embed).not.toHaveBeenCalled();
+    expect(repository.upsertChunks).not.toHaveBeenCalled();
+  });
+
+  it('uses the client override model for classification', async () => {
+    const { service, memoryEnqueue, overrides } = makeService();
+    overrides.getClassifyModel.mockReturnValue('override-model');
+
+    await service.indexSearchResults(
+      [{ url: 'https://example.com/1', snippet: 'snippet' }],
+      'global',
+    );
+
+    expect(memoryEnqueue.enqueueEncyclopediaClassify).toHaveBeenCalledWith({
+      model: 'override-model',
+    });
+  });
+
+  it('skips classification when no model is available', async () => {
+    const { service, memoryEnqueue } = makeService();
+
+    await service.indexSearchResults(
+      [{ url: 'https://example.com/1', snippet: 'snippet' }],
+      'global',
+    );
+
+    expect(memoryEnqueue.enqueueEncyclopediaClassify).not.toHaveBeenCalled();
   });
 });
